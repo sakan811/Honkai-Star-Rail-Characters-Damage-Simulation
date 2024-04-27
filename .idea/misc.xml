@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.12 (hsr_calculation)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (hsr_calculation)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (Honkai Star Rail Characters Damage Calculation)" project-jdk-type="Python SDK" />
 </project>
