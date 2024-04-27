@@ -27,8 +27,10 @@ class Character:
     def _simulate_skill_and_ult(self, skill: bool, ult: bool, crit: bool):
         if skill:
             dmg = self.atk * self.skill_multiplier
+
             if crit:
                 dmg *= self.crit_dmg
+
             dmg *= self.elemental_dmg
 
             self.results.append(dmg)
@@ -36,8 +38,10 @@ class Character:
             self.current_ult_energy += 30
         else:
             dmg = self.atk * self.ult_multiplier
+
             if crit:
                 dmg *= self.crit_dmg
+
             dmg *= self.elemental_dmg
 
             self.results.append(dmg)
@@ -46,6 +50,7 @@ class Character:
 
     def _simulate_actions_during_each_turn(self):
         crit = random.random() < self.crit_rate
+
         self._simulate_skill_and_ult(skill=True, ult=False, crit=crit)
 
         if self.current_ult_energy >= self.ult_energy:
@@ -56,6 +61,7 @@ class Character:
         cycles_action_value = 150 + (100 * (cycles - 1))
         turns = cycles_action_value / char_action_value
         turns = int(turns)
+
         for turn in range(1, turns + 1):
             self._simulate_actions_during_each_turn()
             self._simulate_ally_turn()
@@ -66,23 +72,28 @@ class Character:
     def _simulate_cycles(self):
         self.results = []
         cycles = 30
+
         self._simulate_total_turns_from_given_cycles(cycles)
 
         total_dmg_after_all_cycles = sum(self.results)
+
         return total_dmg_after_all_cycles
 
     def calculate_battles(self, *args):
         self._set_scenario(args)
 
         total_dmg_from_each_battle = []
+
         for _ in range(1000):
             self._reset_variables()
             self._simulate_enter_battle_effect()
 
             total_dmg_from_all_cycles = self._simulate_cycles()
+
             total_dmg_from_each_battle.append(total_dmg_from_all_cycles)
 
         avg_dmg = sum(total_dmg_from_each_battle) / len(total_dmg_from_each_battle)
+
         return avg_dmg, min(total_dmg_from_each_battle), max(total_dmg_from_each_battle)
 
     def _reset_variables(self):
