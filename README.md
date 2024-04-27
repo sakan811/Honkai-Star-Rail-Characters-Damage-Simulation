@@ -2,6 +2,10 @@
 
 Compare damage from each scenario of the given character.
 
+## Visualizations
+[Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid02DEEFBR5ixWvyvnr1rdLW5GnBLvkE26e7ZEkxLWKtaM2EupnGWdeiGe4Gx77GcvBrl&id=61553626169836) 
+[Instagram](https://www.instagram.com/p/C6RPV1Ivttu/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+
 ## Damage Simulation Disclaimers
 Calculate characters' **Average Damage** based on 1,000 battles, with 30 cycles each.
 
@@ -11,8 +15,10 @@ Basic ATK was simulated for some Characters with an Enhanced Basic ATK.
 The effect of Speed buff/debuff from abilities was not simulated.
 Action Forward buff/debuff from abilities were roughly simulated if the character's damage depended on it.
 
-Simulation of enemies or allies were done only to create scenarios that could possibly trigger Skill, Ultimate, Talent, and Trace of the given Character.
-AoE Skill, Ultimate, or Talent were simulated as if they were applied to a single enemy, considering only DMG dealt to the targeted enemy, not adjacent enemies.
+Simulation of enemies or allies were done only to create scenarios 
+that could possibly trigger Skill, Ultimate, Talent, and Trace of the given Character.
+AoE Skill, Ultimate, or Talent was simulated as if they were applied to a single enemy, 
+considering only DMG dealt to the targeted enemy, not adjacent enemies.
 
 Critical damage was also considered and simulated.
 
