@@ -30,18 +30,18 @@ class CharacterTable:
         pass
 
     def migrate_to_character_table(
-            self, table_name: str, character_name: str, dmg_tuple: tuple[float, int, int]
+            self, table_name: str, scenario_name: str, dmg_tuple: tuple[float, int, int]
     ) -> None:
         """
         Migrates data to the given character table.
         :param table_name:  Table name
-        :param character_name: Character name
+        :param scenario_name: Character name
         :param dmg_tuple: Tuple of Damage
         :return: None
         """
         engine = connect_to_db()
         self._create_table(engine, table_name)
-        self._insert_into_table(engine, table_name, character_name, dmg_tuple)
+        self._insert_into_table(engine, table_name, scenario_name, dmg_tuple)
 
     @staticmethod
     def _create_table(engine: Engine, table_name: str) -> None:
@@ -54,9 +54,9 @@ class CharacterTable:
         query = """
         CREATE TABLE IF NOT EXISTS {table_name} 
         (
-            character      VARCHAR not null
+            Scenario      VARCHAR not null
                 primary key,
-            average_damage FLOAT
+            AverageDamage FLOAT
         );
         """.format(table_name=table_name)
         try:
