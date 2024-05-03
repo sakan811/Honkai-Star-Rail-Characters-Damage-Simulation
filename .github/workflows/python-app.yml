@@ -39,6 +39,13 @@ jobs:
         python -m pip install flake8 pytest
         if (Test-Path requirements.txt) { python -m pip install -r requirements.txt }
 
+    - uses: actions/cache@v4
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -50,10 +57,5 @@ jobs:
       run: |
         python -m pytest test.py
 
-    - uses: actions/cache@v4
-      with:
-        path: ~\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+
 
