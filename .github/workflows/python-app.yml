@@ -32,7 +32,7 @@ jobs:
         path: ~\AppData\Local\pip\Cache
         key: ${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
 
     - name: Install dependencies
       if: steps.cache.outputs.cache-hit != 'true'
