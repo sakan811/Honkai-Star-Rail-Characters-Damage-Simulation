@@ -31,11 +31,10 @@ jobs:
     - name: Cache dependencies
       uses: actions/cache@v4.0.2
       with:
-        path: ~/.cache/pip
-        key: pip-${{ hashFiles('**/requirements.txt') }}
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-          pip-${{ hashFiles('**/requirements.txt') }}
-          pip-
+            ${{ runner.os }}-pip-
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
