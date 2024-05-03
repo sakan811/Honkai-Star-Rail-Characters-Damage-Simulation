@@ -20,19 +20,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
     - name: Cache pip dependencies
       id: cache
       uses: actions/cache@v4
       with:
         path: ~\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
         restore-keys: |
-          ${{ runner.os }}-
+          ${{ runner.os }}-pip
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
 
     - name: Install dependencies
       if: steps.cache.outputs.cache-hit != 'true'
