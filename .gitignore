@@ -1,4 +1,4 @@
-/test/
+/prototype/
 /graph/
 /models/
 /notebooks/
@@ -8,3 +8,4 @@
 /hsr_dmg_cal.pdf
 /test.py
 /pdf.py
+/hsr_dmg_calculation.db
