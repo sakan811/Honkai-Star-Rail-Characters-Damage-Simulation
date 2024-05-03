@@ -49,10 +49,3 @@ jobs:
       run: |
         python -m pytest test.py
 
-    - name: Cache dependencies
-      uses: actions/cache@v4.0.2
-      with:
-        path: ~\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-            ${{ runner.os }}-pip-
