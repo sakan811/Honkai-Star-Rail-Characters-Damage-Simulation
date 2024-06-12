@@ -2,6 +2,8 @@
 
 Compare damage from each scenario of the given character.
 
+Lastest Update: 12th June, 2024.
+
 ## Visualizations
 [Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid02DEEFBR5ixWvyvnr1rdLW5GnBLvkE26e7ZEkxLWKtaM2EupnGWdeiGe4Gx77GcvBrl&id=61553626169836)   
 [Instagram](https://www.instagram.com/p/C6RPV1Ivttu/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
