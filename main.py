@@ -11,19 +11,24 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+import logging
 
 from Character import Character
 from sql_lite_pipeline import CharacterTable
 from character_dictionary import return_character_dict
+from configure_logging import configure_logging_with_file
+
+configure_logging_with_file('hsr_dmg_cal.log')
 
 
-def calculate_damage(class_object: Character, scenario_param: bool | int) -> tuple[float, int, int]:
+def calculate_damage(class_object: Character, scenario_param: bool | int | tuple) -> tuple[float, int, int]:
     """
     Calculates character's damage based on scenarios.
     :param class_object: 'Character' class object.
     :param scenario_param: Parameter to set scenarios.
     :return: Tuple with damage calculated from scenarios.
     """
+    logging.info(f'Calculates Character damage based on scenarios.')
     return class_object.calculate_battles(scenario_param)
 
 
@@ -38,6 +43,7 @@ def migrate_to_sqlite(
     :param dmg_tuple: Tuple with damage calculated from scenarios.
     :return: None
     """
+    logging.info('Migrates character data to SQLite database.')
     CharacterTable().migrate_to_character_table(table_name, scenario_name, dmg_tuple)
 
 
@@ -51,12 +57,14 @@ def main() -> None:
     """
     char_dict = return_character_dict()
 
+    logging.info('Looping through character dictionary...')
     for key, value in char_dict.items():
         character_object: Character = value[0]
         scenario_param_list: list[int | str] = value[1]
         scenario_list: list[str] = value[2]
         character_name: str = key
 
+        logging.info(f'Calculating damage for {character_name}...')
         for i, scenario_name in enumerate(scenario_list):
             dmg_tuple = calculate_damage(character_object, scenario_param_list[i])
             migrate_to_sqlite(character_name, scenario_name, dmg_tuple)

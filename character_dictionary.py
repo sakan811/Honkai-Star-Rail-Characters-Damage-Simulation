@@ -1,3 +1,6 @@
+import logging
+
+import numpy as np
 
 #    Copyright 2024 Sakan Nirattisaykul
 #
@@ -33,6 +36,11 @@ def return_character_dict():
 
     :return: Dictionary that contains data for calculating character's damage and migrating to SQLite database.
     """
+    logging.info('Return character dictionary.')
+
+    firefly_break_effect_list: list[float] = np.arange(1, 3.61, 0.1).tolist()
+    firefly_scenario_list: list[str] = [f'{int(i * 100)}% Break Effect' for i in firefly_break_effect_list]
+
     character_dict = {
         'Seele': (Seele(), [False, True], ['Seele With No Resurgence Buff', 'Seele With Resurgence Buff']),
         'DrRatio': (DrRatio(), [0, 1, 2, 3], ['0 Debuff', '1 Debuff', '2 Debuff', '3 Debuff']),
@@ -55,6 +63,11 @@ def return_character_dict():
                 'ImbibitorLunae With Enhanced-Thrice Basic Atk'
             ]
         ),
+        'Firefly': (
+            Firefly(),
+            firefly_break_effect_list,
+            firefly_scenario_list
+        )
     }
     return character_dict
 

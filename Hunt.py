@@ -46,7 +46,7 @@ class Seele(Character):
             self.current_ult_energy += 30
         elif ult:
             self.current_ult_energy = 5
-        self.results.append(dmg)
+        self.total_dmg.append(dmg)
 
     def _simulate_actions_during_each_turn(self):
         crit = random.random() < self.crit_rate
@@ -143,7 +143,7 @@ class DanHeng(Character):
             self.current_ult_energy += 30
         elif ult:
             self.current_ult_energy = 5
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _reset_variables(self):
         self.enemy_debuff = 0
@@ -229,7 +229,7 @@ class SuShang(Character):
             self.current_ult_energy += 30
         elif ult:
             self.current_ult_energy = 5
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _simulate_actions_during_each_turn(self):
         crit = random.random() < self.crit_rate
@@ -330,7 +330,7 @@ class YanQing(Character):
         elif ult:
             self.current_ult_energy = 5
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _simulate_actions_during_each_turn(self):
         #  simulate A2 Trace
@@ -357,7 +357,7 @@ class YanQing(Character):
     def _simulate_enemy_turn(self):
         if self.freeze_enemy > 0:
             dmg = self.atk * 0.5 * self.elemental_dmg
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
             self.freeze_enemy -= 1
         else:
             if not self.with_shield:
@@ -421,7 +421,7 @@ class Numby(Character):
             if self.attack_enemy_with_fire_weakness:
                 result *= 1.15
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _reset_variables(self):
         self.attack_enemy_with_fire_weakness = False
@@ -516,7 +516,7 @@ class DrRatio(Character):
             self.current_ult_energy += 30
         elif ult:
             self.current_ult_energy = 5
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _reset_variables(self):
         self.ult_buff = 0

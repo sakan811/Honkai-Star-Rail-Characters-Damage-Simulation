@@ -86,7 +86,7 @@ class ImbibitorLunae(Character):
             if self.righteous_heart > 0:
                 dmg *= 1 + (0.1 * self.righteous_heart)
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
         else:
             self.righteous_heart += 3
             if self.enhancement_amount > 6:
@@ -112,7 +112,7 @@ class ImbibitorLunae(Character):
             if self.righteous_heart > 0:
                 dmg *= 1 + (0.1 * self.righteous_heart)
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
             self.current_ult_energy = 5
 
@@ -130,3 +130,118 @@ class ImbibitorLunae(Character):
 
     def _simulate_enter_battle_effect(self):
         self.current_ult_energy += 15
+
+
+class Firefly(Character):
+    def __init__(self,
+                 atk=3000,
+                 crit_rate=0.5,
+                 crit_dmg=2,
+                 elemental_dmg=1.466,
+                 speed=104,
+                 skill_multiplier=2,
+                 ult_multiplier=0,
+                 ult_energy=240,
+                 ):
+        super().__init__(
+            atk,
+            crit_rate,
+            crit_dmg,
+            elemental_dmg,
+            speed,
+            skill_multiplier,
+            ult_multiplier,
+            ult_energy
+        )
+        self.complete_combustion = 0
+        self.action_forward_counter = 0
+
+    def _simulate_skill_and_ult(self, skill: bool, ult: bool, crit: bool):
+        if skill:
+            if self.complete_combustion > 0:
+                dmg = self.atk * ((0.2 * self.break_effect) + 2)
+
+                if crit:
+                    dmg *= self.crit_dmg
+
+                dmg *= self.elemental_dmg
+
+                if self.break_effect >= 2:
+                    super_break_dmg = 3767.5533 * (1 + self.break_effect)
+                    if 2 <= self.break_effect < 3.6:
+                        super_break_dmg = super_break_dmg * 0.35
+                    elif self.break_effect >= 3.6:
+                        super_break_dmg = super_break_dmg * 0.5
+
+                    dmg += super_break_dmg
+
+                self.total_dmg.append(dmg)
+            else:
+                dmg = self.atk * self.skill_multiplier
+
+                if crit:
+                    dmg *= self.crit_dmg
+
+                dmg *= self.elemental_dmg
+
+                self.total_dmg.append(dmg)
+
+                self.current_ult_energy += self.ult_energy * 0.6
+
+                self.action_forward_counter += 1
+        else:
+            # I estimated that the Complete Combustion effect lasts 3 turns
+            # By calculating Firefly's speed
+            self.complete_combustion = 3
+            self.current_ult_energy = 5
+
+    def _simulate_actions_during_each_turn(self) -> None:
+        """
+        Simulate actions during each turn.
+        :return: None
+        """
+        crit = random.random() < self.crit_rate
+
+        self._simulate_skill_and_ult(skill=True, ult=False, crit=crit)
+
+        if self.current_ult_energy >= self.ult_energy:
+            self._simulate_skill_and_ult(skill=False, ult=True, crit=crit)
+            self._simulate_skill_and_ult(skill=True, ult=False, crit=crit)
+
+    def _simulate_buff_duration_on_character(self) -> None:
+        """
+        Simulate the character's buff duration.
+        :return: None
+        """
+        if self.complete_combustion > 0:
+            self.complete_combustion -= 1
+
+    def _update_char_spd(self) -> None:
+        """
+        Update Character's speed.
+        :return: None.
+        """
+        if self.action_forward_counter > 0:
+            self.action_forward_counter -= 1
+            self.current_char_action_value = 10000 / (self.speed * 1.25)
+
+        if self.complete_combustion:
+            self.current_char_action_value = 10000 / (self.speed + 60)
+        else:
+            self.current_char_action_value = 10000 / self.speed
+
+    def _set_scenario(self, break_effect: tuple) -> None:
+        """
+        Set scenario for the Character.
+        :param break_effect: Amount of Break Effect.
+        :return: None
+        """
+        self.break_effect = break_effect[0]
+
+    def _simulate_enter_battle_effect(self) -> None:
+        """
+        Simulate the character's enter battle effect.
+        :return: None
+        """
+        # Simulate Firefly's Talent
+        self.ult_energy += self.ult_energy * 0.5

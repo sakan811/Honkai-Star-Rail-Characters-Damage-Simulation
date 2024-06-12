@@ -27,6 +27,17 @@ class Character:
             ult_multiplier,
             ult_energy
     ):
+        """
+        Initialize the character.
+        :param atk: Attack.
+        :param crit_rate: Critical rate.
+        :param crit_dmg: Critical damage.
+        :param elemental_dmg: Elemental damage bonus.
+        :param speed: Speed.
+        :param skill_multiplier: Skill multiplier.
+        :param ult_multiplier: Ultimate multiplier.
+        :param ult_energy: Ultimate energy.
+        """
         self.atk = atk
         self.crit_rate = crit_rate
         self.crit_dmg = crit_dmg
@@ -34,11 +45,20 @@ class Character:
         self.speed = speed
         self.skill_multiplier = skill_multiplier
         self.ult_multiplier = ult_multiplier
-        self.results = []
+        self.total_dmg = []
         self.ult_energy = ult_energy
         self.current_ult_energy = 0
+        self.char_action_value = 0
+        self.current_char_action_value = 0
 
-    def _simulate_skill_and_ult(self, skill: bool, ult: bool, crit: bool):
+    def _simulate_skill_and_ult(self, skill: bool, ult: bool, crit: bool) -> None:
+        """
+        Simulate skill and ultimate.
+        :param skill: True if the action is a skill.
+        :param ult: True if the action is an ultimate.
+        :param crit: True if the action is a critical hit.
+        :return: None
+        """
         if skill:
             dmg = self.atk * self.skill_multiplier
 
@@ -47,7 +67,7 @@ class Character:
 
             dmg *= self.elemental_dmg
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
             self.current_ult_energy += 30
         else:
@@ -58,11 +78,15 @@ class Character:
 
             dmg *= self.elemental_dmg
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
             self.current_ult_energy = 5
 
-    def _simulate_actions_during_each_turn(self):
+    def _simulate_actions_during_each_turn(self) -> None:
+        """
+        Simulate actions during each turn.
+        :return: None
+        """
         crit = random.random() < self.crit_rate
 
         self._simulate_skill_and_ult(skill=True, ult=False, crit=crit)
@@ -70,30 +94,46 @@ class Character:
         if self.current_ult_energy >= self.ult_energy:
             self._simulate_skill_and_ult(skill=False, ult=True, crit=crit)
 
-    def _simulate_total_turns_from_given_cycles(self, cycles: int):
-        char_action_value = 10000 / self.speed
+    def _simulate_total_turns_from_given_cycles(self, cycles: int) -> None:
+        """
+        Simulate total turns from given cycles.
+        :param cycles: Number of cycles.
+        :return: None
+        """
+        self.current_char_action_value = 10000 / self.speed
         cycles_action_value = 150 + (100 * (cycles - 1))
-        turns = cycles_action_value / char_action_value
-        turns = int(turns)
 
-        for turn in range(1, turns + 1):
+        while self.char_action_value < cycles_action_value:
             self._simulate_actions_during_each_turn()
             self._simulate_ally_turn()
             self._simulate_buff_duration_on_character()
             self._simulate_enemy_turn()
             self._simulate_debuff_duration_on_enemy()
+            self._update_char_spd()
+            self.char_action_value += self.current_char_action_value
 
-    def _simulate_cycles(self):
-        self.results = []
+        self.char_action_value = 0
+
+    def _simulate_cycles(self) -> int:
+        """
+        Simulate cycles.
+        :return: Total damage after all cycles.
+        """
+        self.total_dmg = []
         cycles = 30
 
         self._simulate_total_turns_from_given_cycles(cycles)
 
-        total_dmg_after_all_cycles = sum(self.results)
+        total_dmg_after_all_cycles = sum(self.total_dmg)
 
         return total_dmg_after_all_cycles
 
-    def calculate_battles(self, *args):
+    def calculate_battles(self, *args: tuple) -> tuple[float, int, int]:
+        """
+        Calculate the damage from each battle simulation.
+        :param args: Tuple
+        :return:
+        """
         self._set_scenario(args)
 
         total_dmg_from_each_battle = []
@@ -110,23 +150,59 @@ class Character:
 
         return avg_dmg, min(total_dmg_from_each_battle), max(total_dmg_from_each_battle)
 
-    def _reset_variables(self):
+    def _reset_variables(self) -> None:
+        """
+        Reset the variables for the battle simulation.
+        :return: None
+        """
         self.current_ult_energy = 0
 
-    def _simulate_enter_battle_effect(self):
+    def _simulate_enter_battle_effect(self) -> None:
+        """
+        Simulate the character's enter battle effect.
+        :return: None
+        """
         pass
 
-    def _simulate_buff_duration_on_character(self):
+    def _simulate_buff_duration_on_character(self) -> None:
+        """
+        Simulate the character's buff duration.
+        :return: None
+        """
         pass
 
-    def _simulate_debuff_duration_on_enemy(self):
+    def _simulate_debuff_duration_on_enemy(self) -> None:
+        """
+        Simulate the enemy's debuff duration.
+        :return: None
+        """
         pass
 
-    def _simulate_enemy_turn(self):
+    def _simulate_enemy_turn(self) -> None:
+        """
+        Simulate the enemy's turn.
+        :return: None
+        """
         pass
 
-    def _simulate_ally_turn(self):
+    def _simulate_ally_turn(self) -> None:
+        """
+        Simulate ally's turn.
+        :return: None
+        """
         pass
 
-    def _set_scenario(self, *args):
+    def _set_scenario(self, *args) -> None:
+        """
+        Set scenario for the Character.
+        :param args: Arguments for the scenario.
+        :return: None
+        """
+        pass
+
+    def _update_char_spd(self) -> None:
+        """
+        Update Character's speed.
+        :return: None.
+        """
         pass

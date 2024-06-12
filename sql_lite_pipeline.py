@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+import logging
 
 from sqlalchemy import create_engine, Engine, text
 
@@ -20,7 +21,8 @@ def connect_to_db() -> Engine:
     Connects to the SQLite database
     :return: SQLAlchemy Engine
     """
-    engine = create_engine('sqlite:///hsr_dmg_calculation.db', echo=True)
+    logging.info('Connect to SQLite database')
+    engine = create_engine('sqlite:///hsr_dmg_calculation.db')
 
     return engine
 
@@ -39,6 +41,7 @@ class CharacterTable:
         :param dmg_tuple: Tuple of Damage
         :return: None
         """
+        logging.info(f'Migrating data to {table_name} table...')
         engine = connect_to_db()
         self._create_table(engine, table_name)
         self._insert_into_table(engine, table_name, scenario_name, dmg_tuple)
@@ -51,6 +54,8 @@ class CharacterTable:
         :param table_name:  Table name
         :return: None
         """
+        logging.info(f'Creating {table_name} table...')
+
         query = """
         CREATE TABLE IF NOT EXISTS {table_name} 
         (
@@ -80,15 +85,17 @@ class CharacterTable:
         :param dmg_tuple: Tuple of Damage
         :return: None
         """
+        logging.info(f'Inserting data into {table_name} table...')
+
         query = """
         INSERT OR REPLACE INTO {table_name} 
-        (character, average_damage) 
-        VALUES (:character, :average_damage)
+        (Scenario, AverageDamage) 
+        VALUES (:Scenario, :AverageDamage)
         """.format(table_name=table_name)
 
         params = {
-            'character': character_name,
-            'average_damage': dmg_tuple[0]
+            'Scenario': character_name,
+            'AverageDamage': dmg_tuple[0]
         }
 
         try:

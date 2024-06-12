@@ -63,7 +63,7 @@ class Kafka(Character):
             self.shock = 1
             self.current_ult_energy += 10
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _reset_variables(self):
         self.shock = 0
@@ -79,7 +79,7 @@ class Kafka(Character):
             if enemy_killed:
                 self.current_ult_energy += 5
 
-        self.results.append(shock_dmg)
+        self.total_dmg.append(shock_dmg)
 
     def _simulate_debuff_duration_on_enemy(self):
         #  simulate Shock debuff duration
@@ -162,7 +162,7 @@ class BlackSwan(Character):
         elif ult:
             self.current_ult_energy = 5
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _simulate_enemy_turn(self):
         if self.arcana_stack > 50:
@@ -198,7 +198,7 @@ class BlackSwan(Character):
 
         arcana_dmg *= self.increased_dmg_from_effect_hit_rate
 
-        self.results.append(arcana_dmg)
+        self.total_dmg.append(arcana_dmg)
 
         if self.arcana_stack > 0:
             arcana = random.random() < 0.65 * (1 + self.effect_hit_rate)
@@ -401,7 +401,7 @@ class Acheron(Character):
         elif self.nihiliy_allies == 2:
             result *= 1.6
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _simulate_ally_turn(self):
         debuff = random.choice([1, 2, 3, 4])
@@ -524,7 +524,7 @@ class Welt(Character):
             # +1 as the buff should last to the next 2 turns
             self.a2_trace_buff = a2_trace_buff_duration + 1
 
-        self.results.append(result)
+        self.total_dmg.append(result)
 
     def _simulate_buff_duration_on_character(self):
         if self.a2_trace_buff > 0:
@@ -589,7 +589,7 @@ class Luka(Character):
 
         total_dmg = self.elemental_dmg * dmg
 
-        self.results.append(total_dmg)
+        self.total_dmg.append(total_dmg)
 
     def _simulate_actions_during_each_turn(self):
         #  simulate Enhanced Basic Atk if there are Fighting Will stacks, else simulate Skill
@@ -644,7 +644,7 @@ class Luka(Character):
 
             self.current_ult_energy += 20
 
-            self.results.append(total_dmg)
+            self.total_dmg.append(total_dmg)
         else:
             crit = random.random() < self.crit_rate
             self._simulate_skill_and_ult(skill=True, ult=False, crit=crit)
@@ -670,7 +670,7 @@ class Luka(Character):
         if self.bleed > 0:
             bleed_dmg = self.atk * self.bleed_multipier * self.elemental_dmg
 
-            self.results.append(bleed_dmg)
+            self.total_dmg.append(bleed_dmg)
 
     def _simulate_enter_battle_effect(self):
         self.fighting_will_stack.append('talent')
@@ -722,7 +722,7 @@ class Sampo(Character):
                         self.wind_shear_stack.append(wind_shear_duration + talent_effect)
 
             self.current_ult_energy += 30
-            self.results.append(total_skill_dmg)
+            self.total_dmg.append(total_skill_dmg)
         else:
             dmg = self.atk * self.ult_multiplier
             if crit:
@@ -733,7 +733,7 @@ class Sampo(Character):
             dot_amplifier_duration = 2
             self.dot_amplifier.append(dot_amplifier_duration)
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
             self.current_ult_energy = 5
 
@@ -761,7 +761,7 @@ class Sampo(Character):
             if self.dot_amplifier:
                 dmg *= 1.3
             dmg *= len(self.wind_shear_stack)
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
 
 class Guinanfei(Character):
@@ -801,7 +801,7 @@ class Guinanfei(Character):
             burn_duration = 2
             self.burn_stack.append(burn_duration)
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
             self.current_ult_energy += 30
         else:
@@ -822,7 +822,7 @@ class Guinanfei(Character):
                 if self.burn_stack:
                     burn_dmg *= 1.2
 
-            self.results.append(dmg + burn_dmg)
+            self.total_dmg.append(dmg + burn_dmg)
 
             self.current_ult_energy = 5
 
@@ -838,7 +838,7 @@ class Guinanfei(Character):
             if self.burn_stack[0] == 0:
                 self.burn_stack.pop(0)
 
-            self.results.append(dmg)
+            self.total_dmg.append(dmg)
 
     def _reset_variables(self):
         self.burn_stack = []
