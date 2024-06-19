@@ -2,11 +2,12 @@
 
 Compare damage from each scenario of the given character.
 
-Latest Update: 12th June 2024.
+Latest Update: 19 June 2024.
 
 ## Visualizations
-[Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid02DEEFBR5ixWvyvnr1rdLW5GnBLvkE26e7ZEkxLWKtaM2EupnGWdeiGe4Gx77GcvBrl&id=61553626169836)   
-[Instagram](https://www.instagram.com/p/C6RPV1Ivttu/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+[Power BI](https://app.powerbi.com/view?r=eyJrIjoiYmM2MDQxNDMtZGEwNy00NGU2LWJkNjItNmI3MTAwNDMwOGRkIiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
+[Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid025cHVzSokmryctRRaGtreiF4wbyCpeSQtyCcJYVSYqo9oZq4r8MRaGKDLz2rZPQjnl&id=61553626169836)   
+[Instagram](https://www.instagram.com/p/C8ZMHSixVJE/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
 ## Damage Simulation Disclaimers
 Calculate characters' **Average Damage** based on 1,000 battles, with 30 cycles each.
