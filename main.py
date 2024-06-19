@@ -13,7 +13,7 @@
 #    limitations under the License.
 import logging
 
-from Character import Character
+from characters.Character import Character
 from sql_lite_pipeline import CharacterTable
 from character_dictionary import return_character_dict
 from configure_logging import configure_logging_with_file

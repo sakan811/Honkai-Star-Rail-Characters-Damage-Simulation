@@ -14,7 +14,7 @@
 
 import random
 
-from Character import Character
+from characters.Character import Character
 
 
 class ImbibitorLunae(Character):

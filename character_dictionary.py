@@ -16,9 +16,9 @@ import numpy as np
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from Hunt import *
-from Nihility import *
-from Destruction import *
+from characters.Hunt import *
+from characters.Nihility import *
+from characters.Destruction import *
 
 
 def return_character_dict():
