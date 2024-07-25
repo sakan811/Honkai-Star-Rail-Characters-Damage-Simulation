@@ -12,13 +12,20 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import logging
+import sqlite3
 
-from characters.Character import Character
+import pandas as pd
+
+from hsr_simulation.character import Character
+from hsr_simulation.hunt.danheng import DanHeng
+from hsr_simulation.hunt.seele import Seele
+from hsr_simulation.hunt.yanqing import YanQing
+from hsr_simulation.simulate_turns import simulate_turns
 from sql_lite_pipeline import CharacterTable
 from character_dictionary import return_character_dict
 from configure_logging import configure_logging_with_file
 
-configure_logging_with_file('hsr_dmg_cal.log')
+logger = configure_logging_with_file('hsr_dmg_cal.log')
 
 
 def calculate_damage(class_object: Character, scenario_param: bool | int | tuple) -> tuple[float, int, int]:
@@ -71,4 +78,45 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    main()
+    data_dict = {
+        'character': [],
+        'average_dmg': []
+    }
+
+    simulation_num = 100
+    max_cycles = 10
+
+    character = Seele()
+    total_dmg = [simulate_turns(character, max_cycles) for _ in range(simulation_num)]
+    avg_dmg = sum(total_dmg) / len(total_dmg)
+    logger.debug(f'Average Damage: {avg_dmg}')
+    data_dict['character'].append('Seele')
+    data_dict['average_dmg'].append(avg_dmg)
+
+    character = DanHeng()
+    total_dmg = [simulate_turns(character, max_cycles) for _ in range(simulation_num)]
+    avg_dmg = sum(total_dmg) / len(total_dmg)
+    logger.debug(f'Average Damage: {avg_dmg}')
+    data_dict['character'].append('Dan Heng')
+    data_dict['average_dmg'].append(avg_dmg)
+
+    character = YanQing()
+    total_dmg = [simulate_turns(character, max_cycles) for _ in range(simulation_num)]
+    avg_dmg = sum(total_dmg) / len(total_dmg)
+    logger.debug(f'Average Damage: {avg_dmg}')
+    data_dict['character'].append('Yanqing')
+    data_dict['average_dmg'].append(avg_dmg)
+
+    df = pd.DataFrame.from_dict(data_dict)
+    db = 'hsr_dmg_calculation.db'
+    with sqlite3.connect(db) as connection:
+        dtype = {
+            'character': 'text primary key',
+            'average_dmg': 'float not null'
+        }
+
+        df.to_sql(name='Hunt', con=connection, if_exists='replace', dtype=dtype, index=False)
+
+
+
+

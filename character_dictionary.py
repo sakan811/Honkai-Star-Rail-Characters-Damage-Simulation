@@ -16,9 +16,9 @@ import numpy as np
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from characters.Hunt import *
-from characters.Nihility import *
-from characters.Destruction import *
+from hsr_simulation.hunt import *
+from hsr_simulation.Nihility import *
+from hsr_simulation.Destruction import *
 
 
 def return_character_dict():

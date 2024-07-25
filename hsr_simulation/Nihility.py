@@ -1,6 +1,6 @@
 import random
 
-from characters.Character import Character
+from hsr_simulation.character import Character
 
 
 class Kafka(Character):
