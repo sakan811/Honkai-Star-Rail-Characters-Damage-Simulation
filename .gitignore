@@ -11,4 +11,5 @@
 /hsr_dmg_calculation.db
 /.idea
 /data/
-/*.log
+**/*.log
+**/*.db
