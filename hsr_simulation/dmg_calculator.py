@@ -62,7 +62,7 @@ def calculate_dmg_multipliers(
     else:
         dmg_multipliers = sum(dmg_multipliers)
 
-    damage_multiplier = 1 + crit_dmg + dot_dmg + dmg_multipliers
+    damage_multiplier = (1 + crit_dmg) * (1 + dot_dmg + dmg_multipliers)
 
     return damage_multiplier
 
@@ -124,6 +124,46 @@ def calculate_total_damage(
     """
     logger.info('Calculating total damage...')
     return base_dmg * dmg_multipliers * res_multipliers * dmg_reduction
+
+
+def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
+    """
+    Calculates break damage
+    :param break_type: Break DMG type, e.g., Physical, Fire, etc.
+    :param target_max_toughness: Max toughness of the target.
+    :return: Break DMG
+    """
+    logger.info('Calculating break damage...')
+    level_80_multiplier = 3767.5533
+
+    if break_type == 'Physical' or break_type == 'Fire':
+        base_multiplier = 2
+    elif break_type == 'Ice' or break_type == 'Lightning':
+        base_multiplier = 1
+    elif break_type == 'Wind':
+        base_multiplier = 1.5
+    elif break_type == 'Quantum' or break_type == 'Imaginary':
+        base_multiplier = 0.5
+    else:
+        base_multiplier = 1
+
+    target_max_toughness_multiplier = 0.5 + (target_max_toughness / 40)
+    return base_multiplier * level_80_multiplier * target_max_toughness_multiplier
+
+
+def calculate_super_break_dmg(
+        base_toughness_reduce: float,
+        toughness_reduce_increase: float = 0,
+        break_effect: float = 1) -> float:
+    """
+    Calculates super_break dmg
+    :param base_toughness_reduce: Base toughness reduction.
+    :param toughness_reduce_increase: Toughness reduction increase.
+    :param break_effect: Break Effect
+    :return: SUper Break dmg
+    """
+    logger.info('Calculating super_break dmg...')
+    return base_toughness_reduce * (1 + toughness_reduce_increase) * break_effect
 
 
 if __name__ == '__main__':

@@ -2,3 +2,4 @@ SQLAlchemy~=2.0.29
 pytest~=8.2.0
 pdf2image~=1.17.0
 numpy~=1.26.4
+pandas~=2.2.1

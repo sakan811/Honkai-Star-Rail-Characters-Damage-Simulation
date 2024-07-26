@@ -11,13 +11,9 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-
-
 import random
 
 from configure_logging import configure_logging_with_file
-from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universal_dmg_reduction, \
-    calculate_dmg_multipliers, calculate_total_damage, calculate_res_multipliers
 from hsr_simulation.character import Character
 
 logger = configure_logging_with_file('simulate_turns.log')
@@ -28,8 +24,8 @@ class DrRatio(Character):
                  atk=2000,
                  crit_rate=0.5,
                  crit_dmg=1,
-                 speed=110,
-                 ult_energy=100
+                 speed=103,
+                 ult_energy=140
                  ):
         super().__init__(
             atk,
@@ -38,189 +34,134 @@ class DrRatio(Character):
             speed,
             ult_energy
         )
-        self.starting_spd = speed
-        self.can_get_talent = True
-        self.talent_buff = 0
-        self.a4_trace_buff = 0
+        self.wiseman_folly = 0
 
     def take_action(self) -> float:
         """
-        Simulate character's action
-        :return: Damage
+        Simulate taking actions.
+        :return: Total damage.
         """
-        # Reset Dan Heng's speed after A4 buff is gone
-        if self.a4_trace_buff > 0:
-            self.a4_trace_buff -= 1
-        else:
-            self.speed = self.starting_spd
-
-        # Talent buff can be obtained again after 2 turns
-        if self.talent_buff > 0:
-            self.talent_buff -= 1
-        else:
-            self.can_get_talent = True
-
-        total_dmg = []
         logger.info('Taking actions...')
+        total_dmg = []
+
+        # reset stats
+        self.crit_rate = 0.5
+        self.crit_dmg = 1
+
         if self.skill_points > 0:
-            skill_dmg, break_amount = self.use_skill(self.check_enemy_toughness())
-            logger.debug(f'Skill dmg: {skill_dmg}')
-
-            self.skill_points -= 1
-            self.current_ult_energy += 30
-
+            dmg, break_amount = self._use_skill()
             self.enemy_toughness -= break_amount
+            self.data['DMG'].append(dmg)
+            self.data['DMG_Type'].append('Skill')
 
-            total_dmg.append(skill_dmg)
+            follow_up_dmg, follow_up_atk_break_amount = self._simulate_talent()
+            self.enemy_toughness -= follow_up_atk_break_amount
+            self.data['DMG'].append(follow_up_dmg)
+            self.data['DMG_Type'].append('Talent')
+
+            dmg += follow_up_dmg
         else:
-            basic_atk_dmg, break_amount = self.basic_atk(self.check_enemy_toughness())
-            logger.debug(f'Basic atk dmg: {basic_atk_dmg}')
-
-            self.skill_points += 1
-            self.current_ult_energy += 20
-
+            dmg, break_amount = self._use_basic_atk()
             self.enemy_toughness -= break_amount
+            self.data['DMG'].append(dmg)
+            self.data['DMG_Type'].append('Basic ATK')
 
-            total_dmg.append(basic_atk_dmg)
+        total_dmg.append(dmg)
 
-        self._handle_a4_trace()
-
-        if self.current_ult_energy >= self.ult_energy:
-            ult_dmg, break_amount = self.use_ult(self.check_enemy_toughness())
-            logger.debug(f'ult dmg: {ult_dmg}')
-
+        if self._can_use_ult():
+            ult_dmg, ult_break_amount = self._use_ult()
+            self.enemy_toughness -= ult_break_amount
             total_dmg.append(ult_dmg)
 
-            self.enemy_toughness -= break_amount
+            self.data['DMG'].append(ult_dmg)
+            self.data['DMG_Type'].append('Ultimate')
 
             self.current_ult_energy = 5
 
-        self._handle_a4_trace()
+        # simulate ult debuff
+        if self.wiseman_folly > 0:
+            self.wiseman_folly -= 1
+
+            ally_atk_num = random.choice([1, 2])
+            for _ in range(ally_atk_num):
+                dmg, break_amount = self._follow_up_atk()
+                self.enemy_toughness -= break_amount
+
+                self.data['DMG'].append(dmg)
+                self.data['DMG_Type'].append('Talent')
+
+                total_dmg.append(dmg)
 
         return sum(total_dmg)
 
-    def basic_atk(self, weakness_broken: bool) -> tuple[float, int]:
+    def _use_basic_atk(self) -> tuple[float, int]:
         """
-        Basic atk calculation.
-        :param weakness_broken: Weakness Broken Indicator.
-        :return: Basic atk damage and Break Amount.
+        Simulate basic atk damage.
+        :return: Damage and break amount.
         """
-        logger.info("Doing a basic atk...")
-        break_amount = 10
-        if random.random() < self.crit_rate:
-            base_dmg = calculate_base_dmg(atk=self.atk)
-            dmg_multiplier, res_pen = self._random_talent(is_crit=True)
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
+        logger.info("Using basic attack...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
+        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
+        return dmg, break_amount
+
+    def _use_skill(self) -> tuple[float, int]:
+        """
+        Simulate skill damage.
+        :return: Damage and break amount.
+        """
+        logger.info("Using skill...")
+
+        # simulate A2 Trace
+        debuff_on_enemy = random.choice([0, 1, 2, 3, 4, 5, 6])
+        self.crit_rate += 0.025 * debuff_on_enemy
+        self.crit_dmg += 0.05 * debuff_on_enemy
+
+        # simulate A6 Trace
+        if debuff_on_enemy >= 3:
+            multiplier = 0.1 * debuff_on_enemy
+            if multiplier > 0.5:
+                multiplier = 0.5
         else:
-            base_dmg = calculate_base_dmg(atk=self.atk)
-            dmg_multiplier, res_pen = self._random_talent(is_crit=False)
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
+            multiplier = 0
 
-    def use_skill(self, weakness_broken: bool) -> tuple[float, int]:
+        dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier])
+        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
+        return dmg, break_amount
+
+    def _use_ult(self) -> tuple[float, int]:
         """
-        Uses skill.
-        :param weakness_broken: Weakness Broken Indicator.
-        :return: Damage and Break Amount
-        """
-        logger.info("Doing a skill attack...")
-        break_amount = 20
-        if random.random() < self.crit_rate:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=2.6)
-            dmg_multiplier, res_pen = self._random_talent(is_crit=True)
-
-            if self._random_enemy_slowed():
-                dmg_multiplier += 0.4
-
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
-        else:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=2.6)
-            dmg_multiplier, res_pen = self._random_talent(is_crit=False)
-
-            if self._random_enemy_slowed():
-                dmg_multiplier += 0.4
-
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
-
-    def use_ult(self, weakness_broken: bool) -> tuple[float, int]:
-        """
-        Uses ultimate skill.
-        :param weakness_broken: Weakness Broken Indicator.
-        :return: Damage and Break Amount
+        Simulate ultimate damage.
+        :return: Damage and break amount.
         """
         logger.info('Using ultimate...')
-        break_amount = 30
-        if random.random() < self.crit_rate:
-            if self._random_enemy_slowed():
-                base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=5.2)
-            else:
-                base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=4)
+        self.wiseman_folly = 2
+        return self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
-            dmg_multiplier, res_pen = self._random_talent(is_crit=True)
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
-        else:
-            if self._random_enemy_slowed():
-                base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=5.2)
-            else:
-                base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=4)
-
-            dmg_multiplier, res_pen = self._random_talent(is_crit=False)
-            dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-            total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_pen, dmg_reduction)
-            return total_dmg, break_amount
-
-    @staticmethod
-    def _random_enemy_slowed() -> bool:
-        logger.info('Randomizing enemy slowed')
-        if random.random() < 0.5:
-            return True
-        else:
-            return False
-
-    def _handle_a4_trace(self) -> None:
-        logger.info('Handling A4 Trace...')
-        if random.random() < 0.5:
-            self.speed = self.starting_spd * 1.2
-            self.a4_trace_buff = 2
-
-    def _random_talent(self, is_crit: bool) -> tuple[float, float]:
+    def _follow_up_atk(self) -> tuple[float, int]:
         """
-        Random talent to determine multipliers.
-        :param is_crit: Whether it's a crit hit.
-        :return: Damage multiplier and Res multiplier.
+        Simulate follow-up attack damage.
+        :return: Damage and break amount.
         """
-        logger.info('Random resurgence...')
-        if self.can_get_talent:
-            talent_chance = 0.5
-        else:
-            talent_chance = 0
+        logger.info('Using follow-up attack...')
+        dmg, break_amount = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
+        self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=5)
+        return dmg, break_amount
 
-        if is_crit:
-            if random.random() < talent_chance:
-                res_pen = [0.36]
-                res_multiplier = calculate_res_multipliers(res_pen=res_pen)
-                dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg)
-                self.talent_buff = 2
-                return dmg_multiplier, res_multiplier
+    def _simulate_talent(self) -> tuple[float, int]:
+        """
+        Simulate talent.
+        :return: Damage and break amount.
+        """
+        logger.info('Simulating talent...')
+        if self.wiseman_folly > 0:
+            debuff_on_enemy = random.choice([1, 2, 3])
+            if random.random() < 0.4 + (0.2 * debuff_on_enemy):
+                return self._follow_up_atk()
             else:
-                dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg)
-                res_multiplier = calculate_res_multipliers()
-                return dmg_multiplier, res_multiplier
+                return 0, 0
         else:
-            if random.random() < talent_chance:
-                dmg_multiplier = calculate_dmg_multipliers()
-                res_pen = [0.36]
-                res_multiplier = calculate_res_multipliers(res_pen=res_pen)
-                self.talent_buff = 2
-                return dmg_multiplier, res_multiplier
+            debuff_on_enemy = random.choice([0, 1, 2, 3])
+            if random.random() < 0.4 + (0.2 * debuff_on_enemy):
+                return self._follow_up_atk()
             else:
-                return 1, 1
+                return 0, 0

@@ -14,6 +14,7 @@
 
 from configure_logging import configure_logging_with_file
 from hsr_simulation.character import Character
+from hsr_simulation.hunt.boothill import Boothill
 
 logger = configure_logging_with_file('simulate_turns.log')
 
@@ -42,6 +43,11 @@ def simulate_turns(character: Character, max_cycles: int) -> float:
 
     total_dmg_list = []
 
+    if isinstance(character, Boothill):
+        character.set_break_effect(1, 3)
+
+    character.random_enemy_toughness()
+
     while cycles_action_val > 0:
         char_spd = character.speed
         logger.debug(f'Character speed: {char_spd}')
@@ -67,3 +73,4 @@ def simulate_turns(character: Character, max_cycles: int) -> float:
 
 if __name__ == '__main__':
     pass
+
