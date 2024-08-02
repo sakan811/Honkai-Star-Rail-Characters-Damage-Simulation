@@ -124,10 +124,10 @@ class Guinanfei(Character):
         script_logger.info(f'{self.__class__.__name__} is using ultimate...')
 
         if len(self.firekiss) > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=0,
+            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
                                                        dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=0,
+            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
                                                        dmg_multipliers=[self.a6_dmg_multiplier])
 
         self.enemy_toughness -= break_amount

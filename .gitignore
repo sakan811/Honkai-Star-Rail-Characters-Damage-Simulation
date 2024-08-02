@@ -15,3 +15,4 @@
 **/*.db
 **/*.env
 **/*.pbix
+/graph/pdf_to_image.py
