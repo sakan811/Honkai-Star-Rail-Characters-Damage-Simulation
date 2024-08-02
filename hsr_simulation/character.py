@@ -13,15 +13,13 @@
 #    limitations under the License.
 
 import random
-import sqlite3
 
-import pandas as pd
-
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, \
     calculate_total_damage, calculate_universal_dmg_reduction, calculate_res_multipliers, calculate_break_damage
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='character.log',
+                                            logger_name='character', level='DEBUG')
 
 
 class Character:
@@ -44,63 +42,87 @@ class Character:
         self.break_effect = 1
         self.data = {
             'DMG': [],
-            'DMG_Type': []
+            'DMG_Type': [],
+            'Simulate Round No.': []
         }
-        self.db_path = 'hsr_char_action_dmg.db'
+        self.battle_start = True
+        self.effect_hit_rate = 0
 
-    def take_action(self) -> float:
+    def clear_data(self):
+        script_logger.info(f'Clearing {self.__class__.__name__} data dictionary...')
+        self.data = {
+            'DMG': [],
+            'DMG_Type': [],
+            'Simulate Round No.': []
+        }
+
+    def take_action(self) -> None:
         """
         Simulate taking actions.
-        :return: Total damage.
+        :return: None.
         """
-        logger.info('Taking actions...')
-        total_dmg = []
-
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
         if self.skill_points > 0:
-            dmg = self._use_skill()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._use_skill()
         else:
-            dmg = self._use_basic_atk()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Basic ATK')
-
-        total_dmg.append(dmg)
+            self._use_basic_atk()
 
         if self._can_use_ult():
-            ult_dmg = self._use_ult()
-            total_dmg.append(ult_dmg)
-
-            self.data['DMG'].append(ult_dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self._use_ult()
 
             self.current_ult_energy = 5
 
-        return sum(total_dmg)
+    def _use_basic_atk(self) -> None:
+        """
+        Simulate basic atk damage.
+        :return: None
+        """
+        script_logger.info(f"{self.__class__.__name__} is using basic attack...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
+        self.enemy_toughness -= break_amount
+
+        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_skill(self) -> None:
+        """
+        Simulate skill damage.
+        :return: None
+        """
+        script_logger.info(f"{self.__class__.__name__} is using skill...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=2, break_amount=20)
+        self.enemy_toughness -= break_amount
+
+        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_ult(self) -> None:
+        """
+        Simulate ultimate damage.
+        :return: None
+        """
+        script_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Ultimate')
 
     def is_enemy_weakness_broken(self) -> bool:
         """
         Check whether enemy is weakness broken.
         :return: Weakness broken indicator
         """
-        logger.info('Checking Enemy Toughness...')
+        script_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
         if self.enemy_toughness <= 0:
-            logger.debug('Weakness Broken')
+            script_logger.debug(f'{self.__class__.__name__}: Weakness Broken')
             self.enemy_toughness = 50
             return True
         return False
-
-    def _use_basic_atk(self) -> float:
-        """
-        Simulate basic atk damage.
-        :return: Damage.
-        """
-        logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-        self.enemy_toughness -= break_amount
-
-        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        return dmg
 
     def do_break_dmg(self, dmg: float, break_type: str = 'None') -> float:
         """
@@ -109,7 +131,7 @@ class Character:
         :param break_type: Break type, e.g., Physical, Fire, etc.
         :return: Total DMG
         """
-        logger.info('Doing break damage...')
+        script_logger.info(f'{self.__class__.__name__}: Doing break damage...')
         if self.is_enemy_weakness_broken():
             break_dmg = calculate_break_damage(break_type=break_type, target_max_toughness=self.enemy_toughness)
         else:
@@ -117,54 +139,33 @@ class Character:
         dmg += break_dmg
         return dmg
 
-    def _use_skill(self) -> float:
-        """
-        Simulate skill damage.
-        :return: Damage .
-        """
-        logger.info("Using skill...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2, break_amount=20)
-        self.enemy_toughness -= break_amount
-
-        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        return dmg
-
-    def _use_ult(self) -> float:
-        """
-        Simulate ultimate damage.
-        :return: Damage and break amount.
-        """
-        logger.info('Using ultimate...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
-        self.enemy_toughness -= break_amount
-
-        return dmg
-
     def _calculate_damage(
             self,
             skill_multiplier: float,
             break_amount: int,
             dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None) -> tuple[float, int]:
+            res_multipliers: list[float] = None,
+            can_crit: bool = True) -> tuple[float, int]:
         """
-        Calculates damage based on skill_multiplier.
+        Calculates damage based on multipliers.
         :param skill_multiplier: Skill multiplier.
         :param break_amount: Break amount that the attack can do.
         :param dmg_multipliers: DMG multipliers.
         :param res_multipliers: RES multipliers.
+        :param can_crit: Whether the DMG can CRIT.
         :return: Damage and break amount.
         """
-        logger.info('Calculating damage...')
+        script_logger.info(f'{self.__class__.__name__}: Calculating damage...')
         weakness_broken = self.is_enemy_weakness_broken()
-        if random.random() < self.crit_rate:
+        if random.random() < self.crit_rate and can_crit:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
             dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
         else:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = 1
+            dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
 
         dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-        res_multiplier = calculate_res_multipliers()
+        res_multiplier = calculate_res_multipliers(res_multipliers)
         total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
 
         return total_dmg, break_amount
@@ -179,7 +180,7 @@ class Character:
         :param ult_energy: Ultimate energy.
         :return: None
         """
-        logger.info('Updating skill points and ultimate energy...')
+        script_logger.info(f'{self.__class__.__name__}: Updating skill points and ultimate energy...')
         self.skill_points += skill_points
         self.current_ult_energy += ult_energy
 
@@ -190,17 +191,29 @@ class Character:
         :param max_break: Max break effect.
         :return: None
         """
-        logger.info('Setting break effect...')
+        script_logger.info(f'{self.__class__.__name__}: Setting break effect...')
         break_effect = random.uniform(min_break, max_break)
         self.break_effect = break_effect
 
     def random_enemy_toughness(self) -> None:
-        logger.info('Randomizing enemy toughness...')
+        script_logger.info(f'{self.__class__.__name__}: Randomizing enemy toughness...')
         self.enemy_toughness = random.randint(60, 200)
 
-    def add_data_to_table(self):
-        with sqlite3.connect(self.db_path) as connection:
-            df = pd.DataFrame(self.data)
-            df['Character'] = f'{self.__class__.__name__}'
-            table_name = f'{self.__class__.__name__}'
-            df.to_sql(name=table_name, con=connection, if_exists='replace')
+    def start_battle(self) -> None:
+        """
+        Indicate that the battle starts.
+        :return: None
+        """
+        script_logger.info(f"{self.__class__.__name__}: Battle starts...")
+        self.battle_start = True
+
+    def set_effect_hit_rate(self, min_effect_hit_rate, max_effect_hit_rate) -> None:
+        """
+        Set effect hit rate for the character.
+        :return: None
+        """
+        script_logger.info(f'{self.__class__.__name__}: Set effect hit rate...')
+        effect_hit_rate = random.uniform(min_effect_hit_rate, max_effect_hit_rate)
+        self.effect_hit_rate = effect_hit_rate
+
+

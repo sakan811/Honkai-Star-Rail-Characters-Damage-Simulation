@@ -15,10 +15,11 @@
 
 import random
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='danheng.log',
+                                            logger_name='danheng', level='DEBUG')
 
 
 class DanHeng(Character):
@@ -29,13 +30,13 @@ class DanHeng(Character):
         self.talent_buff = 0
         self.a4_trace_buff = 0
 
-    def take_action(self) -> float:
-        logger.info('Taking action...')
+    def take_action(self) -> None:
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
         self._reset_buffs()
-        return super().take_action()
+        super().take_action()
 
-    def _use_basic_atk(self) -> float:
-        logger.info('Using basic atk...')
+    def _use_basic_atk(self) -> None:
+        script_logger.info('Using basic atk...')
         if self._is_enemy_slowed():
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4])
         else:
@@ -43,36 +44,41 @@ class DanHeng(Character):
         self.enemy_toughness -= break_amount
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        return dmg
 
-    def _use_skill(self) -> float:
-        logger.info('Using skill...')
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_skill(self) -> None:
+        script_logger.info('Using skill...')
         dmg, break_amount = self._calculate_damage(2.6, 20)
         self.enemy_toughness -= break_amount
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        return dmg
 
-    def _use_ult(self) -> float:
-        logger.info('Using ult...')
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_ult(self) -> None:
+        script_logger.info('Using ult...')
         multiplier = 5.2 if self._is_enemy_slowed() else 4
         dmg, break_amount = self._calculate_damage(multiplier, 30)
         self.enemy_toughness -= break_amount
 
-        return dmg
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Ultimate')
 
     def _apply_talent(self) -> None:
         """
         Simulate talent
         :return: None
         """
-        logger.info('Simulating talent...')
+        script_logger.info('Simulating talent...')
         if self.can_get_talent and random.random() < 0.5:
             self.talent_buff = 2
             self.can_get_talent = False
 
     def _reset_buffs(self):
-        logger.info('Resetting buffs...')
+        script_logger.info('Resetting buffs...')
         if self.a4_trace_buff > 0:
             self.a4_trace_buff -= 1
         else:
@@ -91,4 +97,3 @@ class DanHeng(Character):
     @staticmethod
     def _is_enemy_slowed() -> bool:
         return random.random() < 0.5
-

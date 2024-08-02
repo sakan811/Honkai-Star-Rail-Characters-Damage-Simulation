@@ -12,9 +12,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='dmg_calculator.log',
+                                            logger_name='dmg_calculator', level='DEBUG')
 
 
 def calculate_base_dmg(
@@ -30,7 +31,7 @@ def calculate_base_dmg(
     :param extra_dmg: A flat additional damage value that is included in some skills.
     :return: Base damage
     """
-    logger.info('Calculating base damage...')
+    main_logger.info('Calculating base damage...')
 
     if extra_multipliers is not None:
         extra_multipliers = sum(extra_multipliers)
@@ -51,7 +52,7 @@ def calculate_dmg_multipliers(
     :param dmg_multipliers: Dmg multipliers.
     :return: Damage
     """
-    logger.info('Calculating damage multipliers...')
+    main_logger.info('Calculating damage multipliers...')
     if dot_dmg is None:
         dot_dmg = 0
     else:
@@ -73,13 +74,13 @@ def calculate_universal_dmg_reduction(weakness_broken: bool) -> float:
     :param weakness_broken: Whether the weakness broken.
     :return: Damage Reduction Multiplier
     """
-    logger.info('Returning universal dmg reduction multiplier...')
+    main_logger.info('Returning universal dmg reduction multiplier...')
 
     if weakness_broken:
-        logger.debug(f'No damage reduction')
+        script_logger.debug(f'No damage reduction')
         return 1
     else:
-        logger.debug(f'Reduce dmg')
+        script_logger.debug(f'Reduce dmg')
         return 0.9
 
 
@@ -89,7 +90,7 @@ def calculate_res_multipliers(res_pen: list[float] = None) -> float:
     :param res_pen: Resistance penetration multiplier.
     :return: Res multiplier
     """
-    logger.info('Calculating res multipliers...')
+    main_logger.info('Calculating res multipliers...')
     if res_pen is None:
         res_pen = 1
     else:
@@ -105,7 +106,7 @@ def calculate_break_effect(break_amount: int, break_effect: float) -> float:
     :param break_effect: Break effect.
     :return: Break amount
     """
-    logger.info('Calculating break effect...')
+    main_logger.info('Calculating break effect...')
     return break_amount * break_effect
 
 
@@ -122,7 +123,7 @@ def calculate_total_damage(
     :param dmg_reduction: DMG Reduction Multipliers.
     :return: Total damage
     """
-    logger.info('Calculating total damage...')
+    main_logger.info('Calculating total damage...')
     return base_dmg * dmg_multipliers * res_multipliers * dmg_reduction
 
 
@@ -133,7 +134,7 @@ def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
     :param target_max_toughness: Max toughness of the target.
     :return: Break DMG
     """
-    logger.info('Calculating break damage...')
+    main_logger.info('Calculating break damage...')
     level_80_multiplier = 3767.5533
 
     if break_type == 'Physical' or break_type == 'Fire':
@@ -162,7 +163,7 @@ def calculate_super_break_dmg(
     :param break_effect: Break Effect
     :return: SUper Break dmg
     """
-    logger.info('Calculating super_break dmg...')
+    main_logger.info('Calculating super_break dmg...')
     return base_toughness_reduce * (1 + toughness_reduce_increase) * break_effect
 
 

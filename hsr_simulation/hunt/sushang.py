@@ -13,10 +13,11 @@
 #    limitations under the License.
 import random
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='sushang.log',
+                                          logger_name='sushang', level='DEBUG')
 
 
 class Sushang(Character):
@@ -27,13 +28,12 @@ class Sushang(Character):
         self.ult_buff = 0
         self.a4_trace_buff = 0
 
-    def take_action(self) -> float:
+    def take_action(self) -> None:
         """
         Simulate taking actions.
-        :return: Total damage.
+        :return: None
         """
-        logger.info('Taking actions...')
-        total_dmg = []
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # reset stats when begins a new action
         self.speed = self.starting_spd
@@ -51,70 +51,28 @@ class Sushang(Character):
             self.talent_spd_buff = 2
 
         if self.skill_points > 0:
-            dmg, break_amount = self._use_skill()
-
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._use_skill()
 
             # simulate ultimate buff
             if self.ult_buff > 0:
                 self.ult_buff -= 1
 
-                total_sword_stance_dmg = []
-
-                sword_stance_dmg, break_amount = self._handle_sword_stance()
-                sword_stance_dmg = self._handle_a4_trace(sword_stance_dmg)
-
-                self.enemy_toughness -= break_amount
-
-                total_sword_stance_dmg.append(sword_stance_dmg)
+                self._handle_sword_stance()
 
                 # extra Sword Stance
                 for _ in range(2):
-                    sword_stance_dmg, break_amount = self._handle_sword_stance(is_extra=True)
-                    sword_stance_dmg = self._handle_a4_trace(sword_stance_dmg)
-
-                    self.enemy_toughness -= break_amount
-
-                    total_sword_stance_dmg.append(sword_stance_dmg)
-
-                sword_stance_dmg = sum(total_sword_stance_dmg)
-
-                self.data['DMG'].append(sword_stance_dmg)
-                self.data['DMG_Type'].append('Talent')
+                    self._handle_sword_stance(is_extra=True)
             else:
-                sword_stance_dmg, break_amount = self._handle_sword_stance()
-                sword_stance_dmg = self._handle_a4_trace(sword_stance_dmg)
-
-                self.data['DMG'].append(sword_stance_dmg)
-                self.data['DMG_Type'].append('Talent')
-
-                self.enemy_toughness -= break_amount
-
-            dmg += sword_stance_dmg
+                self._handle_sword_stance()
         else:
-            dmg, break_amount = self._use_basic_atk()
-            self.enemy_toughness -= break_amount
-
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Basic ATK')
-
-        self.enemy_toughness -= break_amount
-
-        total_dmg.append(dmg)
+            self._use_basic_atk()
 
         # After using skill or basic ATK, if enemy is weakness broken, Sushang's action forward
         if self.is_enemy_weakness_broken():
             self.speed *= 1.15
 
         if self._can_use_ult():
-            ult_dmg, ult_break_amount = self._use_ult()
-            self.enemy_toughness -= ult_break_amount
-
-            total_dmg.append(ult_dmg)
-
-            self.data['DMG'].append(ult_dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self._use_ult()
 
             self.current_ult_energy = 5
 
@@ -123,57 +81,80 @@ class Sushang(Character):
             # action again
             self.speed *= 2
 
-        return sum(total_dmg)
-
     def _handle_a4_trace(self, sword_stance_dmg) -> float:
-        logger.info('Handling A4 Trace buff...')
+        script_logger.info('Handling A4 Trace buff...')
         if sword_stance_dmg > 0:
             self.a4_trace_buff += 1
             sword_stance_dmg *= (1 + (2.5 * self.a4_trace_buff))
         return sword_stance_dmg
 
-    def _use_basic_atk(self) -> tuple[float, int]:
+    def _use_basic_atk(self) -> None:
         """
         Simulate basic atk damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info("Using basic attack...")
+        script_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        return dmg, break_amount
 
-    def _use_skill(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_skill(self) -> None:
         """
         Simulate skill damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info("Using skill...")
+        script_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        return dmg, break_amount
 
-    def _use_ult(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info('Using ultimate...')
-        return self._calculate_damage(skill_multiplier=3.2, break_amount=30)
+        script_logger.info('Using ultimate...')
+        ult_dmg, break_amount = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
 
-    def _handle_sword_stance(self, is_extra: bool = False) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(ult_dmg)
+        self.data['DMG_Type'].append('Ultimate')
+
+    def _handle_sword_stance(self, is_extra: bool = False) -> None:
         """
         Simulate sword stance damage.
         :param is_extra: Whether the sword stance is an extra trigger.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info("Using sword stance...")
+        script_logger.info("Using sword stance...")
         if self.is_enemy_weakness_broken():
-            return self._calculate_damage(skill_multiplier=1, break_amount=0)
+            dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
+            sword_stance_dmg = self._handle_a4_trace(dmg)
+
+            self.enemy_toughness -= break_amount
         else:
             if random.random() < 0.33:
                 if is_extra:
-                    return self._calculate_damage(skill_multiplier=0.5, break_amount=0)
+                    dmg, break_amount = self._calculate_damage(skill_multiplier=0.5, break_amount=0)
+                    sword_stance_dmg = self._handle_a4_trace(dmg)
+
+                    self.enemy_toughness -= break_amount
                 else:
-                    return self._calculate_damage(skill_multiplier=1, break_amount=0)
+                    dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
+                    sword_stance_dmg = self._handle_a4_trace(dmg)
+
+                    self.enemy_toughness -= break_amount
             else:
-                return 0, 0
+                sword_stance_dmg = 0
+
+        self.data['DMG'].append(sword_stance_dmg)
+        self.data['DMG_Type'].append('Talent')

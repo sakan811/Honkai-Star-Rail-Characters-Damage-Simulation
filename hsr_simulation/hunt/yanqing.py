@@ -15,12 +15,13 @@
 
 import random
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universal_dmg_reduction, \
     calculate_dmg_multipliers, calculate_total_damage
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='yanqing.log',
+                                            logger_name='yanqing', level='DEBUG')
 
 
 class YanQing(Character):
@@ -33,60 +34,34 @@ class YanQing(Character):
         self.ult_buff = 0
         self.soulsteel_sync = 0
 
-    def take_action(self) -> float:
+    def take_action(self) -> None:
         self._reset_stats()
         self._handle_soulsteel_sync()
 
-        total_dmg = []
-        logger.info('Taking actions...')
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         if self.skill_points > 0:
-            dmg, break_amount = self._use_skill()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._use_skill()
         else:
-            dmg, break_amount = self._use_basic_atk()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Basic ATK')
+            self._use_basic_atk()
 
-        self.enemy_toughness -= break_amount
+        self._handle_soulsteel_sync_follow_up()
 
-        total_dmg.append(dmg)
-
-        talent_dmg = self._handle_soulsteel_sync_follow_up()
-        total_dmg.append(talent_dmg)
-        self.data['DMG'].append(talent_dmg)
-        self.data['DMG_Type'].append('Talent')
-
-        trace_dmg = self._handle_a2_trace()
-        total_dmg.append(trace_dmg)
-        self.data['DMG'].append(trace_dmg)
-        self.data['DMG_Type'].append('Trace')
+        self._handle_a2_trace()
 
         if self._can_use_ult():
-            ult_dmg = self._use_ult()
-            total_dmg.append(ult_dmg)
-            self.data['DMG'].append(ult_dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self._use_ult()
 
-            talent_dmg = self._handle_soulsteel_sync_follow_up()
-            total_dmg.append(talent_dmg)
-            self.data['DMG'].append(talent_dmg)
-            self.data['DMG_Type'].append('Talent')
+            self._handle_soulsteel_sync_follow_up()
 
-            trace_dmg = self._handle_a2_trace()
-            total_dmg.append(trace_dmg)
-            self.data['DMG'].append(trace_dmg)
-            self.data['DMG_Type'].append('Trace')
-
-        return sum(total_dmg)
+            self._handle_a2_trace()
 
     def _reset_stats(self) -> None:
         """
         Resets stats variables
         :return: None
         """
-        logger.info('Resetting stats...')
+        script_logger.info('Resetting stats...')
         if self.a6_spd_buff > 0:
             self.a6_spd_buff -= 1
         else:
@@ -105,32 +80,48 @@ class YanQing(Character):
                 self.crit_dmg += 0.5
 
     def _handle_soulsteel_sync(self) -> None:
+        """
+        Simulate Soulsteel Sync
+        :return: None
+        """
+        script_logger.info('Simulating Soulsteel Sync buff...')
         if self.soulsteel_sync > 0:
             self.crit_rate += 0.2
             self.crit_dmg += 0.3
 
-    def _use_skill(self) -> tuple[float, int]:
-        logger.info("Using skill...")
+    def _use_skill(self) -> None:
+        script_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
         self.soulsteel_sync = 1
-        return dmg, break_amount
 
-    def _use_basic_atk(self) -> tuple[float, int]:
-        logger.info("Using basic attack...")
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_basic_atk(self) -> None:
+        script_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        return dmg, break_amount
 
-    def _use_ult(self) -> float:
-        logger.info('Using ultimate...')
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_ult(self) -> None:
+        script_logger.info('Using ultimate...')
         self.crit_rate += 0.6
         if self.soulsteel_sync > 0:
             self.crit_dmg += 0.5
         dmg, break_amount = self._calculate_damage(skill_multiplier=3.5, break_amount=30)
         self.current_ult_energy = 5
+
         self.enemy_toughness -= break_amount
-        return dmg
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Ultimate')
 
     def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
         """
@@ -139,7 +130,7 @@ class YanQing(Character):
         :param break_amount: Break amount that the attack can do.
         :return: Damage and break amount.
         """
-        logger.info('Calculating damage...')
+        script_logger.info('Calculating damage...')
         weakness_broken = self.is_enemy_weakness_broken()
         if random.random() < self.crit_rate:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
@@ -156,24 +147,25 @@ class YanQing(Character):
         return total_dmg, break_amount
 
     def _apply_speed_buff(self) -> None:
-        logger.info('Applying speed buff...')
+        script_logger.info('Applying speed buff...')
         self.speed = self.starting_spd * 1.1
         self.a6_spd_buff = 2
 
     @staticmethod
     def _random_hit_by_enemy() -> bool:
-        logger.info('Randomizing being hit by an enemy...')
+        script_logger.info('Randomizing being hit by an enemy...')
         return random.random() < 0.5
 
-    def _handle_soulsteel_sync_follow_up(self) -> float:
-        logger.info('Handling Soulsteel Sync follow-up ATK...')
+    def _handle_soulsteel_sync_follow_up(self) -> None:
+        script_logger.info('Handling Soulsteel Sync follow-up ATK...')
         if random.random() < 0.6:
             dmg, freeze_dmg = self._attack_with_freeze_chance(skill_multiplier=0.5)
-            return dmg + freeze_dmg
-        return 0
+            total_dmg = dmg + freeze_dmg
+            self.data['DMG'].append(total_dmg)
+            self.data['DMG_Type'].append('Talent')
 
     def _attack_with_freeze_chance(self, skill_multiplier) -> tuple[float, float]:
-        logger.info('Attacking with chance to freeze enemy...')
+        script_logger.info('Attacking with chance to freeze enemy...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=10)
 
         self.enemy_toughness -= break_amount
@@ -183,8 +175,8 @@ class YanQing(Character):
         freeze_dmg = 0.5 * self.atk if random.random() < 0.65 else 0
         return dmg, freeze_dmg
 
-    def _handle_a2_trace(self) -> float:
-        logger.info('Handling A2 Trace...')
+    def _handle_a2_trace(self) -> None:
+        script_logger.info('Handling A2 Trace...')
 
         # Random whether the enemy can do AOE attack
         target_to_be_attacked_by_enemy = random.choice([1, 3])
@@ -194,8 +186,9 @@ class YanQing(Character):
             chance = 0.75
 
         if random.random() < chance:
-            return self._calculate_damage(skill_multiplier=0.3, break_amount=0)[0]
-        return 0
+            dmg, break_amount = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
-    def _can_use_ult(self) -> bool:
-        return self.current_ult_energy >= self.ult_energy
+            self.enemy_toughness -= break_amount
+
+            self.data['DMG'].append(dmg)
+            self.data['DMG_Type'].append('Trace')

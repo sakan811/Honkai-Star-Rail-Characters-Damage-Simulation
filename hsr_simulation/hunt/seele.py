@@ -15,12 +15,13 @@
 
 import random
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universal_dmg_reduction, \
     calculate_dmg_multipliers, calculate_total_damage, calculate_res_multipliers
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='seele.log',
+                                          logger_name='seele', level='DEBUG')
 
 
 class Seele(Character):
@@ -29,95 +30,92 @@ class Seele(Character):
         self.sheathed_blade = 0
         self.starting_spd = speed
         self.can_resurgence = True
+        self.is_resurgence = False
 
-    def take_action(self) -> float:
+    def take_action(self) -> None:
         self._reset_stats()
-        total_dmg = []
-        logger.info('Taking actions...')
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         if self.skill_points > 0:
-            dmg, break_amount, is_resurgence = self._use_skill()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._use_skill()
         else:
-            dmg, break_amount, is_resurgence = self._use_basic_atk()
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Basic ATK')
+            self._use_basic_atk()
 
-        self.enemy_toughness -= break_amount
-
-        total_dmg.append(dmg)
-
-        self._handle_resurgence_action_forward(is_resurgence)
+        self._handle_resurgence_action_forward(self.is_resurgence)
 
         if self._can_use_ult():
-            ult_dmg, ult_break_amount, is_resurgence = self._use_ult()
-
-            self.enemy_toughness -= ult_break_amount
-
-            total_dmg.append(ult_dmg)
-
-            self.data['DMG'].append(ult_dmg)
-            self.data['DMG_Type'].append('Ultimate')
-
-            self._handle_resurgence_action_forward(is_resurgence)
+            self._use_ult()
             self.current_ult_energy = 5
 
-        return sum(total_dmg)
+            self._handle_resurgence_action_forward(self.is_resurgence)
 
     def _reset_stats(self):
         self.speed = self.starting_spd
 
-    def _use_basic_atk(self) -> tuple[float, int, bool]:
-        logger.info("Using basic attack...")
-        dmg, break_amount, is_resurgence = self._calculate_damage(skill_multiplier=1, break_amount=20)
+    def _use_basic_atk(self) -> None:
+        script_logger.info("Using basic attack...")
+        dmg, break_amount= self._calculate_damage(skill_multiplier=1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
         self.speed *= 1.2  # action forward 20%
-        return dmg, break_amount, is_resurgence
 
-    def _use_skill(self) -> tuple[float, int, bool]:
-        logger.info("Using skill...")
-        dmg, break_amount, is_resurgence = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_skill(self) -> None:
+        script_logger.info("Using skill...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
+
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
         self._apply_sheathed_blade()
-        return dmg, break_amount, is_resurgence
 
-    def _use_ult(self) -> tuple[float, int, bool]:
-        logger.info('Using ultimate...')
-        return self._calculate_damage(skill_multiplier=4.25, break_amount=30)
+        self.enemy_toughness -= break_amount
 
-    def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int, bool]:
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_ult(self) -> None:
+        script_logger.info('Using ultimate...')
+        ult_dmg, break_amount = self._calculate_damage(skill_multiplier=4.25, break_amount=30)
+
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(ult_dmg)
+        self.data['DMG_Type'].append('Ultimate')
+
+    def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
         weakness_broken = self.is_enemy_weakness_broken()
         is_crit = random.random() < self.crit_rate
         base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-        dmg_multiplier, res_multiplier, is_resurgence = self._random_resurgence(is_crit)
+        dmg_multiplier, res_multiplier = self._random_resurgence(is_crit)
         dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
         total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
-        return total_dmg, break_amount, is_resurgence
+        return total_dmg, break_amount
 
     def _apply_sheathed_blade(self):
         self.sheathed_blade = 2
         if self.sheathed_blade > 0:
             self.speed = self.starting_spd * 1.25
-            logger.debug(f'Speed after Sheathed Blade Buff: {self.speed}')
+            script_logger.debug(f'Speed after Sheathed Blade Buff: {self.speed}')
             self.sheathed_blade -= 1
-        logger.debug(f'Sheathed Blade: {self.sheathed_blade}')
+        script_logger.debug(f'Sheathed Blade: {self.sheathed_blade}')
 
     def _handle_resurgence_action_forward(self, is_resurgence: bool) -> None:
-        logger.info('Handling resurgence action forward...')
+        script_logger.info('Handling resurgence action forward...')
         if is_resurgence:
             self.speed *= 2
-            logger.debug(f'Speed after resurgence buff: {self.speed}')
+            script_logger.debug(f'Speed after resurgence buff: {self.speed}')
             self.can_resurgence = False
         else:
             self.can_resurgence = True
 
-    def _random_resurgence(self, is_crit: bool) -> tuple[float, float, bool]:
-        logger.info('Random resurgence...')
+    def _random_resurgence(self, is_crit: bool) -> tuple[float, float]:
+        script_logger.info('Random resurgence...')
         resurgence_chance = 0.5 if self.can_resurgence else 0
-        is_resurgence = random.random() < resurgence_chance
+        self.is_resurgence = random.random() < resurgence_chance
 
-        if is_resurgence:
+        if self.is_resurgence:
             dmg_multipliers = [0.8]
             res_pen = [0.2]
             res_multiplier = calculate_res_multipliers(res_pen=res_pen)
@@ -129,4 +127,4 @@ class Seele(Character):
             dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg if is_crit else 0)
             res_multiplier = calculate_res_multipliers()
 
-        return dmg_multiplier, res_multiplier, is_resurgence
+        return dmg_multiplier, res_multiplier

@@ -1,8 +1,8 @@
-# Honkai Star Rail Characters' Damage By Scenarios
+# Honkai Star Rail Characters' Damage Simulation
 
-Compare damage from each scenario of the given character.
+**Simulate** 10-cycles for 100 times to find the **average damage** of Honkai Star Rail's **Characters**.
 
-Latest Update: 19 June 2024.
+Latest Update: 27 July 2024.
 
 ## Visualizations
 [Power BI](https://app.powerbi.com/view?r=eyJrIjoiYmM2MDQxNDMtZGEwNy00NGU2LWJkNjItNmI3MTAwNDMwOGRkIiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D) 
@@ -11,38 +11,42 @@ Latest Update: 19 June 2024.
 
 [Instagram](https://www.instagram.com/p/C8ZMHSixVJE/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
-## Damage Simulation Disclaimers
-Calculate characters' **Average Damage** based on 1,000 battles, with 30 cycles each.
+## Simulation Disclaimers
+**_The result of this simulation might not reflect the actual in-game damage._**
 
-Damage was calculated by considering only Skill, Ultimate, Talent, and Trace.
-Basic ATK was simulated for some Characters with an Enhanced Basic ATK.
+This simulation **focuses exclusively** on the **elements** that **directly impact** character **damage** output. 
+As a result, **not all** aspects of character behavior, interactions, or game mechanics were simulated.
 
-The effect of Speed buff/debuff from abilities was not simulated.
-Action Forward buff/debuff from abilities were roughly simulated if the character's damage depended on it.
+Simulate each character for 100 times, 10 cycles each.
 
-Simulation of enemies or allies were done only to create scenarios 
-that could possibly trigger Skill, Ultimate, Talent, and Trace of the given Character.
-AoE Skill, Ultimate, or Talent was simulated as if they were applied to a single enemy, 
-considering only DMG dealt to the targeted enemy, not adjacent enemies.
+Every simulated character has 2,000 ATK, 50% Crit Rate, and 100% Crit Damage.
 
-Critical damage was also considered and simulated.
+Basic ATK, Skill, Ultimate, Talent, and Trace are at level 10.
 
-The Damage from this calculation is only theoretical.
-It might not reflect Damage in real-game scenarios.
+Character's level is 80.
 
-Every simulated character has 3,000 ATK, 50% Crit Rate, 100% Crit Damage, and 46.6% Elemental Damage Bonus.
-Skill, Ultimate, Talent, and Trace are at level 10.
-Characters' Speed is at level 80.
+Eidolons, Light Cones, and Relics were not considered.
 
-## [main.py](main.py)
-- Run characters' average damage calculation by scenario.
-- Migrate the data to SQLite database.
+## To Run a Simulation
+### Setup a Project
+- Clone this repo:
+- Create **.env** file with the following variables:
+  ```
+  DB_NAME=hsr_char_action_dmg
+  DB_PASSWORD=
+  ```
 
-**To run the calculation:**
-- Run [main.py](main.py)
-- 'hsr_dmg_calculation.db' SQLite database will be created, along with the migrated data
+### Setup a Database
+- Install **[PostgreSQL](https://www.postgresql.org/)**
+- install **[pgAdmin](https://www.pgadmin.org/)**
+- Enter your superuser's **password** in **.env** file for **DB_PASSWORD** variable. 
+- Run **pgAdmin**
+- Open **SQL** console in **pgAdmin**
+- Execute:
+  ```
+  create database hsr_char_action_dmg;
+  ```
 
-## [sql_lite_pipeline.py](sql_lite_pipeline.py)
-- Migrate data to SQLite database
-- Create 'hsr_dmg_calculation.db' SQLite database if not exist
-  
+## Codebase Details
+### Test Status
+

@@ -13,10 +13,11 @@
 #    limitations under the License.
 import random
 
-from configure_logging import configure_logging_with_file
+from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
 
-logger = configure_logging_with_file('simulate_turns.log')
+script_logger = configure_logging_with_file(log_dir='logs', log_file='dr_ratio.log',
+                                          logger_name='dr_ratio', level='DEBUG')
 
 
 class DrRatio(Character):
@@ -36,45 +37,26 @@ class DrRatio(Character):
         )
         self.wiseman_folly = 0
 
-    def take_action(self) -> float:
+    def take_action(self) -> None:
         """
         Simulate taking actions.
-        :return: Total damage.
+        :return: None
         """
-        logger.info('Taking actions...')
-        total_dmg = []
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # reset stats
         self.crit_rate = 0.5
         self.crit_dmg = 1
 
         if self.skill_points > 0:
-            dmg, break_amount = self._use_skill()
-            self.enemy_toughness -= break_amount
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._use_skill()
 
-            follow_up_dmg, follow_up_atk_break_amount = self._simulate_talent()
-            self.enemy_toughness -= follow_up_atk_break_amount
-            self.data['DMG'].append(follow_up_dmg)
-            self.data['DMG_Type'].append('Talent')
-
-            dmg += follow_up_dmg
+            self._simulate_talent()
         else:
-            dmg, break_amount = self._use_basic_atk()
-            self.enemy_toughness -= break_amount
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Basic ATK')
-
-        total_dmg.append(dmg)
+            self._use_basic_atk()
 
         if self._can_use_ult():
-            ult_dmg, ult_break_amount = self._use_ult()
-            self.enemy_toughness -= ult_break_amount
-            total_dmg.append(ult_dmg)
-
-            self.data['DMG'].append(ult_dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self._use_ult()
 
             self.current_ult_energy = 5
 
@@ -84,32 +66,28 @@ class DrRatio(Character):
 
             ally_atk_num = random.choice([1, 2])
             for _ in range(ally_atk_num):
-                dmg, break_amount = self._follow_up_atk()
-                self.enemy_toughness -= break_amount
+                self._follow_up_atk()
 
-                self.data['DMG'].append(dmg)
-                self.data['DMG_Type'].append('Talent')
-
-                total_dmg.append(dmg)
-
-        return sum(total_dmg)
-
-    def _use_basic_atk(self) -> tuple[float, int]:
+    def _use_basic_atk(self) -> None:
         """
         Simulate basic atk damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info("Using basic attack...")
+        script_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        return dmg, break_amount
 
-    def _use_skill(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
+
+    def _use_skill(self) -> None:
         """
         Simulate skill damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info("Using skill...")
+        script_logger.info("Using skill...")
 
         # simulate A2 Trace
         debuff_on_enemy = random.choice([0, 1, 2, 3, 4, 5, 6])
@@ -126,42 +104,54 @@ class DrRatio(Character):
 
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier])
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        return dmg, break_amount
 
-    def _use_ult(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Skill')
+
+    def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info('Using ultimate...')
+        script_logger.info('Using ultimate...')
         self.wiseman_folly = 2
-        return self._calculate_damage(skill_multiplier=2.4, break_amount=30)
+        ult_dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
-    def _follow_up_atk(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(ult_dmg)
+        self.data['DMG_Type'].append('Ultimate')
+
+    def _follow_up_atk(self) -> None:
         """
         Simulate follow-up attack damage.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info('Using follow-up attack...')
+        script_logger.info('Using follow-up attack...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=5)
-        return dmg, break_amount
 
-    def _simulate_talent(self) -> tuple[float, int]:
+        self.enemy_toughness -= break_amount
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Talent')
+
+    def _simulate_talent(self) -> None:
         """
         Simulate talent.
-        :return: Damage and break amount.
+        :return: None
         """
-        logger.info('Simulating talent...')
+        script_logger.info('Simulating talent...')
         if self.wiseman_folly > 0:
             debuff_on_enemy = random.choice([1, 2, 3])
             if random.random() < 0.4 + (0.2 * debuff_on_enemy):
-                return self._follow_up_atk()
-            else:
-                return 0, 0
+                self._follow_up_atk()
         else:
             debuff_on_enemy = random.choice([0, 1, 2, 3])
             if random.random() < 0.4 + (0.2 * debuff_on_enemy):
-                return self._follow_up_atk()
-            else:
-                return 0, 0
+                self._follow_up_atk()
+
+
+
