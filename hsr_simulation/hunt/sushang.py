@@ -15,9 +15,11 @@ import random
 
 from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
+from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, calculate_res_multipliers, \
+    calculate_total_damage, calculate_universal_dmg_reduction
 
 script_logger = configure_logging_with_file(log_dir='logs', log_file='sushang.log',
-                                          logger_name='sushang', level='DEBUG')
+                                            logger_name='sushang', level='DEBUG')
 
 
 class Sushang(Character):
@@ -38,6 +40,8 @@ class Sushang(Character):
         # reset stats when begins a new action
         self.speed = self.starting_spd
         self.a4_trace_buff = 0
+        self.char_action_value = []
+        self.atk = 2000
 
         # talend speed buff only lasts for 2 turns
         if self.talent_spd_buff > 0:
@@ -46,17 +50,15 @@ class Sushang(Character):
         else:
             self.speed = self.starting_spd
 
-        if self.is_enemy_weakness_broken():
-            self.speed = self.starting_spd * 1.2
-            self.talent_spd_buff = 2
+        if self.ult_buff > 0:
+            self.atk *= 1.3
+            self.ult_buff -= 1
 
         if self.skill_points > 0:
             self._use_skill()
 
             # simulate ultimate buff
             if self.ult_buff > 0:
-                self.ult_buff -= 1
-
                 self._handle_sword_stance()
 
                 # extra Sword Stance
@@ -67,10 +69,6 @@ class Sushang(Character):
         else:
             self._use_basic_atk()
 
-        # After using skill or basic ATK, if enemy is weakness broken, Sushang's action forward
-        if self.is_enemy_weakness_broken():
-            self.speed *= 1.15
-
         if self._can_use_ult():
             self._use_ult()
 
@@ -79,13 +77,13 @@ class Sushang(Character):
             self.ult_buff = 2
 
             # action again
-            self.speed *= 2
+            self.char_action_value.append(self.simulate_action_forward(action_forward_percent=1))
 
     def _handle_a4_trace(self, sword_stance_dmg) -> float:
         script_logger.info('Handling A4 Trace buff...')
         if sword_stance_dmg > 0:
             self.a4_trace_buff += 1
-            sword_stance_dmg *= (1 + (2.5 * self.a4_trace_buff))
+            sword_stance_dmg *= (1 + (0.025 * self.a4_trace_buff))
         return sword_stance_dmg
 
     def _use_basic_atk(self) -> None:
@@ -94,7 +92,7 @@ class Sushang(Character):
         :return: None
         """
         script_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
+        dmg, break_amount = self._calculate_damage(is_basic_atk=True, skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
         self.enemy_toughness -= break_amount
@@ -108,7 +106,7 @@ class Sushang(Character):
         :return: None
         """
         script_logger.info("Using skill...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.1, break_amount=20)
+        dmg, break_amount = self._calculate_damage(is_skill=True, skill_multiplier=2.1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
         self.enemy_toughness -= break_amount
@@ -158,3 +156,49 @@ class Sushang(Character):
 
         self.data['DMG'].append(sword_stance_dmg)
         self.data['DMG_Type'].append('Talent')
+
+    def _calculate_damage(
+            self,
+            is_skill: bool = False,
+            is_basic_atk: bool = False,
+            skill_multiplier: float = 0,
+            break_amount: int = 0,
+            dmg_multipliers: list[float] = None,
+            res_multipliers: list[float] = None,
+            can_crit: bool = True) -> tuple[float, int]:
+        """
+        Calculates damage based on multipliers.
+        :param is_skill: Whether the skill is the trigger.
+        :param is_basic_atk: Whether the basic atk is the trigger.
+        :param skill_multiplier: Skill multiplier.
+        :param break_amount: Break amount that the attack can do.
+        :param dmg_multipliers: DMG multipliers.
+        :param res_multipliers: RES multipliers.
+        :param can_crit: Whether the DMG can CRIT.
+        :return: Damage and break amount.
+        """
+        script_logger.info(f'{self.__class__.__name__}: Calculating damage...')
+        weakness_broken = self.is_enemy_weakness_broken()
+
+        # simulate Talent Speed buff
+        if weakness_broken:
+            self.speed *= 1.2
+            self.talent_spd_buff = 2
+
+        # simulate A6 trace
+        if is_skill or is_basic_atk:
+            if weakness_broken:
+                self.char_action_value.append(self.simulate_action_forward(action_forward_percent=0.15))
+
+        if random.random() < self.crit_rate and can_crit:
+            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
+            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
+        else:
+            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
+            dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
+
+        dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
+        res_multiplier = calculate_res_multipliers(res_multipliers)
+        total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
+
+        return total_dmg, break_amount

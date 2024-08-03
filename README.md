@@ -2,7 +2,7 @@
 
 **Simulate** 10-cycles for 100 times to find the **average damage** of Honkai Star Rail's **Characters**.
 
-Latest Update: 2 August 2024.
+Latest Update: 4 August 2024.
 
 ## Status
 [![CodeQL](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml/badge.svg)](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml)
@@ -12,9 +12,9 @@ Latest Update: 2 August 2024.
 ## Visualizations
 [Power BI](https://app.powerbi.com/view?r=eyJrIjoiMjg4YTk5ZWQtZTJhMS00NDg1LTg4NGEtZmU4OGQ4MzQxZTYwIiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D) 
 
-[Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid02xGPYpTYPQ5tEFeEzetbfz553et93Ua8yvjWy6gSHKKLCXNyJJRD7rvFotqwZY1Hvl&id=61553626169836)  
+[Facebook](https://www.facebook.com/permalink.php?story_fbid=pfbid02fM2bokmnkFC1mHwo4UDmvS2yLQ5BHd6Eg9ss9rXzRgntx1dXUYU8wi5ANAnfqRirl&id=61553626169836)  
 
-[Instagram](https://www.instagram.com/p/C-LGM0eBeCF/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+[Instagram](https://www.instagram.com/p/C-OBY0fBWLa/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
 ## Simulation Disclaimers
 **_The result of this simulation might not reflect the actual in-game damage._**

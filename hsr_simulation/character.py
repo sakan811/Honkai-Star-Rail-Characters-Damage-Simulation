@@ -47,6 +47,8 @@ class Character:
         }
         self.battle_start = True
         self.effect_hit_rate = 0
+        self.chance_of_certain_enemy_weakness = 0.14  # the chance of enemy being weak to a certain element
+        self.char_action_value = []
 
     def clear_data(self):
         script_logger.info(f'Clearing {self.__class__.__name__} data dictionary...')
@@ -124,20 +126,20 @@ class Character:
             return True
         return False
 
-    def do_break_dmg(self, dmg: float, break_type: str = 'None') -> float:
+    def do_break_dmg(self, break_type: str = 'None') -> None:
         """
         Do break damage if enemy is weakness broken.
-        :param dmg: DMG to be added with break damage.
         :param break_type: Break type, e.g., Physical, Fire, etc.
-        :return: Total DMG
+        :return: None
         """
         script_logger.info(f'{self.__class__.__name__}: Doing break damage...')
         if self.is_enemy_weakness_broken():
             break_dmg = calculate_break_damage(break_type=break_type, target_max_toughness=self.enemy_toughness)
         else:
             break_dmg = 0
-        dmg += break_dmg
-        return dmg
+
+        self.data['DMG'].append(break_dmg)
+        self.data['DMG_Type'].append('Break DMG')
 
     def _calculate_damage(
             self,
@@ -216,4 +218,23 @@ class Character:
         effect_hit_rate = random.uniform(min_effect_hit_rate, max_effect_hit_rate)
         self.effect_hit_rate = effect_hit_rate
 
+    def simulate_action_forward(self, action_forward_percent: float) -> float:
+        """
+        Simulate action forward.
+        :param action_forward_percent: Action forward percent.
+        :return: Action value
+        """
+        script_logger.info(f'Simulate action forward {action_forward_percent * 100}%...')
+        script_logger.debug(f'{self.__class__.__name__} current speed: {self.speed}')
+        action_value = self.calculate_action_value(self.speed)
+        script_logger.debug(f'{self.__class__.__name__}: Current Action value {action_value}')
+        return action_value * action_forward_percent
 
+    def calculate_action_value(self, speed: float) -> float:
+        """
+        Calculate action value
+        :param speed: Character speed
+        :return: Action value
+        """
+        script_logger.info(f'Calculating action value...')
+        return 10000 / speed

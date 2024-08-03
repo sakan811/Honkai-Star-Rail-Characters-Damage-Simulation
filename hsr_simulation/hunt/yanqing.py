@@ -47,14 +47,10 @@ class YanQing(Character):
 
         self._handle_soulsteel_sync_follow_up()
 
-        self._handle_a2_trace()
-
         if self._can_use_ult():
             self._use_ult()
 
             self._handle_soulsteel_sync_follow_up()
-
-            self._handle_a2_trace()
 
     def _reset_stats(self) -> None:
         """
@@ -100,6 +96,8 @@ class YanQing(Character):
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
+        self._handle_a2_trace()
+
     def _use_basic_atk(self) -> None:
         script_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
@@ -110,11 +108,14 @@ class YanQing(Character):
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
 
+        self._handle_a2_trace()
+
     def _use_ult(self) -> None:
         script_logger.info('Using ultimate...')
         self.crit_rate += 0.6
         if self.soulsteel_sync > 0:
             self.crit_dmg += 0.5
+
         dmg, break_amount = self._calculate_damage(skill_multiplier=3.5, break_amount=30)
         self.current_ult_energy = 5
 
@@ -122,6 +123,8 @@ class YanQing(Character):
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
+
+        self._handle_a2_trace()
 
     def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
         """
@@ -154,7 +157,14 @@ class YanQing(Character):
     @staticmethod
     def _random_hit_by_enemy() -> bool:
         script_logger.info('Randomizing being hit by an enemy...')
-        return random.random() < 0.5
+        # Random whether the enemy can do AOE attack
+        target_to_be_attacked_by_enemy = random.choice([1, 3])
+        if target_to_be_attacked_by_enemy == 1:
+            chance = 0.25
+        else:
+            chance = 0.75
+
+        return random.random() < chance
 
     def _handle_soulsteel_sync_follow_up(self) -> None:
         script_logger.info('Handling Soulsteel Sync follow-up ATK...')
@@ -163,6 +173,7 @@ class YanQing(Character):
             total_dmg = dmg + freeze_dmg
             self.data['DMG'].append(total_dmg)
             self.data['DMG_Type'].append('Talent')
+            self._handle_a2_trace()
 
     def _attack_with_freeze_chance(self, skill_multiplier) -> tuple[float, float]:
         script_logger.info('Attacking with chance to freeze enemy...')
@@ -177,15 +188,7 @@ class YanQing(Character):
 
     def _handle_a2_trace(self) -> None:
         script_logger.info('Handling A2 Trace...')
-
-        # Random whether the enemy can do AOE attack
-        target_to_be_attacked_by_enemy = random.choice([1, 3])
-        if target_to_be_attacked_by_enemy == 1:
-            chance = 0.25
-        else:
-            chance = 0.75
-
-        if random.random() < chance:
+        if random.random() < self.chance_of_certain_enemy_weakness:
             dmg, break_amount = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
             self.enemy_toughness -= break_amount

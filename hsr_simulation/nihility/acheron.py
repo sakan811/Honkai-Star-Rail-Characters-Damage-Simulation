@@ -175,7 +175,9 @@ class Acheron(Character):
         max_dmg, break_amount = self._calculate_damage(skill_multiplier=3.72, break_amount=0, res_multipliers=res_pen,
                                                        dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
         self.crit_rate = 0.5
-        final_dmg = min(sum(total_dmg), int(max_dmg))
+
+        final_total_dmg = float(sum(total_dmg))
+        final_dmg = min(final_total_dmg, max_dmg)
 
         self.data['DMG'].append(final_dmg)
         self.data['DMG_Type'].append('Ultimate')

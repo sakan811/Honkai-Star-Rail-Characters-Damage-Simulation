@@ -18,6 +18,7 @@ from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
 from hsr_simulation.nihility.guinanfei import Guinanfei
 from hsr_simulation.nihility.kafka import Kafka
+from hsr_simulation.nihility.pela import Pela
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
 from hsr_simulation.utils import start_simulations, process_result_list
 
@@ -59,6 +60,10 @@ def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
     process_result_list(character, engine, result_list, stage_table_name)
 
     character = Guinanfei()
+    result_list = start_simulations(character, max_cycles, simulation_num)
+    process_result_list(character, engine, result_list, stage_table_name)
+
+    character = Pela()
     result_list = start_simulations(character, max_cycles, simulation_num)
     process_result_list(character, engine, result_list, stage_table_name)
 

@@ -51,6 +51,7 @@ class Seele(Character):
 
     def _reset_stats(self):
         self.speed = self.starting_spd
+        self.char_action_value = []
 
     def _use_basic_atk(self) -> None:
         script_logger.info("Using basic attack...")
@@ -104,8 +105,7 @@ class Seele(Character):
     def _handle_resurgence_action_forward(self, is_resurgence: bool) -> None:
         script_logger.info('Handling resurgence action forward...')
         if is_resurgence:
-            self.speed *= 2
-            script_logger.debug(f'Speed after resurgence buff: {self.speed}')
+            self.char_action_value.append(self.simulate_action_forward(action_forward_percent=1))
             self.can_resurgence = False
         else:
             self.can_resurgence = True

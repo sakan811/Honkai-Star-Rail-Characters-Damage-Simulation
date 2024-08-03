@@ -36,6 +36,7 @@ class DrRatio(Character):
             ult_energy
         )
         self.wiseman_folly = 0
+        self.debuff_on_enemy = 0
 
     def take_action(self) -> None:
         """
@@ -47,6 +48,12 @@ class DrRatio(Character):
         # reset stats
         self.crit_rate = 0.5
         self.crit_dmg = 1
+
+        # simulate enemy turn
+        if self.debuff_on_enemy <= 0:
+            self.debuff_on_enemy = random.choice([1, 2, 3, 4, 5, 6])
+        else:
+            self.debuff_on_enemy -= 1
 
         if self.skill_points > 0:
             self._use_skill()
@@ -63,7 +70,6 @@ class DrRatio(Character):
         # simulate ult debuff
         if self.wiseman_folly > 0:
             self.wiseman_folly -= 1
-
             ally_atk_num = random.choice([1, 2])
             for _ in range(ally_atk_num):
                 self._follow_up_atk()
@@ -90,15 +96,12 @@ class DrRatio(Character):
         script_logger.info("Using skill...")
 
         # simulate A2 Trace
-        debuff_on_enemy = random.choice([0, 1, 2, 3, 4, 5, 6])
-        self.crit_rate += 0.025 * debuff_on_enemy
-        self.crit_dmg += 0.05 * debuff_on_enemy
+        self.crit_rate += 0.025 * self.debuff_on_enemy
+        self.crit_dmg += 0.05 * self.debuff_on_enemy
 
         # simulate A6 Trace
-        if debuff_on_enemy >= 3:
-            multiplier = 0.1 * debuff_on_enemy
-            if multiplier > 0.5:
-                multiplier = 0.5
+        if self.debuff_on_enemy >= 3:
+            multiplier = min(0.1 * self.debuff_on_enemy, 0.5)
         else:
             multiplier = 0
 
@@ -117,6 +120,8 @@ class DrRatio(Character):
         """
         script_logger.info('Using ultimate...')
         self.wiseman_folly = 2
+        self.debuff_on_enemy += 1
+
         ult_dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
         self.enemy_toughness -= break_amount
@@ -144,14 +149,10 @@ class DrRatio(Character):
         :return: None
         """
         script_logger.info('Simulating talent...')
-        if self.wiseman_folly > 0:
-            debuff_on_enemy = random.choice([1, 2, 3])
-            if random.random() < 0.4 + (0.2 * debuff_on_enemy):
-                self._follow_up_atk()
-        else:
-            debuff_on_enemy = random.choice([0, 1, 2, 3])
-            if random.random() < 0.4 + (0.2 * debuff_on_enemy):
-                self._follow_up_atk()
+        follow_up_chance = 0.4 + (0.2 * self.debuff_on_enemy)
+        final_follow_up_chance = min(1.0, follow_up_chance)
+        if random.random() < final_follow_up_chance:
+            self._follow_up_atk()
 
 
 

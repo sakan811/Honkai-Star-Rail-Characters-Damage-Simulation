@@ -45,10 +45,10 @@ class Guinanfei(Character):
             if len(self.firekiss) > 0:
                 self.firekiss[0] -= 1
                 if self.firekiss[0] == 0:
-                    self.firekiss.pop(0)
+                    self.firekiss = []
 
-        script_logger.debug(f'Battle Start. Apply A4 trace effect')
         if self.battle_start:
+            script_logger.debug(f'Battle Start. Apply A4 trace effect')
             self.battle_start = False
             self.speed *= 1.25
         else:
@@ -147,10 +147,11 @@ class Guinanfei(Character):
         script_logger.info(f'{self.__class__.__name__} is applying dot...')
         if len(self.firekiss) > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier])
+                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+                                                       can_crit=False)
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
+                                                       dmg_multipliers=[self.a6_dmg_multiplier], can_crit=False)
 
         if ult_trigger:
             dmg *= 0.92
