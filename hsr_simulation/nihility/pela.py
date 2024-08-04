@@ -76,6 +76,9 @@ class Pela(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
+
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
         self.data['DMG'].append(dmg)
@@ -100,6 +103,9 @@ class Pela(Character):
                                                    dmg_multipliers=[dmg_multipler])
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -131,6 +137,9 @@ class Pela(Character):
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')

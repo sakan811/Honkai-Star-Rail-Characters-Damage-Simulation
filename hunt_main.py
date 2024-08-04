@@ -20,9 +20,10 @@ from hsr_simulation.hunt.dr_ratio import DrRatio
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.seele import Seele
 from hsr_simulation.hunt.sushang import Sushang
-from hsr_simulation.hunt.topaz import Topaz, Numby, start_simulations_for_topaz
+from hsr_simulation.hunt.topaz import Topaz, Numby
 from hsr_simulation.hunt.yanqing import YanQing
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
+from hsr_simulation.simulate_turns import start_simulations_for_char_with_summon
 from hsr_simulation.utils import process_result_list, start_simulations
 
 script_logger = configure_logging_with_file(log_dir='logs', log_file='hunt_main.log',
@@ -68,7 +69,7 @@ def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
 
     topaz = Topaz()
     numby = Numby(topaz)
-    dict_list = start_simulations_for_topaz(topaz, numby, max_cycles, simulation_num)
+    dict_list = start_simulations_for_char_with_summon(topaz, numby, max_cycles, simulation_num)
     process_result_list(topaz, engine, dict_list, stage_table_name)
 
     character = DrRatio()

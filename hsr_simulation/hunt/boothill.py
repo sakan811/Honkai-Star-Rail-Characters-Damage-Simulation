@@ -83,10 +83,13 @@ class Boothill(Character):
     def _use_basic_atk(self) -> None:
         script_logger.info('Using Basic ATK...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-        self.enemy_toughness -= break_amount
+        self.enemy_toughness -= break_amount * self.break_effect
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical', break_effect=self.break_effect)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -98,7 +101,7 @@ class Boothill(Character):
         self.data['DMG_Type'].append('Enhanced Basic ATK')
 
         break_amount *= (1 + 0.5 * self.pocket_trickshot)  # Talent: Five Peas in a Pod
-        self.enemy_toughness -= break_amount
+        self.enemy_toughness -= break_amount * self.break_effect
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=30)
 
@@ -126,10 +129,13 @@ class Boothill(Character):
         script_logger.info('Using Ult...')
 
         dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
-        self.enemy_toughness -= break_amount
+        self.enemy_toughness -= break_amount * self.break_effect
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical', break_effect=self.break_effect)
 
     def _calculate_damage(
             self,

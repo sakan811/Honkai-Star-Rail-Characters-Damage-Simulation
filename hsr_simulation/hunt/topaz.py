@@ -12,7 +12,6 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import random
-from typing import Any
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
@@ -32,10 +31,9 @@ class Topaz(Character):
             numby_spd: int = 80
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
-        self.numby_spd = numby_spd
+        self.summon_speed = numby_spd
         self.windfall_bonanza = 0
         self.numby_action_forward = False
-        self.numby_action_value = []
 
     def enemy_has_fire_weakness(self) -> bool:
         main_logger.info('Whether the enemy has fire weakness...')
@@ -52,8 +50,8 @@ class Topaz(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # reset stats
-        self.numby_spd = 80
-        self.numby_action_value = []
+        self.summon_speed = 80
+        self.summon_action_value_for_action_forward = []
 
         if self.skill_points > 0:
             self._use_skill()
@@ -82,9 +80,12 @@ class Topaz(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Fire')
+
         # Numby action forward
-        self.numby_action_value.append(
-            self.simulate_action_forward(action_forward_percent=0.5, speed=self.numby_spd)
+        self.summon_action_value_for_action_forward.append(
+            self.simulate_action_forward(action_forward_percent=0.5, speed=self.summon_speed)
         )
 
         self.data['DMG'].append(dmg)
@@ -105,9 +106,12 @@ class Topaz(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Fire')
+
         # Numby action forward
-        self.numby_action_value.append(
-            self.simulate_action_forward(action_forward_percent=0.5, speed=self.numby_spd)
+        self.summon_action_value_for_action_forward.append(
+            self.simulate_action_forward(action_forward_percent=0.5, speed=self.summon_speed)
         )
 
         self.data['DMG'].append(dmg)
@@ -157,7 +161,7 @@ class Numby(Topaz):
             atk=topaz.atk,
             crit_rate=topaz.crit_rate,
             crit_dmg=topaz.crit_dmg,
-            speed=topaz.numby_spd,
+            speed=topaz.summon_speed,
             ult_energy=0
         )
         self.topaz = topaz
@@ -175,14 +179,20 @@ class Numby(Topaz):
                 dmg, break_amount = self._calculate_damage(skill_multiplier=3, break_amount=20,
                                                            dmg_multipliers=[0.15])
 
-                self.enemy_toughness -= break_amount
+                self.topaz.enemy_toughness -= break_amount
+
+                if self.is_enemy_weakness_broken():
+                    self.topaz.do_break_dmg(break_type='Fire')
 
                 self.topaz.data['DMG'].append(dmg)
                 self.topaz.data['DMG_Type'].append('Numby with Ult Buff')
             else:
                 dmg, break_amount = self._calculate_damage(skill_multiplier=3, break_amount=20)
 
-                self.enemy_toughness -= break_amount
+                self.topaz.enemy_toughness -= break_amount
+
+                if self.is_enemy_weakness_broken():
+                    self.topaz.do_break_dmg(break_type='Fire')
 
                 self.topaz.data['DMG'].append(dmg)
                 self.topaz.data['DMG_Type'].append('Numby with Ult Buff')
@@ -192,14 +202,20 @@ class Numby(Topaz):
                 dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
                                                            dmg_multipliers=[0.15])
 
-                self.enemy_toughness -= break_amount
+                self.topaz.enemy_toughness -= break_amount
+
+                if self.is_enemy_weakness_broken():
+                    self.topaz.do_break_dmg(break_type='Fire')
 
                 self.topaz.data['DMG'].append(dmg)
                 self.topaz.data['DMG_Type'].append('Numby')
             else:
                 dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20)
 
-                self.enemy_toughness -= break_amount
+                self.topaz.enemy_toughness -= break_amount
+
+                if self.is_enemy_weakness_broken():
+                    self.topaz.do_break_dmg(break_type='Fire')
 
                 self.topaz.data['DMG'].append(dmg)
                 self.topaz.data['DMG_Type'].append('Numby')
@@ -209,7 +225,7 @@ class Numby(Topaz):
 
         # reset stats
         self.crit_dmg = self.topaz.crit_dmg
-        self.topaz.numby_spd = 80
+        self.topaz.summon_speed = 80
 
         if self.topaz.windfall_bonanza > 0:
             self.crit_dmg += 0.25
@@ -229,163 +245,16 @@ class Numby(Topaz):
             follow_up_atk_ally_num = random.choice([1, 2])
 
             # Numby action forward
-            self.topaz.numby_action_value.append(
+            self.topaz.summon_action_value_for_action_forward.append(
                 self.topaz.simulate_action_forward(action_forward_percent=0.5 * follow_up_atk_ally_num,
-                                                   speed=self.topaz.numby_spd)
+                                                   speed=self.topaz.summon_speed)
             )
-
-            self.simulate_break_amount_from_ally(follow_up_atk_ally_num, is_in_windfall_bonanza=True)
         else:
             if random_ally_follow_up_atk():
                 # Numby action forward
-                self.topaz.numby_action_value.append(
-                    self.topaz.simulate_action_forward(action_forward_percent=0.5, speed=self.topaz.numby_spd)
+                self.topaz.summon_action_value_for_action_forward.append(
+                    self.topaz.simulate_action_forward(action_forward_percent=0.5, speed=self.topaz.summon_speed)
                 )
-
-                self.simulate_break_amount_from_ally(follow_up_atk_ally_num=1)
-
-    def simulate_break_amount_from_ally(self, follow_up_atk_ally_num: int, is_in_windfall_bonanza: bool = False):
-        script_logger.info("Simulating break amount from all allies...")
-        if self.topaz.windfall_bonanza > 0:
-            break_amount = random.choice([10, 20, 30])
-            break_amount_from_allies = break_amount * follow_up_atk_ally_num
-            self.enemy_toughness -= break_amount_from_allies
-        else:
-            break_amount = random.choice([10, 20, 30])
-            self.enemy_toughness -= break_amount
-
-
-def simulate_turns_for_topaz(topaz: Topaz, numby: Numby, max_cycles: int, simulate_round: int) -> dict[str, list[Any]]:
-    """
-    Simulate turns for Topaz and Numby.
-    :param topaz: Topaz character
-    :param numby: Numby character
-    :param max_cycles: Cycles to simulate.
-    :param simulate_round: Indicate the current round of the simulation.
-    :return: Dictionary that contains action details of Topaz.
-    """
-    main_logger.info(f'Simulating turns for Topaz and Numby...')
-
-    cycles_action_val = 150 + ((max_cycles - 1) * 100)
-    script_logger.debug(f'Total cycles action value: {cycles_action_val}')
-
-    # re-initialize Topaz and Numby to reset their stats
-    topaz.__init__()
-    numby.__init__(topaz)
-
-    # random enemy toughness
-    topaz.random_enemy_toughness()
-
-    cycles_action_value_for_topaz = cycles_action_val
-    cycles_action_value_for_numby = cycles_action_val
-
-    topaz_end = False
-    numby_end = False
-
-    numby_turn_count, topaz_turn_count = simulate_numby_and_topaz_actions(cycles_action_value_for_numby,
-                                                                          cycles_action_value_for_topaz, numby,
-                                                                          numby_end,
-                                                                          topaz, topaz_end)
-
-    script_logger.debug(f'Total number of Topaz turns: {topaz_turn_count}')
-    script_logger.debug(f'Total number of Numby turns: {numby_turn_count}')
-
-    num_turn = len(topaz.data['DMG'])
-    topaz.data['Simulate Round No.'] = [simulate_round for _ in range(num_turn)]
-    data_dict = topaz.data
-    topaz.clear_data()
-
-    return data_dict
-
-
-def simulate_numby_and_topaz_actions(
-        cycles_action_value_for_numby,
-        cycles_action_value_for_topaz,
-        numby,
-        numby_end,
-        topaz,
-        topaz_end) -> tuple[int, int]:
-    """
-    Simulate actions for Numby and Topaz.
-    :param cycles_action_value_for_numby: Cycles action value of Numby.
-    :param cycles_action_value_for_topaz: Cycles action value of Topaz.
-    :param numby: Numby character
-    :param numby_end: Whether Numby's cycles end
-    :param topaz: Topaz character
-    :param topaz_end: Whether Topaz's cycles end
-    :return: Numby and Topaz turns
-    """
-    main_logger.info(f'Simulating turns for Numby and Topaz...')
-
-    topaz_turn_count = 0
-    numby_turn_count = 0
-    while True:
-        if topaz_end and numby_end:
-            break
-        else:
-            if not topaz_end:
-                topaz_spd = topaz.speed
-                script_logger.debug(f'Topaz speed: {topaz_spd}')
-                topaz_action_val = topaz.calculate_action_value(topaz_spd)
-                script_logger.debug(f'Topaz action value: {topaz_action_val}')
-
-                # calculate whether Topaz has turns left
-                if cycles_action_value_for_topaz >= topaz_action_val:
-                    topaz.take_action()
-
-                    cycles_action_value_for_topaz -= topaz_action_val
-                    topaz_turn_count += 1
-
-                    # simulate Action Forward
-                    script_logger.debug(f'{topaz.__class__.__name__} current speed: {topaz.speed}')
-                    char_action_val_to_be_added = sum(topaz.char_action_value)
-                    script_logger.debug(f'{topaz.__class__.__name__} action value to be added: {char_action_val_to_be_added}')
-                    cycles_action_value_for_topaz += char_action_val_to_be_added
-                else:
-                    topaz_end = True
-
-            if not numby_end:
-                numby_spd = topaz.numby_spd
-                script_logger.debug(f'Numby speed: {numby_spd}')
-                numby_action_val = numby.calculate_action_value(numby_spd)
-                script_logger.debug(f'Numby action value: {numby_action_val}')
-
-                # calculate whether Numby has turns left
-                if cycles_action_value_for_numby >= numby_action_val:
-                    numby.take_action()
-
-                    cycles_action_value_for_numby -= numby_action_val
-                    numby_turn_count += 1
-
-                    # simulate Action Forward
-                    script_logger.debug(f'{numby.__class__.__name__} current speed: {topaz.numby_spd}')
-                    char_action_val_to_be_added = sum(topaz.numby_action_value)
-                    script_logger.debug(f'{numby.__class__.__name__} action value to be added: {char_action_val_to_be_added}')
-                    cycles_action_value_for_numby += char_action_val_to_be_added
-
-                    # ensure it Numby's cycles action value not exceed Topaz's current cycles action value
-                    cycles_action_value_for_numby = min(cycles_action_value_for_numby, cycles_action_value_for_topaz)
-                else:
-                    numby_end = True
-    return numby_turn_count, topaz_turn_count
-
-
-def start_simulations_for_topaz(
-        topaz: Topaz,
-        numby: Numby,
-        max_cycles: int,
-        simulation_num: int) -> list[dict[str, list[Any]]]:
-    """
-    Start simulations for Topaz and Numby.
-    :param topaz: Topaz character
-    :param numby: Numby character
-    :param max_cycles: Max number of cycles to simulate
-    :param simulation_num: Number of simulations
-    :return: A list of Topaz's action details as a dictionary.
-    """
-    main_logger.info('Start simulations for Topaz and Numby...')
-    result_list = [simulate_turns_for_topaz(topaz, numby, max_cycles, i) for i in range(simulation_num)]
-    return result_list
 
 
 if __name__ == '__main__':

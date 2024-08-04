@@ -66,6 +66,9 @@ class Kafka(Character):
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
+
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
         self.data['DMG'].append(dmg)
@@ -79,6 +82,9 @@ class Kafka(Character):
         script_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -97,6 +103,9 @@ class Kafka(Character):
         dmg, break_amount = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
 
@@ -112,6 +121,9 @@ class Kafka(Character):
         script_logger.info('Using talent...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.4, break_amount=10)
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
 
         self.shock = 2
         self.talent_cooldown = True

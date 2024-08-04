@@ -48,7 +48,9 @@ class Character:
         self.battle_start = True
         self.effect_hit_rate = 0
         self.chance_of_certain_enemy_weakness = 0.14  # the chance of enemy being weak to a certain element
-        self.char_action_value = []
+        self.char_action_value_for_action_forward = []
+        self.char_action_value = 0.0
+        self.summon_action_value_for_action_forward = []
 
     def clear_data(self):
         script_logger.info(f'Clearing {self.__class__.__name__} data dictionary...')
@@ -126,17 +128,17 @@ class Character:
             return True
         return False
 
-    def do_break_dmg(self, break_type: str = 'None') -> None:
+    def do_break_dmg(self, break_type: str = 'None', break_effect: float = 1.0) -> None:
         """
         Do break damage if enemy is weakness broken.
         :param break_type: Break type, e.g., Physical, Fire, etc.
+        :param break_effect: Break effect percentage.
         :return: None
         """
         script_logger.info(f'{self.__class__.__name__}: Doing break damage...')
-        if self.is_enemy_weakness_broken():
-            break_dmg = calculate_break_damage(break_type=break_type, target_max_toughness=self.enemy_toughness)
-        else:
-            break_dmg = 0
+        break_dmg = calculate_break_damage(break_type=break_type, target_max_toughness=self.enemy_toughness)
+
+        break_dmg *= break_effect
 
         self.data['DMG'].append(break_dmg)
         self.data['DMG_Type'].append('Break DMG')
@@ -159,6 +161,7 @@ class Character:
         """
         script_logger.info(f'{self.__class__.__name__}: Calculating damage...')
         weakness_broken = self.is_enemy_weakness_broken()
+
         if random.random() < self.crit_rate and can_crit:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
             dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
@@ -226,9 +229,8 @@ class Character:
         """
         script_logger.info(f'Simulate action forward {action_forward_percent * 100}%...')
         script_logger.debug(f'{self.__class__.__name__} current speed: {self.speed}')
-        action_value = self.calculate_action_value(self.speed)
-        script_logger.debug(f'{self.__class__.__name__}: Current Action value {action_value}')
-        return action_value * action_forward_percent
+        script_logger.debug(f'{self.__class__.__name__} action value before taking action: {self.char_action_value}')
+        return self.char_action_value * action_forward_percent
 
     def calculate_action_value(self, speed: float) -> float:
         """
@@ -237,4 +239,6 @@ class Character:
         :return: Action value
         """
         script_logger.info(f'Calculating action value...')
-        return 10000 / speed
+        char_action_value = 10000 / speed
+        self.char_action_value = char_action_value
+        return char_action_value

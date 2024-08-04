@@ -51,7 +51,7 @@ class Seele(Character):
 
     def _reset_stats(self):
         self.speed = self.starting_spd
-        self.char_action_value = []
+        self.char_action_value_for_action_forward = []
 
     def _use_basic_atk(self) -> None:
         script_logger.info("Using basic attack...")
@@ -60,6 +60,9 @@ class Seele(Character):
         self.speed *= 1.2  # action forward 20%
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Quantum')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
@@ -73,6 +76,9 @@ class Seele(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Quantum')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
@@ -82,15 +88,23 @@ class Seele(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Quantum')
+
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
 
     def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
+        script_logger.info(f'{self.__class__.__name__}: Calculating DMG...')
+
         weakness_broken = self.is_enemy_weakness_broken()
+
         is_crit = random.random() < self.crit_rate
+
         base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
         dmg_multiplier, res_multiplier = self._random_resurgence(is_crit)
         dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
+
         total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
         return total_dmg, break_amount
 
@@ -105,7 +119,7 @@ class Seele(Character):
     def _handle_resurgence_action_forward(self, is_resurgence: bool) -> None:
         script_logger.info('Handling resurgence action forward...')
         if is_resurgence:
-            self.char_action_value.append(self.simulate_action_forward(action_forward_percent=1))
+            self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
             self.can_resurgence = False
         else:
             self.can_resurgence = True

@@ -36,7 +36,7 @@ class YanQing(Character):
 
     def take_action(self) -> None:
         self._reset_stats()
-        self._handle_soulsteel_sync()
+        self._handle_soulsteel_sync_buff()
 
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
@@ -45,12 +45,14 @@ class YanQing(Character):
         else:
             self._use_basic_atk()
 
-        self._handle_soulsteel_sync_follow_up()
+        if self.soulsteel_sync > 0:
+            self._handle_soulsteel_sync_follow_up()
 
         if self._can_use_ult():
             self._use_ult()
 
-            self._handle_soulsteel_sync_follow_up()
+            if self.soulsteel_sync > 0:
+                self._handle_soulsteel_sync_follow_up()
 
     def _reset_stats(self) -> None:
         """
@@ -75,9 +77,9 @@ class YanQing(Character):
             if self.soulsteel_sync > 0:
                 self.crit_dmg += 0.5
 
-    def _handle_soulsteel_sync(self) -> None:
+    def _handle_soulsteel_sync_buff(self) -> None:
         """
-        Simulate Soulsteel Sync
+        Simulate Soulsteel Sync buff
         :return: None
         """
         script_logger.info('Simulating Soulsteel Sync buff...')
@@ -93,6 +95,9 @@ class YanQing(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Ice')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
@@ -104,6 +109,9 @@ class YanQing(Character):
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Ice')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
@@ -120,6 +128,9 @@ class YanQing(Character):
         self.current_ult_energy = 5
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Ice')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -181,6 +192,9 @@ class YanQing(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Ice')
+
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
 
         freeze_dmg = 0.5 * self.atk if random.random() < 0.65 else 0
@@ -192,6 +206,9 @@ class YanQing(Character):
             dmg, break_amount = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
             self.enemy_toughness -= break_amount
+
+            if self.is_enemy_weakness_broken():
+                self.do_break_dmg(break_type='Ice')
 
             self.data['DMG'].append(dmg)
             self.data['DMG_Type'].append('Trace')

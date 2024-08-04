@@ -91,6 +91,9 @@ class Acheron(Character):
                                                    dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
+
         self._update_skill_point_and_ult_energy(skill_points=1, slash_dream=0)
 
         self.data['DMG'].append(dmg)
@@ -106,6 +109,9 @@ class Acheron(Character):
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20,
                                                    dmg_multipliers=dmg_multiplier)
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
 
         self._update_skill_point_and_ult_energy(skill_points=-1, slash_dream=1)
 
@@ -137,6 +143,10 @@ class Acheron(Character):
                                                                  res_multipliers=res_pen,
                                                                  dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
             self.enemy_toughness -= break_amount
+
+            if self.is_enemy_weakness_broken():
+                self.do_break_dmg(break_type='Lightning')
+
             total_dmg.append(rainblade_dmg)
 
             # remove Crimson Knot from enemy
@@ -158,6 +168,10 @@ class Acheron(Character):
                                                            dmg_multipliers=[self.a4_dmg_multiplier,
                                                                             self.a6_dmg_multiplier])
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Lightning')
+
         total_dmg.append(stygian_dmg)
 
         # remove Crimson Knot from enemy

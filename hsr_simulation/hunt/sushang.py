@@ -40,7 +40,7 @@ class Sushang(Character):
         # reset stats when begins a new action
         self.speed = self.starting_spd
         self.a4_trace_buff = 0
-        self.char_action_value = []
+        self.char_action_value_for_action_forward = []
         self.atk = 2000
 
         # talend speed buff only lasts for 2 turns
@@ -77,7 +77,7 @@ class Sushang(Character):
             self.ult_buff = 2
 
             # action again
-            self.char_action_value.append(self.simulate_action_forward(action_forward_percent=1))
+            self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
 
     def _handle_a4_trace(self, sword_stance_dmg) -> float:
         script_logger.info('Handling A4 Trace buff...')
@@ -97,6 +97,9 @@ class Sushang(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
 
@@ -111,6 +114,10 @@ class Sushang(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
+
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
@@ -123,6 +130,9 @@ class Sushang(Character):
         ult_dmg, break_amount = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Physical')
 
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -139,6 +149,9 @@ class Sushang(Character):
             sword_stance_dmg = self._handle_a4_trace(dmg)
 
             self.enemy_toughness -= break_amount
+
+            if self.is_enemy_weakness_broken():
+                self.do_break_dmg(break_type='Physical')
         else:
             if random.random() < 0.33:
                 if is_extra:
@@ -146,11 +159,17 @@ class Sushang(Character):
                     sword_stance_dmg = self._handle_a4_trace(dmg)
 
                     self.enemy_toughness -= break_amount
+
+                    if self.is_enemy_weakness_broken():
+                        self.do_break_dmg(break_type='Physical')
                 else:
                     dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
                     sword_stance_dmg = self._handle_a4_trace(dmg)
 
                     self.enemy_toughness -= break_amount
+
+                    if self.is_enemy_weakness_broken():
+                        self.do_break_dmg(break_type='Physical')
             else:
                 sword_stance_dmg = 0
 
@@ -188,7 +207,7 @@ class Sushang(Character):
         # simulate A6 trace
         if is_skill or is_basic_atk:
             if weakness_broken:
-                self.char_action_value.append(self.simulate_action_forward(action_forward_percent=0.15))
+                self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=0.15))
 
         if random.random() < self.crit_rate and can_crit:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)

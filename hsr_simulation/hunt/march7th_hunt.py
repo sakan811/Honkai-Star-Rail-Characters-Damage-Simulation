@@ -19,7 +19,7 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_mult
     calculate_universal_dmg_reduction, calculate_total_damage, calculate_res_multipliers
 
 script_logger = configure_logging_with_file(log_dir='logs', log_file='march7th_hunt.log',
-                                          logger_name='march7th_hunt', level='DEBUG')
+                                            logger_name='march7th_hunt', level='DEBUG')
 
 
 class March7thHunt(Character):
@@ -49,7 +49,7 @@ class March7thHunt(Character):
 
         # reset stats
         self.speed = 102
-        self.char_action_value = []
+        self.char_action_value_for_action_forward = []
 
         # simulate A2 Trace
         if self.battle_start:
@@ -62,14 +62,14 @@ class March7thHunt(Character):
             self.talent_buff = True
 
             # simulate immediate action
-            self.char_action_value.append(self.simulate_action_forward(action_forward_percent=1))
+            self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
 
             # check if ult can be used
             if self._can_use_ult():
                 self._use_ult()
                 self.current_ult_energy = 5
 
-            self.charge = 0
+            self.charge -= 7
             self._enhanced_basic_atk()
 
             self.talent_buff = False
@@ -100,7 +100,12 @@ class March7thHunt(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
+
         self.charge += 1
+        # ensure Charge not exceed 10
+        self.charge = min(10, self.charge)
 
     def _use_skill(self) -> None:
         """
@@ -120,10 +125,13 @@ class March7thHunt(Character):
         script_logger.info('Using ultimate...')
         if self.talent_buff:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30, dmg_multipliers=[0.8])
-            self.enemy_toughness -= break_amount
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
-            self.enemy_toughness -= break_amount
+
+        self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -167,6 +175,9 @@ class March7thHunt(Character):
 
             self.enemy_toughness -= break_amount
 
+            if self.is_enemy_weakness_broken():
+                self.do_break_dmg(break_type='Imaginary')
+
         # Attempt to deal extra hits
         max_extra_hits = 3
         extra_hits = 0
@@ -184,6 +195,9 @@ class March7thHunt(Character):
 
                 self.enemy_toughness -= break_amount
 
+                if self.is_enemy_weakness_broken():
+                    self.do_break_dmg(break_type='Imaginary')
+
                 extra_hits += 1
             else:
                 break
@@ -197,6 +211,8 @@ class March7thHunt(Character):
         """
         script_logger.info("Simulating Shifu...")
         self.charge += 1
+        # ensure Charge not exceed 10
+        self.charge = min(10, self.charge)
 
         # random break amount
         break_amount = random.choice([10, 20])
@@ -205,6 +221,8 @@ class March7thHunt(Character):
         # simulate Shifu using Ultimate
         if random.random() < 0.25:
             self.charge += 1
+            # ensure Charge not exceed 10
+            self.charge = min(10, self.charge)
             self.enemy_toughness -= 30
 
     def set_shifu(self) -> None:
@@ -216,37 +234,3 @@ class March7thHunt(Character):
         choice = random.choice(['DMG', 'SUPPORT'])
         self.shifu = choice
         script_logger.debug(f'Current Shifu is {self.shifu} Type')
-
-    def _calculate_damage(
-            self,
-            skill_multiplier: float,
-            break_amount: int,
-            dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None,
-            can_crit: bool = True) -> tuple[float, int]:
-        """
-        Calculates damage based on multipliers.
-        :param skill_multiplier: Skill multiplier.
-        :param break_amount: Break amount that the attack can do.
-        :param dmg_multipliers: DMG multipliers.
-        :param res_multipliers: RES multipliers.
-        :param can_crit: Whether the DMG can CRIT.
-        :return: Damage and break amount.
-        """
-        script_logger.info(f'{self.__class__.__name__}: Calculating damage...')
-        weakness_broken = self.is_enemy_weakness_broken()
-        if weakness_broken:
-            self.do_break_dmg(break_type='Imaginary')
-
-        if random.random() < self.crit_rate and can_crit:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
-        else:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
-
-        dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-        res_multiplier = calculate_res_multipliers(res_multipliers)
-        total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
-
-        return total_dmg, break_amount

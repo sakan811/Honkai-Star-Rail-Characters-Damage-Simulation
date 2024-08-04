@@ -35,8 +35,7 @@ class DrRatio(Character):
             speed,
             ult_energy
         )
-        self.wiseman_folly = 0
-        self.debuff_on_enemy = 0
+        self.debuff_on_enemy = []
 
     def take_action(self) -> None:
         """
@@ -49,15 +48,17 @@ class DrRatio(Character):
         self.crit_rate = 0.5
         self.crit_dmg = 1
 
+        # simulate applying debuff on enemy by allies
+        debuff_num = random.choice([1, 2, 3])
+        for _ in range(debuff_num):
+            self.debuff_on_enemy.append('debuff')
+
         # simulate enemy turn
-        if self.debuff_on_enemy <= 0:
-            self.debuff_on_enemy = random.choice([1, 2, 3, 4, 5, 6])
-        else:
-            self.debuff_on_enemy -= 1
+        if len(self.debuff_on_enemy) > 0:
+            self.debuff_on_enemy.pop(0)
 
         if self.skill_points > 0:
             self._use_skill()
-
             self._simulate_talent()
         else:
             self._use_basic_atk()
@@ -68,8 +69,8 @@ class DrRatio(Character):
             self.current_ult_energy = 5
 
         # simulate ult debuff
-        if self.wiseman_folly > 0:
-            self.wiseman_folly -= 1
+        if 'wiseman_folly' in self.debuff_on_enemy:
+            self.debuff_on_enemy.remove('wiseman_folly')
             ally_atk_num = random.choice([1, 2])
             for _ in range(ally_atk_num):
                 self._follow_up_atk()
@@ -85,6 +86,10 @@ class DrRatio(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
+            self.debuff_on_enemy.append('debuff')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
 
@@ -96,12 +101,14 @@ class DrRatio(Character):
         script_logger.info("Using skill...")
 
         # simulate A2 Trace
-        self.crit_rate += 0.025 * self.debuff_on_enemy
-        self.crit_dmg += 0.05 * self.debuff_on_enemy
+        crit_rate_multiplier = 0.025
+        crit_dmg_multiplier = 0.05
+        self.crit_rate += min(crit_rate_multiplier * 6, crit_rate_multiplier * len(self.debuff_on_enemy))
+        self.crit_dmg += min(crit_dmg_multiplier * 6, crit_dmg_multiplier * len(self.debuff_on_enemy))
 
         # simulate A6 Trace
-        if self.debuff_on_enemy >= 3:
-            multiplier = min(0.1 * self.debuff_on_enemy, 0.5)
+        if len(self.debuff_on_enemy) >= 3:
+            multiplier = min(0.1 * len(self.debuff_on_enemy), 0.5)
         else:
             multiplier = 0
 
@@ -109,6 +116,10 @@ class DrRatio(Character):
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
+            self.debuff_on_enemy.append('debuff')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -119,12 +130,17 @@ class DrRatio(Character):
         :return: None
         """
         script_logger.info('Using ultimate...')
-        self.wiseman_folly = 2
-        self.debuff_on_enemy += 1
+
+        self.debuff_on_enemy.append('wiseman_folly')
+        self.debuff_on_enemy.append('wiseman_folly')
 
         ult_dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
         self.enemy_toughness -= break_amount
+
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
+            self.debuff_on_enemy.append('debuff')
 
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -140,6 +156,10 @@ class DrRatio(Character):
 
         self.enemy_toughness -= break_amount
 
+        if self.is_enemy_weakness_broken():
+            self.do_break_dmg(break_type='Imaginary')
+            self.debuff_on_enemy.append('debuff')
+
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Talent')
 
@@ -149,7 +169,7 @@ class DrRatio(Character):
         :return: None
         """
         script_logger.info('Simulating talent...')
-        follow_up_chance = 0.4 + (0.2 * self.debuff_on_enemy)
+        follow_up_chance = 0.4 + (0.2 * len(self.debuff_on_enemy))
         final_follow_up_chance = min(1.0, follow_up_chance)
         if random.random() < final_follow_up_chance:
             self._follow_up_atk()
