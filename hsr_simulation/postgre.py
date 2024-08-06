@@ -5,10 +5,8 @@ import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
+from hsr_simulation.configure_logging import main_logger
 
-script_logger = configure_logging_with_file(log_dir='logs', log_file='postgres.log',
-                                            logger_name='postgres', level='DEBUG')
 
 load_dotenv()
 

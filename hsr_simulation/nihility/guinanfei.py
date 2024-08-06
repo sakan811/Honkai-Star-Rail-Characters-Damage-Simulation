@@ -10,11 +10,8 @@
 #    limitations under the License.
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='guinanfei.log',
-                                            logger_name='guinanfei', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class Guinanfei(Character):
@@ -31,6 +28,18 @@ class Guinanfei(Character):
         self.firekiss = []
         self.a6_dmg_multiplier = 0
 
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.burn = 0
+        self.firekiss = []
+        self.a6_dmg_multiplier = 0
+
     def take_action(self) -> None:
         """
         Simulate taking actions.
@@ -38,7 +47,7 @@ class Guinanfei(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
-        script_logger.info(f'Simulate enemy turn')
+        main_logger.info(f'Simulate enemy turn')
         if self.burn > 0:
             self.burn -= 1
             self._apply_dot()
@@ -48,7 +57,7 @@ class Guinanfei(Character):
                     self.firekiss = []
 
         if self.battle_start:
-            script_logger.debug(f'Battle Start. Apply A4 trace effect')
+            main_logger.debug(f'Battle Start. Apply A4 trace effect')
             self.battle_start = False
             self.speed *= 1.25
         else:
@@ -74,10 +83,11 @@ class Guinanfei(Character):
         Simulate basic atk damage.
         :return: None
         """
-        script_logger.info(f"{self.__class__.__name__} is using basic attack...")
+        main_logger.info(f"{self.__class__.__name__} is using basic attack...")
         if len(self.firekiss) > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier])
+                                                       dmg_multipliers=[0.07 * len(self.firekiss),
+                                                                        self.a6_dmg_multiplier])
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
                                                        dmg_multipliers=[self.a6_dmg_multiplier])
@@ -94,7 +104,7 @@ class Guinanfei(Character):
 
         # simulate A2 Trace
         if random.random() < 0.8:
-            script_logger.debug(f'Apply Burn from A2 trace effect')
+            main_logger.debug(f'Apply Burn from A2 trace effect')
             self.burn = 2
 
     def _use_skill(self) -> None:
@@ -102,10 +112,11 @@ class Guinanfei(Character):
         Simulate skill damage.
         :return: None
         """
-        script_logger.info(f"{self.__class__.__name__} is using skill...")
+        main_logger.info(f"{self.__class__.__name__} is using skill...")
         if len(self.firekiss) > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier])
+                                                       dmg_multipliers=[0.07 * len(self.firekiss),
+                                                                        self.a6_dmg_multiplier])
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
                                                        dmg_multipliers=[self.a6_dmg_multiplier])
@@ -127,11 +138,12 @@ class Guinanfei(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
 
         if len(self.firekiss) > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier])
+                                                       dmg_multipliers=[0.07 * len(self.firekiss),
+                                                                        self.a6_dmg_multiplier])
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
                                                        dmg_multipliers=[self.a6_dmg_multiplier])
@@ -153,10 +165,11 @@ class Guinanfei(Character):
         :param ult_trigger: Whether the DoT is triggered by Ultimate
         :return: None
         """
-        script_logger.info(f'{self.__class__.__name__} is applying dot...')
+        main_logger.info(f'{self.__class__.__name__} is applying dot...')
         if len(self.firekiss) > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+                                                       dmg_multipliers=[0.07 * len(self.firekiss),
+                                                                        self.a6_dmg_multiplier],
                                                        can_crit=False)
         else:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,

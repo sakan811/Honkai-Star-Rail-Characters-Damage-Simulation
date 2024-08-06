@@ -11,19 +11,14 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-from typing import Any
 
 import pandas as pd
 import sqlalchemy
 
 from hsr_simulation.character import Character
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
+from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.data_transformer import create_df_from_dict_list
 from hsr_simulation.postgre import load_df_to_stage_table
-from hsr_simulation.simulate_turns import simulate_cycles
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='utils.log',
-                                            logger_name='utils', level='DEBUG')
 
 
 def process_result_list(
@@ -61,14 +56,8 @@ def add_char_name_to_df(character: Character, df: pd.DataFrame) -> None:
     df['Character'] = f'{character.__class__.__name__}'
 
 
-def start_simulations(character: Character, max_cycles: int, simulation_num: int) -> list[dict[str, list[Any]]]:
-    """
-    Start simulations.
-    :param character: Character to simulate
-    :param max_cycles: Max number of cycles to simulate
-    :param simulation_num: Number of simulations
-    :return: A list of Character's action details as a dictionary.
-    """
-    main_logger.info(f'Starting simulations for {character.__class__.__name__}...')
-    result_list = [simulate_cycles(character, max_cycles, i) for i in range(simulation_num)]
-    return result_list
+
+
+
+
+

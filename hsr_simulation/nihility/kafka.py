@@ -12,11 +12,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='kafka.log',
-                                            logger_name='kafka', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class Kafka(Character):
@@ -29,6 +26,17 @@ class Kafka(Character):
             ult_energy: int = 120
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        self.shock = 0
+        self.talent_cooldown = False
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
         self.shock = 0
         self.talent_cooldown = False
 
@@ -62,7 +70,7 @@ class Kafka(Character):
         Simulate basic atk damage.
         :return: None.
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self.enemy_toughness -= break_amount
 
@@ -79,7 +87,7 @@ class Kafka(Character):
         Simulate skill damage.
         :return: None.
         """
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
         self.enemy_toughness -= break_amount
 
@@ -99,7 +107,7 @@ class Kafka(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
         self.enemy_toughness -= break_amount
 
@@ -118,7 +126,7 @@ class Kafka(Character):
         Simulate Talent damage.
         :return: None
         """
-        script_logger.info('Using talent...')
+        main_logger.info('Using talent...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=1.4, break_amount=10)
         self.enemy_toughness -= break_amount
 
@@ -137,7 +145,7 @@ class Kafka(Character):
         :param skill_trigger: Whether the DoT is triggered by Kafka's Skill
         :return: Damage
         """
-        script_logger.info('Using Shock DoT...')
+        main_logger.info('Using Shock DoT...')
         if skill_trigger:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
             dmg *= 0.75
@@ -154,7 +162,7 @@ class Kafka(Character):
         Calculate shock dmg on enemy's turn.
         :return: None.
         """
-        script_logger.info('Calculating shock dmg on enemy turn...')
+        main_logger.info('Calculating shock dmg on enemy turn...')
         if self.shock > 0:
             self.shock -= 1
             self._use_shock()

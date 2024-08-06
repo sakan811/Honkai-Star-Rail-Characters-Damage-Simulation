@@ -14,10 +14,8 @@
 import random
 
 from hsr_simulation.character import Character
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='topaz.log',
-                                            logger_name='topaz', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
+from hsr_simulation.summon import Summon
 
 
 class Topaz(Character):
@@ -27,13 +25,34 @@ class Topaz(Character):
             crit_rate: float = 0.5,
             crit_dmg: float = 1.0,
             speed: float = 110,
-            ult_energy: int = 130,
-            numby_spd: int = 80
+            ult_energy: int = 130
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
-        self.summon_speed = numby_spd
         self.windfall_bonanza = 0
-        self.numby_action_forward = False
+        self.numby = None
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.numby = None
+        self.windfall_bonanza = 0
+
+    def summon_numby(self) -> Summon:
+        """
+        Summon Numby
+        :return: None
+        """
+        main_logger.info('Summon Numby')
+        self.numby = Numby(
+            atk=self.atk, crit_rate=self.crit_rate, crit_dmg=self.crit_dmg,
+            speed=80, ult_energy=0
+        )
+        return self.numby
 
     def enemy_has_fire_weakness(self) -> bool:
         main_logger.info('Whether the enemy has fire weakness...')
@@ -48,10 +67,6 @@ class Topaz(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
-
-        # reset stats
-        self.summon_speed = 80
-        self.summon_action_value_for_action_forward = []
 
         if self.skill_points > 0:
             self._use_skill()
@@ -70,7 +85,7 @@ class Topaz(Character):
         Simulate basic atk damage.
         :return: None.
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         if self.enemy_has_fire_weakness():
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.15])
         else:
@@ -84,8 +99,8 @@ class Topaz(Character):
             self.do_break_dmg(break_type='Fire')
 
         # Numby action forward
-        self.summon_action_value_for_action_forward.append(
-            self.simulate_action_forward(action_forward_percent=0.5, speed=self.summon_speed)
+        self.numby.summon_action_value_for_action_forward.append(
+            self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
         self.data['DMG'].append(dmg)
@@ -96,7 +111,7 @@ class Topaz(Character):
         Simulate skill damage.
         :return: None
         """
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
         if self.enemy_has_fire_weakness():
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
                                                        dmg_multipliers=[0.5, 0.15])
@@ -110,8 +125,8 @@ class Topaz(Character):
             self.do_break_dmg(break_type='Fire')
 
         # Numby action forward
-        self.summon_action_value_for_action_forward.append(
-            self.simulate_action_forward(action_forward_percent=0.5, speed=self.summon_speed)
+        self.numby.summon_action_value_for_action_forward.append(
+            self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
         self.data['DMG'].append(dmg)
@@ -122,21 +137,8 @@ class Topaz(Character):
         Simulate ultimate damage.
         :return: Damage and break amount.
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         self.windfall_bonanza = 2
-
-    def simulate_action_forward(self, action_forward_percent: float, speed: float) -> float:
-        """
-        Simulate action forward.
-        :param action_forward_percent: Action forward percent.
-        :param speed: Character speed.
-        :return: Action value
-        """
-        script_logger.info(f'Simulate action forward {action_forward_percent * 100}%...')
-        script_logger.debug(f'{self.__class__.__name__} current speed: {speed}')
-        action_value = self.calculate_action_value(speed)
-        script_logger.debug(f'{self.__class__.__name__}: Current Action value {action_value}')
-        return action_value * action_forward_percent
 
 
 def random_ally_follow_up_atk() -> bool:
@@ -149,23 +151,38 @@ def random_ally_follow_up_atk() -> bool:
     follow_up_atk_ally_num = random.choice([0, 1])
 
     if random.random() < (0.33 * follow_up_atk_ally_num):
-        script_logger.debug('Ally does follow-up atk')
+        main_logger.debug('Ally does follow-up atk')
         return True
     else:
         return False
 
 
-class Numby(Topaz):
-    def __init__(self, topaz: Topaz):
+class Numby(Summon):
+    def __init__(
+            self,
+            atk: int = Topaz().atk,
+            crit_rate: float = Topaz().crit_rate,
+            crit_dmg: float = Topaz().crit_dmg,
+            speed: float = 80,
+            ult_energy: int = 0
+    ):
         super().__init__(
-            atk=topaz.atk,
-            crit_rate=topaz.crit_rate,
-            crit_dmg=topaz.crit_dmg,
-            speed=topaz.summon_speed,
-            ult_energy=0
+            atk=atk,
+            crit_rate=crit_rate,
+            crit_dmg=crit_dmg,
+            speed=speed,
+            ult_energy=ult_energy
         )
-        self.topaz = topaz
+        self.topaz = None
         self.windfall_bonanza_attacks = 0
+
+    def inherit_topaz(self, topaz: Character) -> None:
+        """
+        Inherit Topaz's data
+        :return: None
+        """
+        main_logger.info('Inherit Topaz data...')
+        self.topaz = topaz
 
     def _numby_attack(self, with_ult_buff: bool = False) -> None:
         """
@@ -174,8 +191,8 @@ class Numby(Topaz):
         :return: None
         """
         if with_ult_buff:
-            script_logger.info('Numby attacking with Ult buff...')
-            if self.enemy_has_fire_weakness():
+            main_logger.info('Numby attacking with Ult buff...')
+            if self.topaz.enemy_has_fire_weakness():
                 dmg, break_amount = self._calculate_damage(skill_multiplier=3, break_amount=20,
                                                            dmg_multipliers=[0.15])
 
@@ -197,8 +214,8 @@ class Numby(Topaz):
                 self.topaz.data['DMG'].append(dmg)
                 self.topaz.data['DMG_Type'].append('Numby with Ult Buff')
         else:
-            script_logger.info('Numby attacking...')
-            if self.enemy_has_fire_weakness():
+            main_logger.info('Numby attacking...')
+            if self.topaz.enemy_has_fire_weakness():
                 dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
                                                            dmg_multipliers=[0.15])
 
@@ -223,10 +240,6 @@ class Numby(Topaz):
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
-        # reset stats
-        self.crit_dmg = self.topaz.crit_dmg
-        self.topaz.summon_speed = 80
-
         if self.topaz.windfall_bonanza > 0:
             self.crit_dmg += 0.25
 
@@ -245,16 +258,25 @@ class Numby(Topaz):
             follow_up_atk_ally_num = random.choice([1, 2])
 
             # Numby action forward
-            self.topaz.summon_action_value_for_action_forward.append(
-                self.topaz.simulate_action_forward(action_forward_percent=0.5 * follow_up_atk_ally_num,
-                                                   speed=self.topaz.summon_speed)
+            self.summon_action_value_for_action_forward.append(
+                self.simulate_action_forward(action_forward_percent=0.5 * follow_up_atk_ally_num)
             )
         else:
             if random_ally_follow_up_atk():
                 # Numby action forward
-                self.topaz.summon_action_value_for_action_forward.append(
-                    self.topaz.simulate_action_forward(action_forward_percent=0.5, speed=self.topaz.summon_speed)
+                self.summon_action_value_for_action_forward.append(
+                    self.simulate_action_forward(action_forward_percent=0.5)
                 )
+
+    def reset_summon_stat(self) -> None:
+        """
+        Reset Numby stats
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} stats ...')
+        super().reset_summon_stat()
+        self.speed = 80
+        self.crit_dmg = 1
 
 
 if __name__ == '__main__':

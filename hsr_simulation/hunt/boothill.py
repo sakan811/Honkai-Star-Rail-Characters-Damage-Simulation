@@ -14,12 +14,9 @@
 import math
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
+from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.character import Character
 from hsr_simulation.dmg_calculator import calculate_break_damage
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='boothill.log',
-                                            logger_name='boothill', level='DEBUG')
 
 
 class Boothill(Character):
@@ -32,6 +29,19 @@ class Boothill(Character):
             ult_energy: int = 115
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        self.pocket_trickshot = 0
+        self.standoff_turns = 0
+        self.win_battle = False
+        self.is_in_standoff = False
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
         self.pocket_trickshot = 0
         self.standoff_turns = 0
         self.win_battle = False
@@ -74,14 +84,14 @@ class Boothill(Character):
 
     def is_enemy_weakness_broken(self) -> bool:
         if self.enemy_toughness <= 0:
-            script_logger.info('Weakness Broken...')
+            main_logger.info('Weakness Broken...')
             self.enemy_toughness = 50
             self._end_standoff()
             return True
         return False
 
     def _use_basic_atk(self) -> None:
-        script_logger.info('Using Basic ATK...')
+        main_logger.info('Using Basic ATK...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self.enemy_toughness -= break_amount * self.break_effect
 
@@ -94,7 +104,7 @@ class Boothill(Character):
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
     def _use_enhanced_basic_atk(self) -> None:
-        script_logger.info('Using Enhanced Basic ATK...')
+        main_logger.info('Using Enhanced Basic ATK...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
 
         self.data['DMG'].append(dmg)
@@ -106,7 +116,7 @@ class Boothill(Character):
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=30)
 
     def _sim_talent_dmg(self) -> None:
-        script_logger.info('Simulating Talent Dmg...')
+        main_logger.info('Simulating Talent Dmg...')
 
         # Talent: Five Peas in a Pod
         break_dmg_multiplier = [0.7, 1.2, 1.7][min(self.pocket_trickshot, 2)]
@@ -117,7 +127,7 @@ class Boothill(Character):
         self.data['DMG_Type'].append('Talent')
 
     def _use_skill(self) -> None:
-        script_logger.info('Using Skill...')
+        main_logger.info('Using Skill...')
         if not self.win_battle:
             self.pocket_trickshot = 0
 
@@ -126,7 +136,7 @@ class Boothill(Character):
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=0)
 
     def _use_ult(self) -> None:
-        script_logger.info('Using Ult...')
+        main_logger.info('Using Ult...')
 
         dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
         self.enemy_toughness -= break_amount * self.break_effect
@@ -143,7 +153,7 @@ class Boothill(Character):
             break_amount: int,
             dmg_multipliers: list[float] = None,
             res_multipliers: list[float] = None) -> tuple[float, int]:
-        script_logger.info('Calculating DMG...')
+        main_logger.info('Calculating DMG...')
 
         weakness_broken = self.is_enemy_weakness_broken()
 
@@ -166,7 +176,7 @@ class Boothill(Character):
         return total_dmg, break_amount
 
     def _update_skill_point_and_ult_energy(self, skill_points: int, ult_energy: int) -> None:
-        script_logger.info('Updating Skill points and Ult energy...')
+        main_logger.info('Updating Skill points and Ult energy...')
 
         self.skill_points += skill_points
         self.current_ult_energy += ult_energy
@@ -176,7 +186,7 @@ class Boothill(Character):
             self.current_ult_energy += 10
 
     def _end_standoff(self) -> None:
-        script_logger.info('Ending Standoff...')
+        main_logger.info('Ending Standoff...')
 
         self.standoff_turns = 0
         self.is_in_standoff = False

@@ -12,10 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='dmg_calculator.log',
-                                            logger_name='dmg_calculator', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 def calculate_base_dmg(
@@ -77,26 +74,42 @@ def calculate_universal_dmg_reduction(weakness_broken: bool) -> float:
     main_logger.info('Returning universal dmg reduction multiplier...')
 
     if weakness_broken:
-        script_logger.debug(f'No damage reduction')
+        main_logger.debug(f'No damage reduction')
         return 1
     else:
-        script_logger.debug(f'Reduce dmg')
+        main_logger.debug(f'Reduce dmg')
         return 0.9
 
 
 def calculate_res_multipliers(res_pen: list[float] = None) -> float:
     """
-    Calculates res multipliers
+    Calculates RES multipliers
     :param res_pen: Resistance penetration multiplier.
     :return: Res multiplier
     """
-    main_logger.info('Calculating res multipliers...')
+    main_logger.info('Calculating RES multipliers...')
+    # calculate RES PEN multiplier
     if res_pen is None:
         res_pen = 1
     else:
         res_pen = sum(res_pen) + 1
 
     return res_pen
+
+
+def calculate_def_multipliers(def_reduction_multiplier: list[float] = None) -> float:
+    """
+    Calculates DEF multipliers
+    :param def_reduction_multiplier: DEF reduction multiplier.
+    :return: Res multiplier
+    """
+    main_logger.info('Calculating DEF reduction multipliers...')
+    if def_reduction_multiplier is None:
+        def_reduction_multiplier = 1
+    else:
+        def_reduction_multiplier = sum(def_reduction_multiplier) + 1
+
+    return def_reduction_multiplier
 
 
 def calculate_break_effect(break_amount: int, break_effect: float) -> float:
@@ -114,17 +127,19 @@ def calculate_total_damage(
         base_dmg: float,
         dmg_multipliers: float,
         res_multipliers: float,
-        dmg_reduction: float) -> float:
+        dmg_reduction: float,
+        def_reduction_multiplier: float) -> float:
     """
     Calculates total damage
     :param base_dmg: Base DMG.
     :param dmg_multipliers: DMG% Multipliers.
-    :param res_multipliers: Res Multipliers.
+    :param res_multipliers: RES Multipliers.
     :param dmg_reduction: DMG Reduction Multipliers.
+    :param def_reduction_multiplier: DEF Reduction Multipliers.
     :return: Total damage
     """
     main_logger.info('Calculating total damage...')
-    return base_dmg * dmg_multipliers * res_multipliers * dmg_reduction
+    return base_dmg * dmg_multipliers * def_reduction_multiplier * res_multipliers * dmg_reduction
 
 
 def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:

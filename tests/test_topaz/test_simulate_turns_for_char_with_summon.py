@@ -1,16 +1,17 @@
-from hsr_simulation.hunt.topaz import Topaz, Numby
-from hsr_simulation.simulate_turns import simulate_turns_for_character_with_summon
+from hsr_simulation.hunt.topaz import Topaz
+from hsr_simulation.simulate_cycles import simulate_cycles_for_character_with_summon
 
 
 def test_simulate_turns_with_default_parameters():
     # Given
     topaz = Topaz()
-    numby = Numby(topaz)
+    numby = topaz.summon_numby()
+
     max_cycles = 5
     simulate_round = 1
 
     # When
-    result = simulate_turns_for_character_with_summon(topaz, numby, max_cycles, simulate_round)
+    result = simulate_cycles_for_character_with_summon(topaz, numby, max_cycles, simulate_round)
 
     # Then
     assert isinstance(result, dict)
@@ -25,12 +26,12 @@ def test_simulate_turns_with_default_parameters():
 def test_simulate_turns_with_zero_max_cycles():
     # Given
     topaz = Topaz()
-    numby = Numby(topaz)
+    numby = topaz.summon_numby()
     max_cycles = 0
     simulate_round = 1
 
     # When
-    result = simulate_turns_for_character_with_summon(topaz, numby, max_cycles, simulate_round)
+    result = simulate_cycles_for_character_with_summon(topaz, numby, max_cycles, simulate_round)
 
     # Then
     assert isinstance(result, dict)

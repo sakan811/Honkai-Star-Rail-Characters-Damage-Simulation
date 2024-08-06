@@ -15,20 +15,30 @@
 
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
+from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universal_dmg_reduction, \
-    calculate_dmg_multipliers, calculate_total_damage, calculate_res_multipliers
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='seele.log',
-                                          logger_name='seele', level='DEBUG')
+    calculate_dmg_multipliers, calculate_total_damage, calculate_res_multipliers, calculate_def_multipliers
 
 
 class Seele(Character):
     def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=115, ult_energy=120):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
         self.sheathed_blade = 0
-        self.starting_spd = speed
+        self.default_speed = speed
+        self.can_resurgence = True
+        self.is_resurgence = False
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.sheathed_blade = 0
+        self.speed = self.default_speed
         self.can_resurgence = True
         self.is_resurgence = False
 
@@ -50,12 +60,12 @@ class Seele(Character):
             self._handle_resurgence_action_forward(self.is_resurgence)
 
     def _reset_stats(self):
-        self.speed = self.starting_spd
+        self.speed = self.default_speed
         self.char_action_value_for_action_forward = []
 
     def _use_basic_atk(self) -> None:
-        script_logger.info("Using basic attack...")
-        dmg, break_amount= self._calculate_damage(skill_multiplier=1, break_amount=20)
+        main_logger.info("Using basic attack...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
         self.speed *= 1.2  # action forward 20%
 
@@ -68,7 +78,7 @@ class Seele(Character):
         self.data['DMG_Type'].append('Basic ATK')
 
     def _use_skill(self) -> None:
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
@@ -83,7 +93,7 @@ class Seele(Character):
         self.data['DMG_Type'].append('Skill')
 
     def _use_ult(self) -> None:
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         ult_dmg, break_amount = self._calculate_damage(skill_multiplier=4.25, break_amount=30)
 
         self.enemy_toughness -= break_amount
@@ -95,7 +105,7 @@ class Seele(Character):
         self.data['DMG_Type'].append('Ultimate')
 
     def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
-        script_logger.info(f'{self.__class__.__name__}: Calculating DMG...')
+        main_logger.info(f'{self.__class__.__name__}: Calculating DMG...')
 
         weakness_broken = self.is_enemy_weakness_broken()
 
@@ -104,20 +114,22 @@ class Seele(Character):
         base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
         dmg_multiplier, res_multiplier = self._random_resurgence(is_crit)
         dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-
-        total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
+        def_reduction = calculate_def_multipliers()
+        total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
+                                           res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
+                                           def_reduction_multiplier=def_reduction)
         return total_dmg, break_amount
 
     def _apply_sheathed_blade(self):
         self.sheathed_blade = 2
         if self.sheathed_blade > 0:
-            self.speed = self.starting_spd * 1.25
-            script_logger.debug(f'Speed after Sheathed Blade Buff: {self.speed}')
+            self.speed = self.default_speed * 1.25
+            main_logger.debug(f'Speed after Sheathed Blade Buff: {self.speed}')
             self.sheathed_blade -= 1
-        script_logger.debug(f'Sheathed Blade: {self.sheathed_blade}')
+        main_logger.debug(f'Sheathed Blade: {self.sheathed_blade}')
 
     def _handle_resurgence_action_forward(self, is_resurgence: bool) -> None:
-        script_logger.info('Handling resurgence action forward...')
+        main_logger.info('Handling resurgence action forward...')
         if is_resurgence:
             self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
             self.can_resurgence = False
@@ -125,7 +137,7 @@ class Seele(Character):
             self.can_resurgence = True
 
     def _random_resurgence(self, is_crit: bool) -> tuple[float, float]:
-        script_logger.info('Random resurgence...')
+        main_logger.info('Random resurgence...')
         resurgence_chance = 0.5 if self.can_resurgence else 0
         self.is_resurgence = random.random() < resurgence_chance
 

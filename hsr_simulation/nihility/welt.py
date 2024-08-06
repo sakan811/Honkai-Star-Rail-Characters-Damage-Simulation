@@ -17,20 +17,16 @@ from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 
 
-class Pela(Character):
+class Welt(Character):
     def __init__(
             self,
             atk: int = 2000,
             crit_rate: float = 0.5,
             crit_dmg: float = 1.0,
-            speed: float = 105,
-            ult_energy: int = 110
+            speed: float = 102,
+            ult_energy: int = 120
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
-        self.enemy_has_buff = False
-        self.a6_buff = False
-        self.exposed = 0
-        self.a2_multiplier = 0.2
 
     def reset_character_data(self) -> None:
         """
@@ -38,12 +34,8 @@ class Pela(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        script_logger.info(f'Resetting {self.__class__.__name__} data...')
         super().reset_character_data()
-        self.enemy_has_buff = False
-        self.a6_buff = False
-        self.exposed = 0
-        self.a2_multiplier = 0.2
 
     def take_action(self) -> None:
         """
@@ -51,14 +43,6 @@ class Pela(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
-
-        # random debuff on enemy
-        self.enemy_has_buff = random.choice([True, False])
-
-        # simulate enemy turn
-        if self.exposed > 0:
-            self.exposed -= 1
-
         if self.skill_points > 0:
             self._use_skill()
         else:
@@ -67,27 +51,19 @@ class Pela(Character):
         if self._can_use_ult():
             self._use_ult()
 
+            self.current_ult_energy = 5
+
     def _use_basic_atk(self) -> None:
         """
         Simulate basic atk damage.
         :return: None
         """
-        main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg_multipler = 0
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler])
-
+        script_logger.info(f"{self.__class__.__name__} is using basic attack...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self.enemy_toughness -= break_amount
 
         if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+            self.do_break_dmg(break_type='Imaginary')
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -99,59 +75,29 @@ class Pela(Character):
         Simulate skill damage.
         :return: None
         """
-        main_logger.info(f"{self.__class__.__name__} is using skill...")
-        dmg_multipler = 0
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.1, break_amount=20,
-                                                   dmg_multipliers=[dmg_multipler])
-
+        script_logger.info(f"{self.__class__.__name__} is using skill...")
+        dmg, break_amount = self._calculate_damage(skill_multiplier=2, break_amount=20)
         self.enemy_toughness -= break_amount
 
         if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+            self.do_break_dmg(break_type='Imaginary')
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
-        # A6 trace
-        if self.enemy_has_buff:
-            self.a6_buff = True
-
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        self.current_ult_energy = 5
-
-        dmg_multipler = 0
-
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self.current_ult_energy += 10
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
-
+        script_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
         self.enemy_toughness -= break_amount
 
         if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+            self.do_break_dmg(break_type='Imaginary')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
-
-        self.exposed = 2

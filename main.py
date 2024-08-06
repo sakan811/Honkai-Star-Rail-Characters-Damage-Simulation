@@ -17,7 +17,7 @@ from nihility_main import start_sim_nihility
 
 
 if __name__ == '__main__':
-    simulation_num = 100
+    simulation_num = 1000
     max_cycles = 10
 
     start_sim_hunt(simulation_num, max_cycles)

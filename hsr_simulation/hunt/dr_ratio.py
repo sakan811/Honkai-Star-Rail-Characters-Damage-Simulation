@@ -13,11 +13,8 @@
 #    limitations under the License.
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='dr_ratio.log',
-                                          logger_name='dr_ratio', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class DrRatio(Character):
@@ -35,6 +32,16 @@ class DrRatio(Character):
             speed,
             ult_energy
         )
+        self.debuff_on_enemy = []
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
         self.debuff_on_enemy = []
 
     def take_action(self) -> None:
@@ -80,7 +87,7 @@ class DrRatio(Character):
         Simulate basic atk damage.
         :return: None
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -98,7 +105,7 @@ class DrRatio(Character):
         Simulate skill damage.
         :return: None
         """
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
 
         # simulate A2 Trace
         crit_rate_multiplier = 0.025
@@ -129,7 +136,7 @@ class DrRatio(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
 
         self.debuff_on_enemy.append('wiseman_folly')
         self.debuff_on_enemy.append('wiseman_folly')
@@ -150,7 +157,7 @@ class DrRatio(Character):
         Simulate follow-up attack damage.
         :return: None
         """
-        script_logger.info('Using follow-up attack...')
+        main_logger.info('Using follow-up attack...')
         dmg, break_amount = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=5)
 
@@ -168,7 +175,7 @@ class DrRatio(Character):
         Simulate talent.
         :return: None
         """
-        script_logger.info('Simulating talent...')
+        main_logger.info('Simulating talent...')
         follow_up_chance = 0.4 + (0.2 * len(self.debuff_on_enemy))
         final_follow_up_chance = min(1.0, follow_up_chance)
         if random.random() < final_follow_up_chance:

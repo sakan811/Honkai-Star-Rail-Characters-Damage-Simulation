@@ -13,21 +13,19 @@
 #    limitations under the License.
 from sqlalchemy import create_engine
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
+from hsr_simulation.configure_logging import main_logger
+from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.danheng import DanHeng
 from hsr_simulation.hunt.dr_ratio import DrRatio
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.seele import Seele
 from hsr_simulation.hunt.sushang import Sushang
-from hsr_simulation.hunt.topaz import Topaz, Numby
+from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.hunt.yanqing import YanQing
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
-from hsr_simulation.simulate_turns import start_simulations_for_char_with_summon
-from hsr_simulation.utils import process_result_list, start_simulations
 
-script_logger = configure_logging_with_file(log_dir='logs', log_file='hunt_main.log',
-                                            logger_name='hunt_main', level='DEBUG')
+from hsr_simulation.utils import process_result_list
 
 
 def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
@@ -68,7 +66,7 @@ def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
     process_result_list(character, engine, dict_list, stage_table_name)
 
     topaz = Topaz()
-    numby = Numby(topaz)
+    numby = topaz.summon_numby()
     dict_list = start_simulations_for_char_with_summon(topaz, numby, max_cycles, simulation_num)
     process_result_list(topaz, engine, dict_list, stage_table_name)
 

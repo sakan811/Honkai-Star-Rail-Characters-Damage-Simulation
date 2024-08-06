@@ -1,6 +1,6 @@
 # Honkai Star Rail Characters' Damage Simulation
 
-**Simulate** 10-cycles for 100 times to find the **average damage** of Honkai Star Rail's **Characters**.
+**Simulate** 10-cycles for 1,000 battles to find the **average damage** of Honkai Star Rail's **Characters**.
 
 Latest Update: 4 August 2024.
 
@@ -22,7 +22,7 @@ Latest Update: 4 August 2024.
 This simulation **focuses exclusively** on the **elements** that **directly impact** character **damage** output. 
 As a result, **not all** aspects of character behavior, interactions, or game mechanics were simulated.
 
-Simulate each character for 100 times, 10 cycles each.
+Simulate each character for 1,000 battles, 10 cycles each.
 
 Every simulated character has 2,000 ATK, 50% Crit Rate, and 100% Crit Damage.
 
@@ -34,7 +34,7 @@ Eidolons, Light Cones, and Relics were not considered.
 
 ## To Run a Simulation
 ### Setup a Project
-- Clone this repo:
+- Clone this repo: https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios.git
 - Create **.env** file with the following variables:
   ```
   DB_NAME=hsr_char_action_dmg
@@ -55,3 +55,6 @@ Eidolons, Light Cones, and Relics were not considered.
 ## Codebase Details
 ### Test Status
 
+
+### Brief Codebase Documents
+[Click here](docs/DOCS.md) to read a brief docs of this codebase.

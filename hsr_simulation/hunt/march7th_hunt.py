@@ -13,13 +13,8 @@
 #    limitations under the License.
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, \
-    calculate_universal_dmg_reduction, calculate_total_damage, calculate_res_multipliers
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='march7th_hunt.log',
-                                            logger_name='march7th_hunt', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class March7thHunt(Character):
@@ -32,6 +27,21 @@ class March7thHunt(Character):
             ult_energy: int = 110
     ):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        self.has_shifu = False
+        self.charge = 0
+        self.ult_buff = False
+        self.talent_buff = False
+        self.battle_start = True
+        self.shifu = None
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
         self.has_shifu = False
         self.charge = 0
         self.ult_buff = False
@@ -85,7 +95,7 @@ class March7thHunt(Character):
         Simulate basic atk damage.
         :return: None
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
@@ -112,7 +122,7 @@ class March7thHunt(Character):
         Simulate skill damage.
         :return: None
         """
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
         self.has_shifu = True
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
@@ -122,7 +132,7 @@ class March7thHunt(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         if self.talent_buff:
             dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30, dmg_multipliers=[0.8])
         else:
@@ -143,7 +153,7 @@ class March7thHunt(Character):
         Simulate additional damage from SKill.
         :return: None
         """
-        script_logger.info("Simulating additional damage from skill...")
+        main_logger.info("Simulating additional damage from skill...")
         dmg, break_amount = self._calculate_damage(skill_multiplier=0.2, break_amount=0)
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Additional DMG')
@@ -153,7 +163,7 @@ class March7thHunt(Character):
         Use enhanced basic ATK
         :return: None
         """
-        script_logger.info("Using enhanced basic ATK...")
+        main_logger.info("Using enhanced basic ATK...")
         extra_hit_chance = 0.6
         if self.ult_buff:
             self.ult_buff = False
@@ -209,7 +219,7 @@ class March7thHunt(Character):
         Simulate March 7th's Shifu.
         :return: None
         """
-        script_logger.info("Simulating Shifu...")
+        main_logger.info("Simulating Shifu...")
         self.charge += 1
         # ensure Charge not exceed 10
         self.charge = min(10, self.charge)
@@ -230,7 +240,7 @@ class March7thHunt(Character):
         Set March 7th's Shifu
         :return: None
         """
-        script_logger.info('Setting Shifu...')
+        main_logger.info('Setting Shifu...')
         choice = random.choice(['DMG', 'SUPPORT'])
         self.shifu = choice
-        script_logger.debug(f'Current Shifu is {self.shifu} Type')
+        main_logger.debug(f'Current Shifu is {self.shifu} Type')

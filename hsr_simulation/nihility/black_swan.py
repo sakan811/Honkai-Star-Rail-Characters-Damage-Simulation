@@ -13,11 +13,8 @@
 #    limitations under the License.
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='black_swan.log',
-                                            logger_name='black_swan', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class BlackSwan(Character):
@@ -35,6 +32,19 @@ class BlackSwan(Character):
         self.enemy_def_reduced = 0
         self.a6_dmg_multiplier = min(0.72, 0.6 * self.break_effect)
 
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.arcana = 0
+        self.epiphany = 0
+        self.enemy_def_reduced = 0
+        self.a6_dmg_multiplier = min(0.72, 0.6 * self.break_effect)
+
     def take_action(self) -> None:
         """
         Simulate taking actions.
@@ -44,7 +54,7 @@ class BlackSwan(Character):
 
         # simulate A4 Trace
         if self.battle_start:
-            script_logger.debug(f'Battle starts')
+            main_logger.debug(f'Battle starts')
             self.battle_start = False
             self._apply_arcana()
 
@@ -61,7 +71,7 @@ class BlackSwan(Character):
             self.current_ult_energy = 5
 
         # simulate A4 Trace br randomizing ally's DoT attack
-        script_logger.debug(f'Randomizing ally DoT attack...')
+        main_logger.debug(f'Randomizing ally DoT attack...')
         if random.random() < 0.5:
             self._apply_arcana()
 
@@ -70,7 +80,7 @@ class BlackSwan(Character):
         Apply Arcana stack with base inflicting chance.
         :return:
         """
-        script_logger.info('Apply Arcana stack...')
+        main_logger.info('Apply Arcana stack...')
         base_chance = 0.65
         if random.random() < base_chance:
             self.arcana += 1
@@ -80,7 +90,7 @@ class BlackSwan(Character):
         Simulate basic atk damage.
         :return: None
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         if self.enemy_def_reduced > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
                                                        dmg_multipliers=[0.208, self.a6_dmg_multiplier])
@@ -141,7 +151,7 @@ class BlackSwan(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         if self.enemy_def_reduced > 0:
             dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
                                                        dmg_multipliers=[0.208, self.a6_dmg_multiplier])
@@ -164,9 +174,9 @@ class BlackSwan(Character):
         Simulate enemy turn
         :return: None
         """
-        script_logger.info('Simulating enemy turn...')
-        script_logger.debug(f'Arcana stack on enemy: {self.arcana}')
-        script_logger.debug(f'Epiphany stack on enemy: {self.epiphany}')
+        main_logger.info('Simulating enemy turn...')
+        main_logger.debug(f'Arcana stack on enemy: {self.arcana}')
+        main_logger.debug(f'Epiphany stack on enemy: {self.epiphany}')
         self._apply_talent_dmg()
 
         if self.epiphany > 0:
@@ -177,7 +187,7 @@ class BlackSwan(Character):
         Simulate talent damage.
         :return: None
         """
-        script_logger.info('Simulating talent damage...')
+        main_logger.info('Simulating talent damage...')
         epiphany_multiplier = 0
         if self.epiphany > 0:
             epiphany_multiplier = 0.25
@@ -200,5 +210,5 @@ class BlackSwan(Character):
             self.data['DMG_Type'].append('DoT')
 
             if self.epiphany <= 0:
-                script_logger.debug(f'Epiphany stack is zero or less. Reset Arcana stack to 1.')
+                main_logger.debug(f'Epiphany stack is zero or less. Reset Arcana stack to 1.')
                 self.arcana = 1

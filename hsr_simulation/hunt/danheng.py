@@ -15,17 +15,27 @@
 
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='danheng.log',
-                                            logger_name='danheng', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 class DanHeng(Character):
     def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=110, ult_energy=100):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
-        self.starting_spd = speed
+        self.default_speed = speed
+        self.can_get_talent = True
+        self.talent_buff = 0
+        self.a4_trace_buff = 0
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.speed = self.default_speed
         self.can_get_talent = True
         self.talent_buff = 0
         self.a4_trace_buff = 0
@@ -36,7 +46,7 @@ class DanHeng(Character):
         super().take_action()
 
     def _use_basic_atk(self) -> None:
-        script_logger.info('Using basic atk...')
+        main_logger.info('Using basic atk...')
         if self._is_enemy_slowed():
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4])
         else:
@@ -52,13 +62,12 @@ class DanHeng(Character):
         self.data['DMG_Type'].append('Basic ATK')
 
     def _use_skill(self) -> None:
-        script_logger.info('Using skill...')
+        main_logger.info('Using skill...')
         dmg, break_amount = self._calculate_damage(2.6, 20)
         self.enemy_toughness -= break_amount
 
         if self.is_enemy_weakness_broken():
             self.do_break_dmg(break_type='Wind')
-
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -66,7 +75,7 @@ class DanHeng(Character):
         self.data['DMG_Type'].append('Skill')
 
     def _use_ult(self) -> None:
-        script_logger.info('Using ult...')
+        main_logger.info('Using ult...')
         multiplier = 5.2 if self._is_enemy_slowed() else 4
         dmg, break_amount = self._calculate_damage(multiplier, 30)
         self.enemy_toughness -= break_amount
@@ -82,17 +91,17 @@ class DanHeng(Character):
         Simulate talent
         :return: None
         """
-        script_logger.info('Simulating talent...')
+        main_logger.info('Simulating talent...')
         if self.can_get_talent and random.random() < 0.5:
             self.talent_buff = 2
             self.can_get_talent = False
 
     def _reset_buffs(self):
-        script_logger.info('Resetting buffs...')
+        main_logger.info('Resetting buffs...')
         if self.a4_trace_buff > 0:
             self.a4_trace_buff -= 1
         else:
-            self.speed = self.starting_spd
+            self.speed = self.default_speed
 
         if self.talent_buff > 0:
             self.talent_buff -= 1
@@ -101,7 +110,7 @@ class DanHeng(Character):
 
     def _handle_a4_trace(self):
         if random.random() < 0.5:
-            self.speed = self.starting_spd * 1.2
+            self.speed = self.default_speed * 1.2
             self.a4_trace_buff = 2
 
     @staticmethod

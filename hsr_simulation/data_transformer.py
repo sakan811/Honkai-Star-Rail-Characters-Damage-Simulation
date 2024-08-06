@@ -13,10 +13,7 @@
 #    limitations under the License.
 import pandas as pd
 
-from hsr_simulation.configure_logging import configure_logging_with_file
-
-logger = configure_logging_with_file(log_dir='logs', log_file='data_transformer.log',
-                                     logger_name='data_transformer', level='DEBUG')
+from hsr_simulation.configure_logging import main_logger
 
 
 def create_df_from_dict_list(dict_list: list[dict]) -> pd.DataFrame:
@@ -25,7 +22,7 @@ def create_df_from_dict_list(dict_list: list[dict]) -> pd.DataFrame:
     :param dict_list: Dictionaries to create the dataframe from.
     :return: Dataframe created from a list of dictionaries.
     """
-    logger.info('Creating dataframe from a list of dictionary...')
+    main_logger.info('Creating dataframe from a list of dictionary...')
     df_list = []
     for entry in dict_list:
         df = pd.DataFrame({

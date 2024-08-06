@@ -13,20 +13,30 @@
 #    limitations under the License.
 import random
 
-from hsr_simulation.configure_logging import configure_logging_with_file, main_logger
 from hsr_simulation.character import Character
+from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, calculate_res_multipliers, \
-    calculate_total_damage, calculate_universal_dmg_reduction
-
-script_logger = configure_logging_with_file(log_dir='logs', log_file='sushang.log',
-                                            logger_name='sushang', level='DEBUG')
+    calculate_total_damage, calculate_universal_dmg_reduction, calculate_def_multipliers
 
 
 class Sushang(Character):
     def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=107, ult_energy=120):
         super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
         self.talent_spd_buff = 0
-        self.starting_spd = speed
+        self.default_speed = speed
+        self.ult_buff = 0
+        self.a4_trace_buff = 0
+
+    def reset_character_data(self) -> None:
+        """
+        Reset character's stats, along with all battle-related data,
+        and the dictionary that store the character's actions' data.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        super().reset_character_data()
+        self.talent_spd_buff = 0
+        self.speed = self.default_speed
         self.ult_buff = 0
         self.a4_trace_buff = 0
 
@@ -38,17 +48,17 @@ class Sushang(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # reset stats when begins a new action
-        self.speed = self.starting_spd
+        self.speed = self.default_speed
         self.a4_trace_buff = 0
         self.char_action_value_for_action_forward = []
         self.atk = 2000
 
         # talend speed buff only lasts for 2 turns
         if self.talent_spd_buff > 0:
-            self.speed = self.starting_spd * 1.2
+            self.speed = self.default_speed * 1.2
             self.talent_spd_buff -= 1
         else:
-            self.speed = self.starting_spd
+            self.speed = self.default_speed
 
         if self.ult_buff > 0:
             self.atk *= 1.3
@@ -80,7 +90,7 @@ class Sushang(Character):
             self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
 
     def _handle_a4_trace(self, sword_stance_dmg) -> float:
-        script_logger.info('Handling A4 Trace buff...')
+        main_logger.info('Handling A4 Trace buff...')
         if sword_stance_dmg > 0:
             self.a4_trace_buff += 1
             sword_stance_dmg *= (1 + (0.025 * self.a4_trace_buff))
@@ -91,7 +101,7 @@ class Sushang(Character):
         Simulate basic atk damage.
         :return: None
         """
-        script_logger.info("Using basic attack...")
+        main_logger.info("Using basic attack...")
         dmg, break_amount = self._calculate_damage(is_basic_atk=True, skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -108,7 +118,7 @@ class Sushang(Character):
         Simulate skill damage.
         :return: None
         """
-        script_logger.info("Using skill...")
+        main_logger.info("Using skill...")
         dmg, break_amount = self._calculate_damage(is_skill=True, skill_multiplier=2.1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -126,7 +136,7 @@ class Sushang(Character):
         Simulate ultimate damage.
         :return: None
         """
-        script_logger.info('Using ultimate...')
+        main_logger.info('Using ultimate...')
         ult_dmg, break_amount = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
 
         self.enemy_toughness -= break_amount
@@ -143,7 +153,7 @@ class Sushang(Character):
         :param is_extra: Whether the sword stance is an extra trigger.
         :return: None
         """
-        script_logger.info("Using sword stance...")
+        main_logger.info("Using sword stance...")
         if self.is_enemy_weakness_broken():
             dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
             sword_stance_dmg = self._handle_a4_trace(dmg)
@@ -196,7 +206,7 @@ class Sushang(Character):
         :param can_crit: Whether the DMG can CRIT.
         :return: Damage and break amount.
         """
-        script_logger.info(f'{self.__class__.__name__}: Calculating damage...')
+        main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
         weakness_broken = self.is_enemy_weakness_broken()
 
         # simulate Talent Speed buff
@@ -218,6 +228,8 @@ class Sushang(Character):
 
         dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
         res_multiplier = calculate_res_multipliers(res_multipliers)
-        total_dmg = calculate_total_damage(base_dmg, dmg_multiplier, res_multiplier, dmg_reduction)
-
+        def_reduction = calculate_def_multipliers()
+        total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
+                                           res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
+                                           def_reduction_multiplier=def_reduction)
         return total_dmg, break_amount

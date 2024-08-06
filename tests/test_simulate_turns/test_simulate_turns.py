@@ -1,5 +1,5 @@
 from hsr_simulation.character import Character
-from hsr_simulation.simulate_turns import simulate_cycles
+from hsr_simulation.simulate_cycles import simulate_cycles
 
 
 def test_simulate_turns_with_default_attributes():
