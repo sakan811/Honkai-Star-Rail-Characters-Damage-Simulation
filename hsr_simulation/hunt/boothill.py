@@ -11,24 +11,21 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-import math
-import random
 
-from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.character import Character
+from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.dmg_calculator import calculate_break_damage
 
 
 class Boothill(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 107,
             ult_energy: int = 115
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.pocket_trickshot = 0
         self.standoff_turns = 0
         self.win_battle = False
@@ -54,6 +51,13 @@ class Boothill(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
         # reset stats
         self.crit_rate = 0.5
         self.crit_dmg = 1
@@ -69,8 +73,7 @@ class Boothill(Character):
             self._use_enhanced_basic_atk()
         elif self.is_in_standoff:
             self._use_enhanced_basic_atk()
-
-            if self.is_enemy_weakness_broken():
+            if self.weakness_broken:
                 self.win_battle = True
                 self._sim_talent_dmg()
         else:
@@ -80,38 +83,45 @@ class Boothill(Character):
             self._use_ult()
             self.current_ult_energy = 5
 
-        self.standoff_turns -= 1
+        if self.standoff_turns > 0:
+            self.standoff_turns -= 1
 
-    def is_enemy_weakness_broken(self) -> bool:
-        if self.enemy_toughness <= 0:
-            main_logger.info('Weakness Broken...')
-            self.enemy_toughness = 50
+        # Boothill did not win battle during Stand Off
+        if self.standoff_turns <= 0:
             self._end_standoff()
-            return True
-        return False
+            self.win_battle = False
+
+    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+        """
+        Check whether enemy is weakness broken.
+        :param break_type: Break DMG type, e.g., Physical, Fire, etc.
+        :return: None
+        """
+        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+            self.enemy_turn_delayed_duration_weakness_broken = 1
+            self.weakness_broken = True
+            self._end_standoff()
+            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
 
     def _use_basic_atk(self) -> None:
         main_logger.info('Using Basic ATK...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-        self.enemy_toughness -= break_amount * self.break_effect
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical', break_effect=self.break_effect)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
     def _use_enhanced_basic_atk(self) -> None:
         main_logger.info('Using Enhanced Basic ATK...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
+        # Talent: Five Peas in a Pod
+        break_amount = 20 * (1 + 0.5 * self.pocket_trickshot)
+        break_amount = int(break_amount)
+
+        dmg = self._calculate_damage(skill_multiplier=2.2, break_amount=break_amount)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Enhanced Basic ATK')
-
-        break_amount *= (1 + 0.5 * self.pocket_trickshot)  # Talent: Five Peas in a Pod
-        self.enemy_toughness -= break_amount * self.break_effect
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=30)
 
@@ -138,42 +148,10 @@ class Boothill(Character):
     def _use_ult(self) -> None:
         main_logger.info('Using Ult...')
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=4, break_amount=30)
-        self.enemy_toughness -= break_amount * self.break_effect
+        dmg = self._calculate_damage(skill_multiplier=4, break_amount=30)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical', break_effect=self.break_effect)
-
-    def _calculate_damage(
-            self,
-            skill_multiplier: float,
-            break_amount: int,
-            dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None) -> tuple[float, int]:
-        main_logger.info('Calculating DMG...')
-
-        weakness_broken = self.is_enemy_weakness_broken()
-
-        if random.random() < self.crit_rate:
-            base_dmg = self.atk * skill_multiplier
-            dmg_multiplier = 1 + self.crit_dmg
-        else:
-            base_dmg = self.atk * skill_multiplier
-            dmg_multiplier = 1
-
-        if dmg_multipliers:
-            dmg_multiplier *= math.prod(dmg_multipliers)
-
-        dmg_reduction = 0.9 if weakness_broken else 1  # Simplified damage reduction
-        res_multiplier = 1  # Simplified resistance multiplier
-        if res_multipliers:
-            res_multiplier *= math.prod(res_multipliers)
-
-        total_dmg = base_dmg * dmg_multiplier * res_multiplier * dmg_reduction
-        return total_dmg, break_amount
 
     def _update_skill_point_and_ult_energy(self, skill_points: int, ult_energy: int) -> None:
         main_logger.info('Updating Skill points and Ult energy...')
@@ -187,7 +165,6 @@ class Boothill(Character):
 
     def _end_standoff(self) -> None:
         main_logger.info('Ending Standoff...')
-
         self.standoff_turns = 0
         self.is_in_standoff = False
         self.pocket_trickshot = min(self.pocket_trickshot + 1, 3)

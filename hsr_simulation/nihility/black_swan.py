@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class BlackSwan(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 102,
             ult_energy: int = 120
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.arcana = 0
         self.epiphany = 0
         self.enemy_def_reduced = 0
@@ -51,6 +50,13 @@ class BlackSwan(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         # simulate A4 Trace
         if self.battle_start:
@@ -92,16 +98,11 @@ class BlackSwan(Character):
         """
         main_logger.info("Using basic attack...")
         if self.enemy_def_reduced > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
-                                                       dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
+                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+            dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -124,16 +125,11 @@ class BlackSwan(Character):
         """
         main_logger.info("Using skill...")
         if self.enemy_def_reduced > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
-                                                       dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
+                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+            dmg = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -153,16 +149,11 @@ class BlackSwan(Character):
         """
         main_logger.info('Using ultimate...')
         if self.enemy_def_reduced > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
-                                                       dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
+                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -197,14 +188,14 @@ class BlackSwan(Character):
         if self.arcana > 0:
             if self.arcana >= 7:
                 dmg_multiplier = [0.12 * self.arcana, 0.2, epiphany_multiplier, self.a6_dmg_multiplier]
-                dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
-                                                           dmg_multipliers=dmg_multiplier,
-                                                           can_crit=False)
+                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
+                                             dmg_multipliers=dmg_multiplier,
+                                             can_crit=False)
             else:
                 dmg_multiplier = [0.12 * self.arcana, epiphany_multiplier, self.a6_dmg_multiplier]
-                dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
-                                                           dmg_multipliers=dmg_multiplier,
-                                                           can_crit=False)
+                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
+                                             dmg_multipliers=dmg_multiplier,
+                                             can_crit=False)
 
             self.data['DMG'].append(dmg)
             self.data['DMG_Type'].append('DoT')

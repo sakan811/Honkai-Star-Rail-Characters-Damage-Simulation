@@ -19,13 +19,12 @@ from hsr_simulation.configure_logging import main_logger
 class Kafka(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 100,
             ult_energy: int = 120
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.shock = 0
         self.talent_cooldown = False
 
@@ -46,6 +45,13 @@ class Kafka(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         self._calculate_shock_dmg_on_enemy()
 
@@ -71,11 +77,7 @@ class Kafka(Character):
         :return: None.
         """
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -88,11 +90,7 @@ class Kafka(Character):
         :return: None.
         """
         main_logger.info("Using skill...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
+        dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -108,11 +106,7 @@ class Kafka(Character):
         :return: None
         """
         main_logger.info('Using ultimate...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
+        dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -127,11 +121,7 @@ class Kafka(Character):
         :return: None
         """
         main_logger.info('Using talent...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.4, break_amount=10)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
+        dmg = self._calculate_damage(skill_multiplier=1.4, break_amount=10)
 
         self.shock = 2
         self.talent_cooldown = True
@@ -147,10 +137,10 @@ class Kafka(Character):
         """
         main_logger.info('Using Shock DoT...')
         if skill_trigger:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
+            dmg = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
             dmg *= 0.75
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
+            dmg = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('DoT')

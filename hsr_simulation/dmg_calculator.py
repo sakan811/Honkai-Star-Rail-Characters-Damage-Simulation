@@ -150,7 +150,7 @@ def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
     :return: Break DMG
     """
     main_logger.info('Calculating break damage...')
-    level_80_multiplier = 3767.5533
+    level_80_multiplier = 3767
 
     if break_type == 'Physical' or break_type == 'Fire':
         base_multiplier = 2

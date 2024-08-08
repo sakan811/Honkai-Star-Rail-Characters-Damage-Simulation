@@ -13,8 +13,8 @@
 #    limitations under the License.
 from sqlalchemy import create_engine
 
+from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
-from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.danheng import DanHeng
 from hsr_simulation.hunt.dr_ratio import DrRatio
@@ -24,15 +24,16 @@ from hsr_simulation.hunt.sushang import Sushang
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.hunt.yanqing import YanQing
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
-
+from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.utils import process_result_list
 
 
-def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
+def start_sim_hunt(base_char: Character, simulation_num: int, max_cycles: int) -> None:
     """
     Start simulations for Hunt characters
-    :simulation_num: Number of simulations
-    :max_cycles: Maximum number of cycles to simulate
+    :param base_char: Base Character class
+    :param simulation_num: Number of simulations
+    :param max_cycles: Maximum number of cycles to simulate
     :return: None
     """
     main_logger.info('Starting Hunt characters simulations...')
@@ -49,37 +50,18 @@ def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
     view_name = 'Hunt'
     drop_view(postgres_url, view_name)
 
-    character = Seele()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
+    # Hunt characters list
+    hunt_char_list = [Seele(base_char), DanHeng(base_char), YanQing(base_char), Sushang(base_char), Topaz(base_char),
+                      DrRatio(base_char), Boothill(base_char), March7thHunt(base_char)]
 
-    character = DanHeng()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
-
-    character = YanQing()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
-
-    character = Sushang()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
-
-    topaz = Topaz()
-    numby = topaz.summon_numby()
-    dict_list = start_simulations_for_char_with_summon(topaz, numby, max_cycles, simulation_num)
-    process_result_list(topaz, engine, dict_list, stage_table_name)
-
-    character = DrRatio()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
-
-    character = Boothill()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
-
-    character = March7thHunt()
-    dict_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, dict_list, stage_table_name)
+    for hunt_char in hunt_char_list:
+        # when the character is Topaz
+        if isinstance(hunt_char, Topaz):
+            numby = hunt_char.summon_numby()
+            dict_list = start_simulations_for_char_with_summon(hunt_char, numby, max_cycles, simulation_num)
+            process_result_list(hunt_char, engine, dict_list, stage_table_name)
+        else:
+            dict_list = start_simulations(hunt_char, max_cycles, simulation_num)
+            process_result_list(hunt_char, engine, dict_list, stage_table_name)
 
     create_view(postgres_url, view_name, stage_table_name)

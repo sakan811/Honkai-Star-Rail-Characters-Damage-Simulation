@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class Sampo(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 102,
             ult_energy: int = 120
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.ult_buff = 0
         self.wind_shear = []
 
@@ -48,8 +47,15 @@ class Sampo(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
-        # simulate enemy turn
+        # simulate applying Wind Shear on enemy turn
         self._apply_wind_shear_dmg()
+
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         # simulate debuffs on enemy
         if self.ult_buff > 0:
@@ -78,11 +84,7 @@ class Sampo(Character):
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -100,11 +102,7 @@ class Sampo(Character):
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=0)
         hit_num = 5
         for _ in range(hit_num):
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.56, break_amount=10)
-            self.enemy_toughness -= break_amount
-
-            if self.is_enemy_weakness_broken():
-                self.do_break_dmg(break_type='Wind')
+            dmg = self._calculate_damage(skill_multiplier=0.56, break_amount=10)
 
             self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=6)
 
@@ -119,11 +117,7 @@ class Sampo(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+        dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -162,7 +156,8 @@ class Sampo(Character):
             if self.ult_buff > 0:
                 dot_dmg_multiplier += [0.3]
 
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.52, break_amount=0,
-                                                       dot_dmg_multipliers=dot_dmg_multiplier, can_crit=False)
+            dmg = self._calculate_damage(skill_multiplier=0.52, break_amount=0,
+                                         dot_dmg_multipliers=dot_dmg_multiplier, can_crit=False)
+
             self.data['DMG'].append(dmg)
             self.data['DMG_Type'].append('DoT')

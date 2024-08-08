@@ -20,8 +20,9 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_mult
 
 
 class Sushang(Character):
-    def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=107, ult_energy=120):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+    def __init__(self, base_char: Character, speed=107, ult_energy=120):
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.talent_spd_buff = 0
         self.default_speed = speed
         self.ult_buff = 0
@@ -46,6 +47,13 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         # reset stats when begins a new action
         self.speed = self.default_speed
@@ -102,13 +110,8 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(is_basic_atk=True, skill_multiplier=1, break_amount=10)
+        dmg = self._calculate_damage(is_basic_atk=True, skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
@@ -119,14 +122,8 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using skill...")
-        dmg, break_amount = self._calculate_damage(is_skill=True, skill_multiplier=2.1, break_amount=20)
+        dmg = self._calculate_damage(is_skill=True, skill_multiplier=2.1, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
-
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -137,12 +134,7 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info('Using ultimate...')
-        ult_dmg, break_amount = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+        ult_dmg = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
 
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -154,32 +146,17 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using sword stance...")
-        if self.is_enemy_weakness_broken():
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
+        if self.weakness_broken:
+            dmg = self._calculate_damage(skill_multiplier=1, break_amount=0)
             sword_stance_dmg = self._handle_a4_trace(dmg)
-
-            self.enemy_toughness -= break_amount
-
-            if self.is_enemy_weakness_broken():
-                self.do_break_dmg(break_type='Physical')
         else:
             if random.random() < 0.33:
                 if is_extra:
-                    dmg, break_amount = self._calculate_damage(skill_multiplier=0.5, break_amount=0)
+                    dmg = self._calculate_damage(skill_multiplier=0.5, break_amount=0)
                     sword_stance_dmg = self._handle_a4_trace(dmg)
-
-                    self.enemy_toughness -= break_amount
-
-                    if self.is_enemy_weakness_broken():
-                        self.do_break_dmg(break_type='Physical')
                 else:
-                    dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=0)
+                    dmg = self._calculate_damage(skill_multiplier=1, break_amount=0)
                     sword_stance_dmg = self._handle_a4_trace(dmg)
-
-                    self.enemy_toughness -= break_amount
-
-                    if self.is_enemy_weakness_broken():
-                        self.do_break_dmg(break_type='Physical')
             else:
                 sword_stance_dmg = 0
 
@@ -194,7 +171,7 @@ class Sushang(Character):
             break_amount: int = 0,
             dmg_multipliers: list[float] = None,
             res_multipliers: list[float] = None,
-            can_crit: bool = True) -> tuple[float, int]:
+            can_crit: bool = True) -> float:
         """
         Calculates damage based on multipliers.
         :param is_skill: Whether the skill is the trigger.
@@ -204,19 +181,21 @@ class Sushang(Character):
         :param dmg_multipliers: DMG multipliers.
         :param res_multipliers: RES multipliers.
         :param can_crit: Whether the DMG can CRIT.
-        :return: Damage and break amount.
+        :param break_type: Break DMG Type, e.g., Physical, Fire, etc.
+        :return: Damage.
         """
         main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
-        weakness_broken = self.is_enemy_weakness_broken()
+        self.current_enemy_toughness -= break_amount
+        self.check_if_enemy_weakness_broken()
 
         # simulate Talent Speed buff
-        if weakness_broken:
-            self.speed *= 1.2
+        if self.weakness_broken:
+            self.speed = self.default_speed * 1.2
             self.talent_spd_buff = 2
 
         # simulate A6 trace
         if is_skill or is_basic_atk:
-            if weakness_broken:
+            if self.weakness_broken:
                 self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=0.15))
 
         if random.random() < self.crit_rate and can_crit:
@@ -226,10 +205,10 @@ class Sushang(Character):
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
         res_multiplier = calculate_res_multipliers(res_multipliers)
         def_reduction = calculate_def_multipliers()
         total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
                                            res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
                                            def_reduction_multiplier=def_reduction)
-        return total_dmg, break_amount
+        return total_dmg

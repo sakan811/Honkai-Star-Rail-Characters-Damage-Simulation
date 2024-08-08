@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class Pela(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 105,
             ult_energy: int = 110
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.enemy_has_buff = False
         self.a6_buff = False
         self.exposed = 0
@@ -56,6 +55,13 @@ class Pela(Character):
         self.enemy_has_buff = random.choice([True, False])
 
         # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
+        # simulate enemy turn
         if self.exposed > 0:
             self.exposed -= 1
 
@@ -82,12 +88,7 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler])
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -109,13 +110,8 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.1, break_amount=20,
-                                                   dmg_multipliers=[dmg_multipler])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+        dmg = self._calculate_damage(skill_multiplier=2.1, break_amount=20,
+                                     dmg_multipliers=[dmg_multipler])
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -144,12 +140,7 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Physical')
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')

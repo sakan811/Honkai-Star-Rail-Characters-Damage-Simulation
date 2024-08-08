@@ -17,13 +17,12 @@ from hsr_simulation.configure_logging import main_logger
 class Guinanfei(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 106,
             ult_energy: int = 120
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.burn = 0
         self.firekiss = []
         self.a6_dmg_multiplier = 0
@@ -48,6 +47,12 @@ class Guinanfei(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         main_logger.info(f'Simulate enemy turn')
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+        main_logger.info(f'{self.__class__.__name__}: apply Burn DMG on enemy...')
         if self.burn > 0:
             self.burn -= 1
             self._apply_dot()
@@ -85,17 +90,12 @@ class Guinanfei(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
         if len(self.firekiss) > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss),
-                                                                        self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
+                                         dmg_multipliers=[0.07 * len(self.firekiss),
+                                                          self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Fire')
+            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -114,17 +114,12 @@ class Guinanfei(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
         if len(self.firekiss) > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss),
-                                                                        self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
+                                         dmg_multipliers=[0.07 * len(self.firekiss),
+                                                          self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Fire')
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -141,17 +136,12 @@ class Guinanfei(Character):
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
 
         if len(self.firekiss) > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss),
-                                                                        self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
+                                         dmg_multipliers=[0.07 * len(self.firekiss),
+                                                          self.a6_dmg_multiplier])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier])
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Fire')
+            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
+                                         dmg_multipliers=[self.a6_dmg_multiplier])
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -167,13 +157,13 @@ class Guinanfei(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is applying dot...')
         if len(self.firekiss) > 0:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                                       dmg_multipliers=[0.07 * len(self.firekiss),
-                                                                        self.a6_dmg_multiplier],
-                                                       can_crit=False)
+            dmg = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
+                                         dmg_multipliers=[0.07 * len(self.firekiss),
+                                                          self.a6_dmg_multiplier],
+                                         can_crit=False)
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                                       dmg_multipliers=[self.a6_dmg_multiplier], can_crit=False)
+            dmg = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
+                                         dmg_multipliers=[self.a6_dmg_multiplier], can_crit=False)
 
         if ult_trigger:
             dmg *= 0.92

@@ -19,19 +19,12 @@ from hsr_simulation.configure_logging import main_logger
 
 class DrRatio(Character):
     def __init__(self,
-                 atk=2000,
-                 crit_rate=0.5,
-                 crit_dmg=1,
+                 base_char: Character,
                  speed=103,
                  ult_energy=140
                  ):
-        super().__init__(
-            atk,
-            crit_rate,
-            crit_dmg,
-            speed,
-            ult_energy
-        )
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.debuff_on_enemy = []
 
     def reset_character_data(self) -> None:
@@ -63,6 +56,11 @@ class DrRatio(Character):
         # simulate enemy turn
         if len(self.debuff_on_enemy) > 0:
             self.debuff_on_enemy.pop(0)
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         if self.skill_points > 0:
             self._use_skill()
@@ -88,14 +86,8 @@ class DrRatio(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
-            self.debuff_on_enemy.append('debuff')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
@@ -119,14 +111,8 @@ class DrRatio(Character):
         else:
             multiplier = 0
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier])
+        dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier])
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
-            self.debuff_on_enemy.append('debuff')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -141,13 +127,7 @@ class DrRatio(Character):
         self.debuff_on_enemy.append('wiseman_folly')
         self.debuff_on_enemy.append('wiseman_folly')
 
-        ult_dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
-            self.debuff_on_enemy.append('debuff')
+        ult_dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -158,14 +138,8 @@ class DrRatio(Character):
         :return: None
         """
         main_logger.info('Using follow-up attack...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
+        dmg = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=5)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
-            self.debuff_on_enemy.append('debuff')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Talent')
@@ -181,5 +155,15 @@ class DrRatio(Character):
         if random.random() < final_follow_up_chance:
             self._follow_up_atk()
 
-
-
+    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+        """
+        Check whether enemy is weakness broken.
+        :param break_type: Break DMG type, e.g., Physical, Fire, etc.
+        :return: None
+        """
+        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+            self.enemy_turn_delayed_duration_weakness_broken = 1
+            self.weakness_broken = True
+            self.debuff_on_enemy.append('debuff')
+            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

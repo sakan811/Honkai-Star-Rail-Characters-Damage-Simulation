@@ -60,9 +60,6 @@ def simulate_cycles(character: Character, max_cycles: int, simulate_round: int) 
 
     set_stats_for_some_char(character)
 
-    # random enemy toughness
-    character.random_enemy_toughness()
-
     # Indicate that the battle starts
     character.start_battle()
 
@@ -104,8 +101,8 @@ def simulate_cycles_for_character_with_summon(
         summon = character.summon_numby()
         summon.inherit_topaz(character)
 
-    # random enemy toughness
-    character.random_enemy_toughness()
+    # Indicate that the battle starts
+    character.start_battle()
 
     cycles_action_value_for_character = cycles_action_val
     cycles_action_value_for_summon = cycles_action_val

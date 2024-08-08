@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class Acheron(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 101,
             ult_energy: int = 0
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.slash_dream = 0
         self.crimson_knot = 0
         self.a4_dmg_multiplier = 0
@@ -40,6 +39,13 @@ class Acheron(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+
+        # simulate enemy turn
+        if self.check_if_enemy_weakness_broken():
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         # simulate applying debuff on enemy
         if self.nihility_teammate_num > 0:
@@ -82,13 +88,8 @@ class Acheron(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                                   dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
-            self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
+                                     dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
 
         self._update_skill_point_and_ult_energy(skill_points=1, slash_dream=0)
 
@@ -102,13 +103,8 @@ class Acheron(Character):
         """
         main_logger.info("Using skill...")
         dmg_multiplier = [self.a4_dmg_multiplier, self.a6_dmg_multiplier]
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.6, break_amount=20,
-                                                   dmg_multipliers=dmg_multiplier)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
-            self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
+        dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20,
+                                     dmg_multipliers=dmg_multiplier)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, slash_dream=1)
 
@@ -136,15 +132,10 @@ class Acheron(Character):
                 self.a6_buff = 3
 
             # Rainblade hits
-            rainblade_dmg, break_amount = self._calculate_damage(skill_multiplier=0.24, break_amount=5,
-                                                                 res_multipliers=res_pen,
-                                                                 dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                                  self.a6_dmg_multiplier])
-            self.enemy_toughness -= break_amount
-
-            if self.is_enemy_weakness_broken():
-                self.do_break_dmg(break_type='Lightning')
-                self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
+            rainblade_dmg = self._calculate_damage(skill_multiplier=0.24, break_amount=5,
+                                                   res_multipliers=res_pen,
+                                                   dmg_multipliers=[self.a4_dmg_multiplier,
+                                                                    self.a6_dmg_multiplier])
 
             total_dmg.append(rainblade_dmg)
 
@@ -155,24 +146,19 @@ class Acheron(Character):
             for _ in range(removed_crimson_knot):
                 base_skill_multiplier = 0.15
                 final_skill_multiplier = base_skill_multiplier + add_skill_multiplier
-                additional_dmg, break_amount = self._calculate_damage(skill_multiplier=final_skill_multiplier,
-                                                                      break_amount=0,
-                                                                      dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                                       self.a6_dmg_multiplier],
-                                                                      res_multipliers=res_pen)
+                additional_dmg = self._calculate_damage(skill_multiplier=final_skill_multiplier,
+                                                        break_amount=0,
+                                                        dmg_multipliers=[self.a4_dmg_multiplier,
+                                                                         self.a6_dmg_multiplier],
+                                                        res_multipliers=res_pen)
 
                 total_dmg.append(additional_dmg)
 
         # Stygian Resurge
-        stygian_dmg, break_amount = self._calculate_damage(skill_multiplier=1.2, break_amount=5,
-                                                           res_multipliers=res_pen,
-                                                           dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                            self.a6_dmg_multiplier])
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Lightning')
-            self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
+        stygian_dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=5,
+                                             res_multipliers=res_pen,
+                                             dmg_multipliers=[self.a4_dmg_multiplier,
+                                                              self.a6_dmg_multiplier])
 
         total_dmg.append(stygian_dmg)
 
@@ -181,16 +167,16 @@ class Acheron(Character):
 
         # A6 Trace
         for _ in range(6):
-            additional_dmg, break_amount = self._calculate_damage(skill_multiplier=0.25, break_amount=0,
-                                                                  dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                                   self.a6_dmg_multiplier],
-                                                                  res_multipliers=res_pen)
+            additional_dmg = self._calculate_damage(skill_multiplier=0.25, break_amount=0,
+                                                    dmg_multipliers=[self.a4_dmg_multiplier,
+                                                                     self.a6_dmg_multiplier],
+                                                    res_multipliers=res_pen)
             total_dmg.append(additional_dmg)
 
         # Find max DMG
         self.crit_rate = 1
-        max_dmg, break_amount = self._calculate_damage(skill_multiplier=3.72, break_amount=0, res_multipliers=res_pen,
-                                                       dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
+        max_dmg = self._calculate_damage(skill_multiplier=3.72, break_amount=0, res_multipliers=res_pen,
+                                         dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
         self.crit_rate = 0.5
 
         final_total_dmg = float(sum(total_dmg))
@@ -253,3 +239,16 @@ class Acheron(Character):
         self.a6_dmg_multiplier = 0
         self.a6_buff = 0
         self.nihility_teammate_num = 0
+
+    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+        """
+        Check whether enemy is weakness broken.
+        :param break_type: Break DMG type, e.g., Physical, Fire, etc.
+        :return: None
+        """
+        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+            self.enemy_turn_delayed_duration_weakness_broken = 1
+            self.weakness_broken = True
+            self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
+            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

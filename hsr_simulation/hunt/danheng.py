@@ -20,8 +20,9 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class DanHeng(Character):
-    def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=110, ult_energy=100):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+    def __init__(self, base_char: Character, speed=110, ult_energy=100):
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.default_speed = speed
         self.can_get_talent = True
         self.talent_buff = 0
@@ -42,19 +43,22 @@ class DanHeng(Character):
 
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
         self._reset_buffs()
         super().take_action()
 
     def _use_basic_atk(self) -> None:
         main_logger.info('Using basic atk...')
         if self._is_enemy_slowed():
-            dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4])
+            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4])
         else:
-            dmg, break_amount = self._calculate_damage(1, 10)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+            dmg = self._calculate_damage(1, 10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -63,11 +67,7 @@ class DanHeng(Character):
 
     def _use_skill(self) -> None:
         main_logger.info('Using skill...')
-        dmg, break_amount = self._calculate_damage(2.6, 20)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+        dmg = self._calculate_damage(2.6, 20)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -77,11 +77,7 @@ class DanHeng(Character):
     def _use_ult(self) -> None:
         main_logger.info('Using ult...')
         multiplier = 5.2 if self._is_enemy_slowed() else 4
-        dmg, break_amount = self._calculate_damage(multiplier, 30)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Wind')
+        dmg = self._calculate_damage(multiplier, 30)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')

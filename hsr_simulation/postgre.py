@@ -1,3 +1,4 @@
+import functools
 import os
 
 import pandas as pd
@@ -7,8 +8,26 @@ from sqlalchemy import create_engine, text
 
 from hsr_simulation.configure_logging import main_logger
 
-
 load_dotenv()
+
+
+def db_operation_error_handler(func):
+    """
+    Decorator for database operations with error handling.
+    :param func: Function to be decorated
+    :return: Wrapped function
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            main_logger.error(e)
+            main_logger.error("Database operation error")
+        except Exception as e:
+            main_logger.error(e)
+            main_logger.error("Unexpected error")
+    return wrapper
 
 
 def get_db_postgre_url() -> str:
@@ -35,6 +54,7 @@ def get_db_postgre_url() -> str:
     return url
 
 
+@db_operation_error_handler
 def drop_stage_table(postgres_url: str, stage_table_name: str):
     """
     Drop a stage table in the database
@@ -49,6 +69,7 @@ def drop_stage_table(postgres_url: str, stage_table_name: str):
         conn.commit()
 
 
+@db_operation_error_handler
 def load_df_to_stage_table(
         df: pd.DataFrame,
         engine: sqlalchemy.engine,
@@ -65,6 +86,7 @@ def load_df_to_stage_table(
         df.to_sql(stage_table_name, conn, if_exists='append', index=False)
 
 
+@db_operation_error_handler
 def create_view(postgres_url: str,
                 view_name: str,
                 stage_table_name: str) -> None:
@@ -98,6 +120,7 @@ def create_view(postgres_url: str,
         conn.commit()
 
 
+@db_operation_error_handler
 def drop_view(postgres_url: str, view_name: str) -> None:
     """
     Drop a view in the database

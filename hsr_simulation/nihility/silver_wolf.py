@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class SilverWolf(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 107,
             ult_energy: int = 110
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.specific_weakness_res_reduce = 0
         self.general_weakness_res_reduce = 0
         self.def_reduce = 0
@@ -51,7 +50,7 @@ class SilverWolf(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
-        # simulate enemy turn
+        # simulate debuff duration on enemy turn
         if self.def_reduce > 0:
             self.def_reduce -= 1
         if self.bug > 0:
@@ -60,6 +59,13 @@ class SilverWolf(Character):
             self.specific_weakness_res_reduce -= 1
         if self.general_weakness_res_reduce > 0:
             self.general_weakness_res_reduce -= 1
+
+        # simulate enemy turn
+        if self.check_if_enemy_weakness_broken():
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
 
         if self.skill_points > 0:
             self._use_skill()
@@ -94,14 +100,9 @@ class SilverWolf(Character):
         if self.specific_weakness_res_reduce > 0:
             res_reduce_multiplier += [0.2]
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                                   def_reduction_multiplier=def_reduce_multiplier,
-                                                   res_multipliers=res_reduce_multiplier)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Quantum')
-            self._apply_bugs()
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
+                                     def_reduction_multiplier=def_reduce_multiplier,
+                                     res_multipliers=res_reduce_multiplier)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -142,14 +143,9 @@ class SilverWolf(Character):
         if current_debuff_on_enemy >= 3:
             res_reduction_multiplier += [0.03]
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1.96, break_amount=20,
-                                                   res_multipliers=res_reduction_multiplier,
-                                                   def_reduction_multiplier=def_reduce_multiplier,)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Quantum')
-            self._apply_bugs()
+        dmg = self._calculate_damage(skill_multiplier=1.96, break_amount=20,
+                                     res_multipliers=res_reduction_multiplier,
+                                     def_reduction_multiplier=def_reduce_multiplier)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -176,14 +172,9 @@ class SilverWolf(Character):
         self.def_reduce = 3
         def_reduction_multiplier = [0.45]
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=3.8, break_amount=30,
-                                                   def_reduction_multiplier=def_reduction_multiplier,
-                                                   res_multipliers=res_reduction_multiplier)
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Quantum')
-            self._apply_bugs()
+        dmg = self._calculate_damage(skill_multiplier=3.8, break_amount=30,
+                                     def_reduction_multiplier=def_reduction_multiplier,
+                                     res_multipliers=res_reduction_multiplier)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -207,3 +198,16 @@ class SilverWolf(Character):
 
             # simulate A2 trace
             self.bug += 1
+
+    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+        """
+        Check whether enemy is weakness broken.
+        :param break_type: Break DMG type, e.g., Physical, Fire, etc.
+        :return: None
+        """
+        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+            self.enemy_turn_delayed_duration_weakness_broken = 1
+            self.weakness_broken = True
+            self._apply_bugs()
+            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

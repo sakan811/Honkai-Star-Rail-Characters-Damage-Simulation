@@ -13,6 +13,7 @@
 #    limitations under the License.
 from sqlalchemy import create_engine
 
+from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
@@ -22,16 +23,18 @@ from hsr_simulation.nihility.luka import Luka
 from hsr_simulation.nihility.pela import Pela
 from hsr_simulation.nihility.sampo import Sampo
 from hsr_simulation.nihility.silver_wolf import SilverWolf
+from hsr_simulation.nihility.welt import Welt
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
 from hsr_simulation.simulate_battles import start_simulations
 from hsr_simulation.utils import process_result_list
 
 
-def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
+def start_sim_nihility(base_char: Character, simulation_num: int, max_cycles: int) -> None:
     """
     Start simulations for Nihility characters
-    :simulation_num: Number of simulations
-    :max_cycles: Maximum number of cycles to simulate
+    :param base_char: Base Character class
+    :param simulation_num: Number of simulations
+    :param max_cycles: Maximum number of cycles to simulate
     :return: None
     """
     main_logger.info('Starting Nihility characters simulations...')
@@ -48,36 +51,13 @@ def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
     view_name = 'Nihility'
     drop_view(postgres_url, view_name)
 
-    character = Kafka()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
+    # Nihility characters list
+    nihility_char_list = [Kafka(base_char), BlackSwan(base_char), Acheron(base_char), Guinanfei(base_char),
+                          Pela(base_char), Luka(base_char), SilverWolf(base_char), Sampo(base_char),
+                          Welt(base_char)]
 
-    character = BlackSwan()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = Acheron()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = Guinanfei()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = Pela()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = Luka()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = SilverWolf()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
-
-    character = Sampo()
-    result_list = start_simulations(character, max_cycles, simulation_num)
-    process_result_list(character, engine, result_list, stage_table_name)
+    for nihility_char in nihility_char_list:
+        result_list = start_simulations(nihility_char, max_cycles, simulation_num)
+        process_result_list(nihility_char, engine, result_list, stage_table_name)
 
     create_view(postgres_url, view_name, stage_table_name)

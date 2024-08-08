@@ -18,15 +18,16 @@ import random
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universal_dmg_reduction, \
-    calculate_dmg_multipliers, calculate_total_damage, calculate_def_multipliers
+    calculate_dmg_multipliers, calculate_total_damage, calculate_def_multipliers, calculate_res_multipliers
 
 
 class YanQing(Character):
-    def __init__(self, atk=2000, crit_rate=0.5, crit_dmg=1, speed=109, ult_energy=140):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+    def __init__(self, base_char: Character, speed=109, ult_energy=140):
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.default_speed = speed
-        self.default_crit_rate = crit_rate
-        self.default_crit_dmg = crit_dmg
+        self.default_crit_rate = base_char.default_crit_rate
+        self.default_crit_dmg = base_char.default_crit_dmg
 
         self.a6_spd_buff = 0
         self.ult_buff = 0
@@ -48,10 +49,17 @@ class YanQing(Character):
         self.crit_dmg = self.default_crit_dmg
 
     def take_action(self) -> None:
+        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
         self._reset_stats()
         self._handle_soulsteel_sync_buff()
-
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         if self.skill_points > 0:
             self._use_skill()
@@ -102,14 +110,9 @@ class YanQing(Character):
 
     def _use_skill(self) -> None:
         main_logger.info("Using skill...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
+        dmg = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
         self.soulsteel_sync = 1
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Ice')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
@@ -118,13 +121,8 @@ class YanQing(Character):
 
     def _use_basic_atk(self) -> None:
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Ice')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
@@ -137,43 +135,57 @@ class YanQing(Character):
         if self.soulsteel_sync > 0:
             self.crit_dmg += 0.5
 
-        dmg, break_amount = self._calculate_damage(skill_multiplier=3.5, break_amount=30)
+        dmg = self._calculate_damage(skill_multiplier=3.5, break_amount=30)
         self.current_ult_energy = 5
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Ice')
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
 
         self._handle_a2_trace()
 
-    def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> tuple[float, int]:
+    def _calculate_damage(
+            self,
+            skill_multiplier: float,
+            break_amount: int,
+            dmg_multipliers: list[float] = None,
+            dot_dmg_multipliers: list[float] = None,
+            res_multipliers: list[float] = None,
+            def_reduction_multiplier: list[float] = None,
+            can_crit: bool = True) -> float:
         """
-        Calculates damage based on skill_multiplier.
+        Calculates damage based on multipliers.
         :param skill_multiplier: Skill multiplier.
         :param break_amount: Break amount that the attack can do.
-        :return: Damage and break amount.
+        :param dmg_multipliers: DMG multipliers.
+        :param dot_dmg_multipliers: Dot DMG multipliers.
+        :param res_multipliers: RES multipliers.
+        :param def_reduction_multiplier: DEF reduction multipliers.
+        :param can_crit: Whether the DMG can CRIT.
+        :return: Damage.
         """
-        main_logger.info('Calculating damage...')
-        weakness_broken = self.is_enemy_weakness_broken()
-        if random.random() < self.crit_rate:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg)
+        main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
+        # reduce enemy toughness
+        self.current_enemy_toughness -= break_amount
+
+        self.check_if_enemy_weakness_broken()
+
+        base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
+
+        if random.random() < self.crit_rate and can_crit:
+            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
             self._apply_speed_buff()
         else:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = 1
+            dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
 
-        res_multiplier = 1
-        dmg_reduction = calculate_universal_dmg_reduction(weakness_broken)
-        def_reduction = calculate_def_multipliers()
+        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
+        res_multiplier = calculate_res_multipliers(res_multipliers)
+
         total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
                                            res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
                                            def_reduction_multiplier=def_reduction)
-        return total_dmg, break_amount
+
+        return total_dmg
 
     def _apply_speed_buff(self) -> None:
         main_logger.info('Applying speed buff...')
@@ -203,12 +215,7 @@ class YanQing(Character):
 
     def _attack_with_freeze_chance(self, skill_multiplier) -> tuple[float, float]:
         main_logger.info('Attacking with chance to freeze enemy...')
-        dmg, break_amount = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=10)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Ice')
+        dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
 
@@ -218,12 +225,7 @@ class YanQing(Character):
     def _handle_a2_trace(self) -> None:
         main_logger.info('Handling A2 Trace...')
         if random.random() < self.chance_of_certain_enemy_weakness:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
-
-            self.enemy_toughness -= break_amount
-
-            if self.is_enemy_weakness_broken():
-                self.do_break_dmg(break_type='Ice')
+            dmg = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
             self.data['DMG'].append(dmg)
             self.data['DMG_Type'].append('Trace')

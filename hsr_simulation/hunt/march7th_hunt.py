@@ -20,13 +20,12 @@ from hsr_simulation.configure_logging import main_logger
 class March7thHunt(Character):
     def __init__(
             self,
-            atk: int = 2000,
-            crit_rate: float = 0.5,
-            crit_dmg: float = 1.0,
+            base_char: Character,
             speed: float = 102,
             ult_energy: int = 110
     ):
-        super().__init__(atk, crit_rate, crit_dmg, speed, ult_energy)
+        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
+                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
         self.has_shifu = False
         self.charge = 0
         self.ult_buff = False
@@ -55,6 +54,14 @@ class March7thHunt(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        # simulate enemy turn
+        if self.weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
+        # simulate Shifu turn
         self._sim_shifu()
 
         # reset stats
@@ -96,22 +103,18 @@ class March7thHunt(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=1, break_amount=10)
-
-        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
-
+        break_amount = 10
         if self.shifu == 'DMG':
             self._additional_dmg()
         else:
             break_amount *= 2
 
-        self.enemy_toughness -= break_amount
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=break_amount)
 
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
+        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
+
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append('Basic ATK')
 
         self.charge += 1
         # ensure Charge not exceed 10
@@ -134,14 +137,9 @@ class March7thHunt(Character):
         """
         main_logger.info('Using ultimate...')
         if self.talent_buff:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30, dmg_multipliers=[0.8])
+            dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=30, dmg_multipliers=[0.8])
         else:
-            dmg, break_amount = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
-
-        self.enemy_toughness -= break_amount
-
-        if self.is_enemy_weakness_broken():
-            self.do_break_dmg(break_type='Imaginary')
+            dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Ultimate')
@@ -154,7 +152,7 @@ class March7thHunt(Character):
         :return: None
         """
         main_logger.info("Simulating additional damage from skill...")
-        dmg, break_amount = self._calculate_damage(skill_multiplier=0.2, break_amount=0)
+        dmg = self._calculate_damage(skill_multiplier=0.2, break_amount=0)
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Additional DMG')
 
@@ -164,6 +162,13 @@ class March7thHunt(Character):
         :return: None
         """
         main_logger.info("Using enhanced basic ATK...")
+        default_break_amount = 5
+        break_amount = default_break_amount
+        if self.shifu == 'DMG':
+            self._additional_dmg()
+        else:
+            break_amount = default_break_amount * 2
+
         extra_hit_chance = 0.6
         if self.ult_buff:
             self.ult_buff = False
@@ -173,40 +178,20 @@ class March7thHunt(Character):
             initial_hit_num = 3
 
         for _ in range(initial_hit_num):
-            dmg, break_amount = self._calculate_damage(skill_multiplier=0.8, break_amount=5, dmg_multipliers=[0.8])
+            dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=break_amount, dmg_multipliers=[0.8])
 
             self.data['DMG'].append(dmg)
             self.data['DMG_Type'].append('Enhanced Basic ATK')
-
-            if self.shifu == 'DMG':
-                self._additional_dmg()
-            else:
-                break_amount *= 2
-
-            self.enemy_toughness -= break_amount
-
-            if self.is_enemy_weakness_broken():
-                self.do_break_dmg(break_type='Imaginary')
 
         # Attempt to deal extra hits
         max_extra_hits = 3
         extra_hits = 0
         while extra_hits < max_extra_hits:
             if random.random() < extra_hit_chance:
-                dmg, break_amount = self._calculate_damage(skill_multiplier=0.8, break_amount=5, dmg_multipliers=[0.8])
+                dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=break_amount, dmg_multipliers=[0.8])
 
                 self.data['DMG'].append(dmg)
                 self.data['DMG_Type'].append('Enhanced Basic ATK')
-
-                if self.shifu == 'DMG':
-                    self._additional_dmg()
-                else:
-                    break_amount *= 2
-
-                self.enemy_toughness -= break_amount
-
-                if self.is_enemy_weakness_broken():
-                    self.do_break_dmg(break_type='Imaginary')
 
                 extra_hits += 1
             else:
@@ -226,14 +211,14 @@ class March7thHunt(Character):
 
         # random break amount
         break_amount = random.choice([10, 20])
-        self.enemy_toughness -= break_amount
+        self.current_enemy_toughness -= break_amount
 
         # simulate Shifu using Ultimate
         if random.random() < 0.25:
             self.charge += 1
             # ensure Charge not exceed 10
             self.charge = min(10, self.charge)
-            self.enemy_toughness -= 30
+            self.current_enemy_toughness -= 30
 
     def set_shifu(self) -> None:
         """
