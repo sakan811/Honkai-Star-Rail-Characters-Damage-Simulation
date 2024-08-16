@@ -1,4 +1,3 @@
-import functools
 import os
 
 import pandas as pd
@@ -9,25 +8,6 @@ from sqlalchemy import create_engine, text
 from hsr_simulation.configure_logging import main_logger
 
 load_dotenv()
-
-
-def db_operation_error_handler(func):
-    """
-    Decorator for database operations with error handling.
-    :param func: Function to be decorated
-    :return: Wrapped function
-    """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except sqlalchemy.exc.SQLAlchemyError as e:
-            main_logger.error(e)
-            main_logger.error("Database operation error")
-        except Exception as e:
-            main_logger.error(e)
-            main_logger.error("Unexpected error")
-    return wrapper
 
 
 def get_db_postgre_url() -> str:
@@ -54,7 +34,6 @@ def get_db_postgre_url() -> str:
     return url
 
 
-@db_operation_error_handler
 def drop_stage_table(postgres_url: str, stage_table_name: str):
     """
     Drop a stage table in the database
@@ -63,13 +42,18 @@ def drop_stage_table(postgres_url: str, stage_table_name: str):
     :return: None
     """
     main_logger.info(f'Dropping view {stage_table_name}...')
-    engine = create_engine(postgres_url)
-    with engine.connect() as conn:
-        conn.execute(text(f"DROP TABLE IF EXISTS public.\"{stage_table_name}\" CASCADE;"))
-        conn.commit()
+    try:
+        engine = create_engine(postgres_url)
+        with engine.connect() as conn:
+            conn.execute(text(f"DROP TABLE IF EXISTS public.\"{stage_table_name}\" CASCADE;"))
+            conn.commit()
+    except sqlalchemy.OperationalError as e:
+        main_logger.error('OperationalError')
+        main_logger.error(e, exc_info=True)
+        conn.rollback()
+        conn.close()
 
 
-@db_operation_error_handler
 def load_df_to_stage_table(
         df: pd.DataFrame,
         engine: sqlalchemy.engine,
@@ -82,11 +66,16 @@ def load_df_to_stage_table(
     :return: None
     """
     main_logger.info(f'Loading dataframe to {stage_table_name}...')
-    with engine.connect() as conn:
-        df.to_sql(stage_table_name, conn, if_exists='append', index=False)
+    try:
+        with engine.connect() as conn:
+            df.to_sql(stage_table_name, conn, if_exists='append', index=False)
+    except sqlalchemy.OperationalError as e:
+        main_logger.error('OperationalError')
+        main_logger.error(e, exc_info=True)
+        conn.rollback()
+        conn.close()
 
 
-@db_operation_error_handler
 def create_view(postgres_url: str,
                 view_name: str,
                 stage_table_name: str) -> None:
@@ -98,29 +87,34 @@ def create_view(postgres_url: str,
     :return: None
     """
     main_logger.info(f'Creating view {view_name}...')
-    engine = create_engine(postgres_url)
-    with engine.connect() as conn:
-        query = f'''
-        CREATE OR REPLACE VIEW public.\"{view_name}\" as
-        with DMGbyRound as (
-            select  "Character", 
-                    sum("DMG") as "AvgDMGbyRound", 
-                    "DMG_Type",
-                    "Simulate Round No."
-            from public.\"{stage_table_name}\"
-            group by "Character", "Simulate Round No.", "DMG_Type"
+    try:
+        engine = create_engine(postgres_url)
+        with engine.connect() as conn:
+            query = f'''
+            CREATE OR REPLACE VIEW public.\"{view_name}\" as
+            with DMGbyRound as (
+                select  "Character", 
+                        sum("DMG") as "AvgDMGbyRound", 
+                        "DMG_Type",
+                        "Simulate Round No."
+                from public.\"{stage_table_name}\"
+                group by "Character", "Simulate Round No.", "DMG_Type"
+                order by "Character"
+            ) 
+            select "Character", avg("AvgDMGbyRound") as "AvgDMG", "DMG_Type"
+            from DMGbyRound
+            group by "Character", "DMG_Type"
             order by "Character"
-        ) 
-        select "Character", avg("AvgDMGbyRound") as "AvgDMG", "DMG_Type"
-        from DMGbyRound
-        group by "Character", "DMG_Type"
-        order by "Character"
-        '''
-        conn.execute(text(query))
-        conn.commit()
+            '''
+            conn.execute(text(query))
+            conn.commit()
+    except sqlalchemy.OperationalError as e:
+        main_logger.error('OperationalError')
+        main_logger.error(e, exc_info=True)
+        conn.rollback()
+        conn.close()
 
 
-@db_operation_error_handler
 def drop_view(postgres_url: str, view_name: str) -> None:
     """
     Drop a view in the database
@@ -129,7 +123,13 @@ def drop_view(postgres_url: str, view_name: str) -> None:
     :return: None
     """
     main_logger.info(f'Dropping view {view_name}...')
-    engine = create_engine(postgres_url)
-    with engine.connect() as conn:
-        conn.execute(text(f"DROP VIEW IF EXISTS public.\"{view_name}\" CASCADE;"))
-        conn.commit()
+    try:
+        engine = create_engine(postgres_url)
+        with engine.connect() as conn:
+            conn.execute(text(f"DROP VIEW IF EXISTS public.\"{view_name}\" CASCADE;"))
+            conn.commit()
+    except sqlalchemy.OperationalError as e:
+        main_logger.error('OperationalError')
+        main_logger.error(e, exc_info=True)
+        conn.rollback()
+        conn.close()
