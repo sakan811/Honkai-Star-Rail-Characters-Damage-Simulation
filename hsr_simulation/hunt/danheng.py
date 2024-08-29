@@ -20,22 +20,21 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class DanHeng(Character):
-    def __init__(self, base_char: Character, speed=110, ult_energy=100):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+    def __init__(self, speed=110, ult_energy=100):
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.default_speed = speed
         self.can_get_talent = True
         self.talent_buff = 0
         self.a4_trace_buff = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.speed = self.default_speed
         self.can_get_talent = True
         self.talent_buff = 0
@@ -44,11 +43,7 @@ class DanHeng(Character):
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         self._reset_buffs()
         super().take_action()

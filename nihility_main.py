@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+import sqlalchemy
 from sqlalchemy import create_engine
 
 from hsr_simulation.character import Character
@@ -18,6 +19,7 @@ from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
 from hsr_simulation.nihility.guinanfei import Guinanfei
+from hsr_simulation.nihility.jiaoqiu import Jiaoqiu
 from hsr_simulation.nihility.kafka import Kafka
 from hsr_simulation.nihility.luka import Luka
 from hsr_simulation.nihility.pela import Pela
@@ -29,10 +31,9 @@ from hsr_simulation.simulate_battles import start_simulations
 from hsr_simulation.utils import process_result_list
 
 
-def start_sim_nihility(base_char: Character, simulation_num: int, max_cycles: int) -> None:
+def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
     """
     Start simulations for Nihility characters
-    :param base_char: Base Character class
     :param simulation_num: Number of simulations
     :param max_cycles: Maximum number of cycles to simulate
     :return: None
@@ -40,24 +41,25 @@ def start_sim_nihility(base_char: Character, simulation_num: int, max_cycles: in
     main_logger.info('Starting Nihility characters simulations...')
 
     # get PostgreSQL connection URL
-    postgres_url = get_db_postgre_url()
-    engine = create_engine(postgres_url)
+    postgres_url: str = get_db_postgre_url()
+    engine: sqlalchemy.engine = create_engine(postgres_url)
 
     # drop stage table if exists
-    stage_table_name = 'NihilityStage'
+    stage_table_name: str = 'NihilityStage'
     drop_stage_table(postgres_url, stage_table_name)
 
     # drop view if exist
-    view_name = 'Nihility'
+    view_name: str = 'Nihility'
     drop_view(postgres_url, view_name)
 
     # Nihility characters list
-    nihility_char_list = [Kafka(base_char), BlackSwan(base_char), Acheron(base_char), Guinanfei(base_char),
-                          Pela(base_char), Luka(base_char), SilverWolf(base_char), Sampo(base_char),
-                          Welt(base_char)]
+    nihility_char_list: list[Character] = [Kafka(), BlackSwan(), Acheron(),
+                                           Guinanfei(), Pela(), Luka(),
+                                           SilverWolf(), Sampo(), Welt(),
+                                           Jiaoqiu()]
 
     for nihility_char in nihility_char_list:
-        result_list = start_simulations(nihility_char, max_cycles, simulation_num)
+        result_list: list[dict[str, list]] = start_simulations(nihility_char, max_cycles, simulation_num)
         process_result_list(nihility_char, engine, result_list, stage_table_name)
 
     create_view(postgres_url, view_name, stage_table_name)

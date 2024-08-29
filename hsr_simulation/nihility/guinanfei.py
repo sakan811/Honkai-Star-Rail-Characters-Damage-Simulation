@@ -1,3 +1,6 @@
+#    Copyright 2024 Sakan Nirattisaykul
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
 #    You may obtain a copy of the License at
 #
@@ -17,24 +20,22 @@ from hsr_simulation.configure_logging import main_logger
 class Guinanfei(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 106,
             ult_energy: int = 120
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.burn = 0
         self.firekiss = []
         self.a6_dmg_multiplier = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.burn = 0
         self.firekiss = []
         self.a6_dmg_multiplier = 0
@@ -47,11 +48,9 @@ class Guinanfei(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         main_logger.info(f'Simulate enemy turn')
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        # simulate enemy turn
+        self._simulate_enemy_weakness_broken()
+
         main_logger.info(f'{self.__class__.__name__}: apply Burn DMG on enemy...')
         if self.burn > 0:
             self.burn -= 1

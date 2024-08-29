@@ -11,20 +11,20 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-from hsr_simulation.character import Character
+from destruction_main import start_sim_destruction
 from hsr_simulation.configure_logging import main_logger
 from hunt_main import start_sim_hunt
 from nihility_main import start_sim_nihility
 
 
 if __name__ == '__main__':
-    base_char = Character()
-    simulation_num = 1000
-    max_cycles = 10
+    simulation_num: int = 1000
+    max_cycles: int = 10
 
     try:
-        start_sim_hunt(base_char, simulation_num, max_cycles)
-        start_sim_nihility(base_char, simulation_num, max_cycles)
+        start_sim_hunt(simulation_num, max_cycles)
+        start_sim_nihility(simulation_num, max_cycles)
+        start_sim_destruction(simulation_num, max_cycles)
     except Exception as e:
         main_logger.error(e, exc_info=True)
         main_logger.error("Unexpected error occurred.")

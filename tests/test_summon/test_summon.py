@@ -1,13 +1,11 @@
-from hsr_simulation.character import Character
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.simulate_battles import start_simulations_for_char_with_summon
 
 
 def test_subclass_topaz_and_numby():
     # Given:
-    base_char = Character()
-    topaz = Topaz(base_char)
-    numby = topaz.summon_numby()
+    topaz = Topaz()
+    numby = topaz.summon_numby(topaz)
 
     # When:
     dict_list = start_simulations_for_char_with_summon(topaz, numby, max_cycles=10, simulation_num=2)

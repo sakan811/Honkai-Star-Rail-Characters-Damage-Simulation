@@ -20,12 +20,10 @@ from hsr_simulation.configure_logging import main_logger
 class March7thHunt(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 102,
             ult_energy: int = 110
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.has_shifu = False
         self.charge = 0
         self.ult_buff = False
@@ -33,14 +31,14 @@ class March7thHunt(Character):
         self.battle_start = True
         self.shifu = None
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.has_shifu = False
         self.charge = 0
         self.ult_buff = False
@@ -55,11 +53,7 @@ class March7thHunt(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         # simulate Shifu turn
         self._sim_shifu()

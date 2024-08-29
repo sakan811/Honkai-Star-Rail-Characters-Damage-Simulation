@@ -20,12 +20,10 @@ from hsr_simulation.configure_logging import main_logger
 class Acheron(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 101,
             ult_energy: int = 0
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.slash_dream = 0
         self.crimson_knot = 0
         self.a4_dmg_multiplier = 0
@@ -41,11 +39,7 @@ class Acheron(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.check_if_enemy_weakness_broken():
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         # simulate applying debuff on enemy
         if self.nihility_teammate_num > 0:
@@ -165,14 +159,6 @@ class Acheron(Character):
         # remove Crimson Knot from enemy
         self._remove_crimson_knot(remove_amount=self.crimson_knot)
 
-        # A6 Trace
-        for _ in range(6):
-            additional_dmg = self._calculate_damage(skill_multiplier=0.25, break_amount=0,
-                                                    dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                     self.a6_dmg_multiplier],
-                                                    res_multipliers=res_pen)
-            total_dmg.append(additional_dmg)
-
         # Find max DMG
         self.crit_rate = 1
         max_dmg = self._calculate_damage(skill_multiplier=3.72, break_amount=0, res_multipliers=res_pen,
@@ -184,6 +170,15 @@ class Acheron(Character):
 
         self.data['DMG'].append(final_dmg)
         self.data['DMG_Type'].append('Ultimate')
+
+        # A6 Trace DMG
+        for _ in range(6):
+            additional_dmg = self._calculate_damage(skill_multiplier=0.25, break_amount=0,
+                                                    dmg_multipliers=[self.a4_dmg_multiplier,
+                                                                     self.a6_dmg_multiplier],
+                                                    res_multipliers=res_pen)
+            self.data['DMG'].append(additional_dmg)
+            self.data['DMG_Type'].append('Ultimate')
 
     def _remove_crimson_knot(self, remove_amount: int = 3) -> tuple[float, int]:
         """
@@ -225,14 +220,14 @@ class Acheron(Character):
         elif self.nihility_teammate_num == 2:
             self.a4_dmg_multiplier = 0.6
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.slash_dream = 0
         self.crimson_knot = 0
         self.a4_dmg_multiplier = 0
@@ -247,8 +242,8 @@ class Acheron(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
-        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+        if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
-            self.weakness_broken = True
+            self.enemy_weakness_broken = True
             self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
             main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

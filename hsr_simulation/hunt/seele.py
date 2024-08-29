@@ -20,34 +20,33 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Seele(Character):
-    def __init__(self, base_character: Character, speed=115, ult_energy=120):
-        super().__init__(atk=base_character.default_atk, crit_rate=base_character.default_crit_rate,
-                         crit_dmg=base_character.crit_dmg, speed=speed, ult_energy=ult_energy)
+    def __init__(self, speed=115, ult_energy=120):
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.sheathed_blade = 0
         self.default_speed = speed
         self.can_resurgence = True
+        self.buff_state = False
+        self.current_normal_enemy: int = random.choice([2, 4])  # simulate the number of non-boss enemies
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.sheathed_blade = 0
         self.speed = self.default_speed
         self.can_resurgence = True
+        self.buff_state = False
+        self.current_normal_enemy: int = random.choice([2, 4])  # simulate the number of non-boss enemies
 
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         self._reset_stats_before_begin_actions()
 
@@ -76,36 +75,40 @@ class Seele(Character):
 
     def _use_basic_atk(self) -> None:
         main_logger.info("Using basic attack...")
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20)
+        res_pen = self._simulate_a4_trace()
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, res_multipliers=[res_pen])
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-        self.speed *= 1.2  # action forward 20%
+        self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=0.2))
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
 
     def _use_skill(self) -> None:
         main_logger.info("Using skill...")
-        dmg = self._calculate_damage(skill_multiplier=2.2, break_amount=20)
+        res_pen = self._simulate_a4_trace()
+        dmg = self._calculate_damage(skill_multiplier=2.2, break_amount=20, res_multipliers=[res_pen])
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        self._apply_sheathed_blade()
+        self._apply_sheathed_blade_buff()
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
     def _use_ult(self) -> None:
         main_logger.info('Using ultimate...')
-        ult_dmg = self._calculate_damage(skill_multiplier=4.25, break_amount=30)
+        res_pen = self._simulate_a4_trace()
+        ult_dmg = self._calculate_damage(skill_multiplier=4.25, break_amount=30, res_multipliers=[res_pen])
 
         self.data['DMG'].append(ult_dmg)
         self.data['DMG_Type'].append('Ultimate')
 
-    def _apply_sheathed_blade(self):
-        self.sheathed_blade = 2
+    def _apply_sheathed_blade_buff(self):
         if self.sheathed_blade > 0:
-            self.speed = self.default_speed * 1.25
+            self.speed *= 1.25
             main_logger.debug(f'Speed after Sheathed Blade Buff: {self.speed}')
             self.sheathed_blade -= 1
+        else:
+            self.sheathed_blade = 2
         main_logger.debug(f'Sheathed Blade: {self.sheathed_blade}')
 
     def _handle_resurgence_action_forward(self, is_resurgence: bool) -> None:
@@ -113,10 +116,23 @@ class Seele(Character):
         if is_resurgence:
             self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
             self.can_resurgence = False
+            self.buff_state = True
         else:
             self.can_resurgence = True
+            self.buff_state = False
 
     def _random_resurgence(self) -> bool:
         main_logger.info('Random resurgence...')
         resurgence_chance = 0.5 if self.can_resurgence else 0
         return random.random() < resurgence_chance
+
+    def _simulate_a4_trace(self) -> float:
+        """
+        Simulate A4 trace.
+        :return: Quantum RES PEN.
+        """
+        main_logger.info(f'{self.__class__.__name__}: Simulating A4 trace...')
+        if self.buff_state:
+            return 0.2
+        else:
+            return 0

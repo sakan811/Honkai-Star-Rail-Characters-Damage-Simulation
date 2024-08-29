@@ -22,25 +22,22 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_universa
 
 
 class YanQing(Character):
-    def __init__(self, base_char: Character, speed=109, ult_energy=140):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+    def __init__(self, speed=109, ult_energy=140):
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.default_speed = speed
-        self.default_crit_rate = base_char.default_crit_rate
-        self.default_crit_dmg = base_char.default_crit_dmg
 
         self.a6_spd_buff = 0
         self.ult_buff = 0
         self.soulsteel_sync = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.a6_spd_buff = 0
         self.ult_buff = 0
         self.soulsteel_sync = 0
@@ -52,11 +49,7 @@ class YanQing(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         self._reset_stats()
         self._handle_soulsteel_sync_buff()
@@ -177,7 +170,7 @@ class YanQing(Character):
         else:
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
         res_multiplier = calculate_res_multipliers(res_multipliers)
 
@@ -195,14 +188,7 @@ class YanQing(Character):
     @staticmethod
     def _random_hit_by_enemy() -> bool:
         main_logger.info('Randomizing being hit by an enemy...')
-        # Random whether the enemy can do AOE attack
-        target_to_be_attacked_by_enemy = random.choice([1, 3])
-        if target_to_be_attacked_by_enemy == 1:
-            chance = 0.25
-        else:
-            chance = 0.75
-
-        return random.random() < chance
+        return random.random() < 0.5
 
     def _handle_soulsteel_sync_follow_up(self) -> None:
         main_logger.info('Handling Soulsteel Sync follow-up ATK...')
@@ -224,7 +210,7 @@ class YanQing(Character):
 
     def _handle_a2_trace(self) -> None:
         main_logger.info('Handling A2 Trace...')
-        if random.random() < self.chance_of_certain_enemy_weakness:
+        if random.random() < 0.5:
             dmg = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
             self.data['DMG'].append(dmg)

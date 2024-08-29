@@ -17,32 +17,40 @@ import numpy as np
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
+from hsr_simulation.destruction.firefly import FireFly
+from hsr_simulation.destruction.xueyi import Xueyi
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
+from hsr_simulation.nihility.jiaoqiu import Jiaoqiu
 from hsr_simulation.nihility.luka import Luka
 from hsr_simulation.simulate_turns import simulate_turns, simulate_turns_for_char_with_summon
-from hsr_simulation.summon import Summon
 
 
 def set_stats_for_some_char(character: Character) -> None:
     """
-    Set stats for some character
+    Set stats for some character.
     :param character: Character to set stats for.
-    :return: None
+    :return: None.
     """
     if isinstance(character, Boothill):
         character.set_break_effect(1, 3)
     elif isinstance(character, BlackSwan):
-        character.set_effect_hit_rate(1, 2)
+        character.set_effect_hit_rate(0, 1.2)
     elif isinstance(character, Acheron):
         character.random_nihility_teammate()
     elif isinstance(character, March7thHunt):
         character.set_shifu()
     elif isinstance(character, Luka):
         character.random_enemy_hp()
+    elif isinstance(character, Jiaoqiu):
+        character.set_effect_hit_rate(0, 1.4)
+    elif isinstance(character, FireFly):
+        character.set_break_effect(1, 3.6)
+    elif isinstance(character, Xueyi):
+        character.set_break_effect(1, 2.4)
 
 
 def simulate_cycles(character: Character, max_cycles: int, simulate_round: int) -> dict[str, list[Any]]:
@@ -73,14 +81,14 @@ def simulate_cycles(character: Character, max_cycles: int, simulate_round: int) 
     data_dict: dict[str, list] = character.data
 
     # reset the character data
-    character.reset_character_data()
+    character.reset_character_data_for_each_battle()
 
     return data_dict
 
 
 def simulate_cycles_for_character_with_summon(
         character: Character,
-        summon: Summon,
+        summon: Character,
         max_cycles: int,
         simulate_round: int) -> dict[str, list[Any]]:
     """
@@ -96,10 +104,9 @@ def simulate_cycles_for_character_with_summon(
     cycles_action_val = 150 + ((max_cycles - 1) * 100)
     main_logger.debug(f'Total cycles action value: {cycles_action_val}')
 
-    # summoning characters' summon
+    # re-initialize characters' summon
     if isinstance(character, Topaz):
-        summon = character.summon_numby()
-        summon.inherit_topaz(character)
+        summon = character.summon_numby(character)
 
     # Indicate that the battle starts
     character.start_battle()
@@ -130,6 +137,6 @@ def simulate_cycles_for_character_with_summon(
     data_dict = character.data
 
     # reset the character and their summon data
-    character.reset_character_data()
+    character.reset_character_data_for_each_battle()
 
     return data_dict

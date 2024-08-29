@@ -20,25 +20,23 @@ from hsr_simulation.configure_logging import main_logger
 class SilverWolf(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 107,
             ult_energy: int = 110
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.specific_weakness_res_reduce = 0
         self.general_weakness_res_reduce = 0
         self.def_reduce = 0
         self.bug = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.specific_weakness_res_reduce = 0
         self.general_weakness_res_reduce = 0
         self.def_reduce = 0
@@ -61,11 +59,7 @@ class SilverWolf(Character):
             self.general_weakness_res_reduce -= 1
 
         # simulate enemy turn
-        if self.check_if_enemy_weakness_broken():
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         if self.skill_points > 0:
             self._use_skill()
@@ -126,7 +120,7 @@ class SilverWolf(Character):
 
         # simulate RES reduction to a Quantum element
         res_reduction_multiplier = [0]
-        if self.chance_of_certain_enemy_weakness:
+        if random.random() < 0.5:
             res_reduction_multiplier = [0.2]
             self.specific_weakness_res_reduce = 2
 
@@ -160,7 +154,7 @@ class SilverWolf(Character):
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
         # simulate DMG Res reduction to a weakness type
         res_reduction_multiplier = [0]
-        if not self.chance_of_certain_enemy_weakness:
+        if random.random() < 0.5:
             res_reduction_multiplier = [0.2]
             self.specific_weakness_res_reduce = 2
 
@@ -206,8 +200,8 @@ class SilverWolf(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
-        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+        if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
-            self.weakness_broken = True
+            self.enemy_weakness_broken = True
             self._apply_bugs()
             main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

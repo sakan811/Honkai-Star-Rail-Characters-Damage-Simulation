@@ -26,8 +26,7 @@ def test_character():
 
 
 def test_subclass_character():
-    base_char = Character()
-    character = Kafka(base_char)
+    character = Kafka()
     dict_list = start_simulations(character, max_cycles=10, simulation_num=2)
 
     assert len(dict_list) > 0

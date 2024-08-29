@@ -29,9 +29,6 @@
 [simulate_turns.py](..%2Fhsr_simulation%2Fsimulate_turns.py)
 - Contain functions to simulate characters' turns within the given cycles
 
-[summon.py](..%2Fhsr_simulation%2Fsummon.py)
-- Contain base class for Summon character
-
 [utils.py](..%2Fhsr_simulation%2Futils.py)
 - Contain utility functions
 
@@ -43,5 +40,10 @@ Each character is a subclass of Character class.
 
 ## [nihility](..%2Fhsr_simulation%2Fnihility) Package
 Contain Python scripts that represent Nihility characters.
+
+Each character is a subclass of Character class.
+
+## [destruction](..%2Fhsr_simulation%2Fdestruction) Package
+Contain Python scripts that represent Destruction characters.
 
 Each character is a subclass of Character class.

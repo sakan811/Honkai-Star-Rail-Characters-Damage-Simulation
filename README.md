@@ -2,8 +2,6 @@
 
 **Simulate** 10-cycles for 1,000 battles to find the **average damage** of Honkai Star Rail's **Characters**.
 
-Latest Update: 8 August 2024.
-
 ## Status
 [![CodeQL](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml/badge.svg)](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml)
 
@@ -15,8 +13,8 @@ Latest Update: 8 August 2024.
 ## Simulation Disclaimers
 **_The result of this simulation might not reflect the actual in-game damage._**
 
-This simulation **focuses exclusively** on the **elements** that **directly impact** character **damage** output. 
-As a result, **not all** aspects of character behavior, interactions, or game mechanics were simulated.
+This simulation **focuses exclusively** on the **elements** that **directly impact** character **damage** output, 
+as a result, **not all** aspects of character behavior, interactions, or game mechanics were simulated.
 
 Simulate each character for 1,000 battles, 10 cycles each.
 
@@ -27,6 +25,10 @@ Basic ATK, Skill, Ultimate, Talent, and Trace are at level 10.
 Character's level is 80.
 
 Eidolons, Light Cones, and Relics were not considered.
+
+Each character starts with 1 skill point.
+
+[Click here](docs/DISCLAIMERS.md) to read more about the simulation details.
 
 ## To Run a Simulation
 ### Setup a Project

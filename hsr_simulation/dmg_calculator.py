@@ -169,17 +169,16 @@ def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
 
 def calculate_super_break_dmg(
         base_toughness_reduce: float,
-        toughness_reduce_increase: float = 0,
         break_effect: float = 1) -> float:
     """
     Calculates super_break dmg
     :param base_toughness_reduce: Base toughness reduction.
-    :param toughness_reduce_increase: Toughness reduction increase.
     :param break_effect: Break Effect
-    :return: SUper Break dmg
+    :return: Super Break dmg
     """
     main_logger.info('Calculating super_break dmg...')
-    return base_toughness_reduce * (1 + toughness_reduce_increase) * break_effect
+    lvl_multiplier = 3767.5533
+    return lvl_multiplier * (base_toughness_reduce / 10) * (1 + break_effect)
 
 
 if __name__ == '__main__':

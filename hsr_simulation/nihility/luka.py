@@ -22,25 +22,23 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_mult
 class Luka(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 103,
             ult_energy: int = 130
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.bleed = 0
         self.fighting_will = 0
         self.ult_buff = 0
         self.enemy_hp = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.bleed = 0
         self.fighting_will = 0
         self.ult_buff = 0
@@ -58,11 +56,7 @@ class Luka(Character):
             self._apply_bleed()
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         # simulate Talent
         if self.battle_start:
@@ -217,7 +211,7 @@ class Luka(Character):
         Random enemy's HP
         """
         main_logger.info(f'{self.__class__.__name__} is randomizing enemy HP')
-        self.enemy_hp = random.randint(480, 28166)
+        self.enemy_hp = random.choice([480, 28166])
         main_logger.info(f'Enemy HP: {self.enemy_hp}')
 
     def _calculate_damage(
@@ -259,7 +253,7 @@ class Luka(Character):
         else:
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
         res_multiplier = calculate_res_multipliers(res_multipliers)
 

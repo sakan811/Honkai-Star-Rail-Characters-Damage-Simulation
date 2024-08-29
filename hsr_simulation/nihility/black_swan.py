@@ -20,25 +20,23 @@ from hsr_simulation.configure_logging import main_logger
 class BlackSwan(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 102,
             ult_energy: int = 120
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.arcana = 0
         self.epiphany = 0
         self.enemy_def_reduced = 0
         self.a6_dmg_multiplier = min(0.72, 0.6 * self.break_effect)
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.arcana = 0
         self.epiphany = 0
         self.enemy_def_reduced = 0
@@ -52,11 +50,7 @@ class BlackSwan(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         # simulate A4 Trace
         if self.battle_start:
@@ -87,7 +81,7 @@ class BlackSwan(Character):
         :return:
         """
         main_logger.info('Apply Arcana stack...')
-        base_chance = 0.65
+        base_chance = 0.65 * (1 + self.effect_hit_rate)
         if random.random() < base_chance:
             self.arcana += 1
 
@@ -187,13 +181,15 @@ class BlackSwan(Character):
 
         if self.arcana > 0:
             if self.arcana >= 7:
-                dmg_multiplier = [0.12 * self.arcana, 0.2, epiphany_multiplier, self.a6_dmg_multiplier]
-                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
-                                             dmg_multipliers=dmg_multiplier,
+                dmg_multiplier = [epiphany_multiplier, self.a6_dmg_multiplier]
+                dot_multiplier = 0.12 * self.arcana
+                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0, dot_dmg_multipliers=[dot_multiplier],
+                                             dmg_multipliers=dmg_multiplier, def_reduction_multiplier=[0.2],
                                              can_crit=False)
             else:
                 dmg_multiplier = [0.12 * self.arcana, epiphany_multiplier, self.a6_dmg_multiplier]
-                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0,
+                dot_multiplier = 0.12 * self.arcana
+                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0, dot_dmg_multipliers=[dot_multiplier],
                                              dmg_multipliers=dmg_multiplier,
                                              can_crit=False)
 

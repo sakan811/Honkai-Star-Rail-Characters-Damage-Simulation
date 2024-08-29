@@ -17,7 +17,7 @@ import random
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, \
     calculate_total_damage, calculate_universal_dmg_reduction, calculate_res_multipliers, calculate_break_damage, \
-    calculate_def_multipliers
+    calculate_def_multipliers, calculate_super_break_dmg
 
 
 class Character:
@@ -30,38 +30,41 @@ class Character:
 
     def __init__(
             self,
-            atk: int = 2000,
+            atk: float = 2000,
             crit_rate: float = 0.5,
             crit_dmg: float = 1.0,
             speed: float = 90,
             ult_energy: int = 140
     ):
         # default character stats
-        self.default_atk = atk
-        self.default_crit_rate = crit_rate
-        self.default_crit_dmg = crit_dmg
-        self.default_speed = speed
-        self.default_ult_energy = ult_energy
-        self.default_enemy_toughness = 100
-        self.default_weakness_broken = False
+        self.default_atk: float = atk
+        self.default_crit_rate: float = crit_rate
+        self.default_crit_dmg: float = crit_dmg
+        self.default_speed: float = speed
+        self.default_ult_energy: int = ult_energy
+        self.default_enemy_weakness_broken: bool = False
+        self.default_skill_points: int = 1
 
         # character stats
-        self.atk = self.default_atk
-        self.crit_rate = self.default_crit_rate
-        self.crit_dmg = self.default_crit_dmg
-        self.speed = self.default_speed
-        self.skill_points = 3
-        self.ult_energy = self.default_ult_energy
-        self.current_ult_energy = 0
-        self.break_effect = 1
-        self.effect_hit_rate = 0
+        self.atk: float = self.default_atk
+        self.crit_rate: float = self.default_crit_rate
+        self.crit_dmg: float = self.default_crit_dmg
+        self.speed: float = self.default_speed
+        self.skill_points: int = self.default_skill_points
+        self.ult_energy: int = self.default_ult_energy
+        self.current_ult_energy: int = 0
+        self.break_effect: float = 1
+        self.effect_hit_rate: float = 0
+
+        # summon stats
+        self.summon_action_value_for_action_forward: list[float] = []
 
         # enemy-related stats
-        self.enemy_toughness = self.default_enemy_toughness
-        self.current_enemy_toughness = self.enemy_toughness
-        self.enemy_turn_delayed_duration_weakness_broken = 0
-        self.chance_of_certain_enemy_weakness = 0.14  # the chance of enemy being weak to a certain element
-        self.weakness_broken = self.default_weakness_broken
+        self.default_enemy_toughness: int = 100
+        self.enemy_toughness: int = self.default_enemy_toughness
+        self.current_enemy_toughness: int = self.enemy_toughness
+        self.enemy_turn_delayed_duration_weakness_broken: int = 0
+        self.enemy_weakness_broken: bool = self.default_enemy_weakness_broken
 
         # dictionary for storing character actions
         self.data = {
@@ -71,11 +74,19 @@ class Character:
         }
 
         # other stats
-        self.battle_start = True
-        self.char_action_value_for_action_forward = []
-        self.char_action_value = 0.0
+        self.battle_start: bool = True
+        self.char_action_value_for_action_forward: list[float] = []
+        self.char_action_value: float = 0.0
 
-    def reset_character_data(self) -> None:
+    def reset_summon_stat_for_each_turn(self) -> None:
+        """
+        Reset Summon stats for each turn.
+        :return: None
+        """
+        main_logger.info(f'Resetting {self.__class__.__name__} stats ...')
+        self.summon_action_value_for_action_forward = []
+
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data,
@@ -89,7 +100,7 @@ class Character:
         self.crit_rate = self.default_crit_rate
         self.crit_dmg = self.default_crit_dmg
         self.speed = self.default_speed
-        self.skill_points = 3
+        self.skill_points = self.default_skill_points
         self.ult_energy = self.default_ult_energy
         self.current_ult_energy = 0
         self.break_effect = 1
@@ -99,8 +110,7 @@ class Character:
         self.enemy_toughness = self.default_enemy_toughness
         self.current_enemy_toughness = self.enemy_toughness
         self.enemy_turn_delayed_duration_weakness_broken = 0
-        self.chance_of_certain_enemy_weakness = 0.14  # the chance of enemy being weak to a certain element
-        self.weakness_broken = self.default_weakness_broken
+        self.enemy_weakness_broken = self.default_enemy_weakness_broken
 
         # dictionary for storing character actions
         self.data = {
@@ -173,9 +183,9 @@ class Character:
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
-        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+        if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
-            self.weakness_broken = True
+            self.enemy_weakness_broken = True
             main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
 
     def regenerate_enemy_toughness(self) -> None:
@@ -185,7 +195,7 @@ class Character:
         """
         main_logger.info(f'{self.__class__.__name__}: Regenerate enemy toughness...')
         self.current_enemy_toughness = self.enemy_toughness
-        self.weakness_broken = False
+        self.enemy_weakness_broken = False
 
     def do_break_dmg(self, break_type: str = 'None') -> None:
         """
@@ -234,7 +244,7 @@ class Character:
         else:
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
         res_multiplier = calculate_res_multipliers(res_multipliers)
 
@@ -266,7 +276,7 @@ class Character:
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Setting break effect...')
-        break_effect = random.uniform(min_break, max_break)
+        break_effect = random.choice([min_break, max_break])
         self.break_effect = break_effect
 
     def start_battle(self) -> None:
@@ -283,19 +293,21 @@ class Character:
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Set effect hit rate...')
-        effect_hit_rate = random.uniform(min_effect_hit_rate, max_effect_hit_rate)
+        effect_hit_rate = random.choice([min_effect_hit_rate, max_effect_hit_rate])
         self.effect_hit_rate = effect_hit_rate
 
     def simulate_action_forward(self, action_forward_percent: float) -> float:
         """
         Simulate action forward.
-        :param action_forward_percent: Action forward percent.
-        :return: Action value
+        :param action_forward_percent: Action forward percent as a float.
+        :return: Action value to be added back to the total cycles action value to simulate
+                character's action forward.
         """
         main_logger.info(f'Simulate action forward {action_forward_percent * 100}%...')
         main_logger.debug(f'{self.__class__.__name__} current speed: {self.speed}')
         main_logger.debug(f'{self.__class__.__name__} action value before taking action: {self.char_action_value}')
-        return self.char_action_value * action_forward_percent
+        current_char_action_value: float = self.char_action_value
+        return current_char_action_value * action_forward_percent
 
     def calculate_action_value(self, speed: float) -> float:
         """
@@ -307,3 +319,26 @@ class Character:
         char_action_value = 10000 / speed
         self.char_action_value = char_action_value
         return char_action_value
+
+    def _simulate_enemy_weakness_broken(self) -> None:
+        """
+        Simulate when the enemy is weakness broken.
+        If enemy weakness is broken, its action should be delayed for 1 turn.
+        :return: None
+        """
+        main_logger.info(f'{self.__class__.__name__}: Simulate when enemy is weakness broken...')
+        if self.enemy_weakness_broken:
+            if self.enemy_turn_delayed_duration_weakness_broken > 0:
+                self.enemy_turn_delayed_duration_weakness_broken -= 1
+            else:
+                self.regenerate_enemy_toughness()
+
+    def _deal_super_break_dmg(self, enemy_toughness_reduction: int, break_effect: float) -> float:
+        """
+        Deal super break damage.
+        :param enemy_toughness_reduction: Enemy toughness reduction from an attack.
+        :param break_effect: Break Effect
+        :return: Super Break DMG
+        """
+        main_logger.info(f'{self.__class__.__name__}: Dealing super break damage...')
+        return calculate_super_break_dmg(enemy_toughness_reduction, break_effect)

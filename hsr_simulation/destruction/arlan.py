@@ -11,36 +11,32 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-import random
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 
 
-class Pela(Character):
+class Arlan(Character):
     def __init__(
             self,
-            speed: float = 105,
+            speed: float = 102,
             ult_energy: int = 110
     ):
         super().__init__(speed=speed, ult_energy=ult_energy)
-        self.enemy_has_buff = False
-        self.a6_buff = False
-        self.exposed = 0
-        self.a2_multiplier = 0.2
+        self.default_hp: int = 3600
+        self.current_hp: int = self.default_hp
 
     def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
-        and the dictionary that store the character's actions' data.
+        and the dictionary that store the character's actions' data,
+        to ensure the character starts with default stats and battle-related data,
+        in each battle simulation.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
         super().reset_character_data_for_each_battle()
-        self.enemy_has_buff = False
-        self.a6_buff = False
-        self.exposed = 0
-        self.a2_multiplier = 0.2
+        self.default_hp: int = 3600
 
     def take_action(self) -> None:
         """
@@ -49,15 +45,7 @@ class Pela(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
-        # random debuff on enemy
-        self.enemy_has_buff = random.choice([True, False])
-
-        # simulate enemy turn
         self._simulate_enemy_weakness_broken()
-
-        # simulate enemy turn
-        if self.exposed > 0:
-            self.exposed -= 1
 
         if self.skill_points > 0:
             self._use_skill()
@@ -67,22 +55,15 @@ class Pela(Character):
         if self._can_use_ult():
             self._use_ult()
 
+            self.current_ult_energy = 5
+
     def _use_basic_atk(self) -> None:
         """
         Simulate basic atk damage.
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg_multipler = 0
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler])
+        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -95,26 +76,16 @@ class Pela(Character):
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
-        dmg_multipler = 0
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg = self._calculate_damage(skill_multiplier=2.1, break_amount=20,
-                                     dmg_multipliers=[dmg_multipler])
-
+        hp_cost = self.default_atk * 0.15
+        if self.current_hp > hp_cost:
+            self.current_hp -= hp_cost
+        else:
+            self.current_hp = 1
+        dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
-
-        # A6 trace
-        if self.enemy_has_buff:
-            self.a6_buff = True
 
     def _use_ult(self) -> None:
         """
@@ -122,21 +93,16 @@ class Pela(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        self.current_ult_energy = 5
+        single_target_dmg = self._calculate_damage(skill_multiplier=3.2, break_amount=20)
 
-        dmg_multipler = 0
-
-        if self.exposed > 0:
-            dmg_multipler += 0.4 + self.a2_multiplier
-            self.current_ult_energy += 10
-
-        if self.a6_buff:
-            dmg_multipler += 0.2
-            self.a6_buff = False
-
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
-
-        self.data['DMG'].append(dmg)
+        self.data['DMG'].append(single_target_dmg)
         self.data['DMG_Type'].append('Ultimate')
 
-        self.exposed = 2
+    def _apply_talent_effect(self) -> None:
+        """
+        Apply talent effect to increase damage based on missing HP.
+        :return: None
+        """
+        missing_hp_percent = (self.default_hp - self.current_hp) / self.default_hp
+        dmg_increase = min(missing_hp_percent * 0.72, 0.72)
+        self.atk *= (1 + dmg_increase)

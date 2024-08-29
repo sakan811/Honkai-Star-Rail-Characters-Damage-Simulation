@@ -1,13 +1,11 @@
-from hsr_simulation.character import Character
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.simulate_cycles import simulate_cycles_for_character_with_summon
 
 
 def test_simulate_turns_with_default_parameters():
     # Given
-    base_char = Character()
-    topaz = Topaz(base_char)
-    numby = topaz.summon_numby()
+    topaz = Topaz()
+    numby = topaz.summon_numby(topaz)
 
     max_cycles = 5
     simulate_round = 1
@@ -27,9 +25,8 @@ def test_simulate_turns_with_default_parameters():
 
 def test_simulate_turns_with_zero_max_cycles():
     # Given
-    base_char = Character()
-    topaz = Topaz(base_char)
-    numby = topaz.summon_numby()
+    topaz = Topaz()
+    numby = topaz.summon_numby(topaz)
     max_cycles = 0
     simulate_round = 1
 

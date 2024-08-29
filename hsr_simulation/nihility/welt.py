@@ -22,24 +22,22 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_mult
 class Welt(Character):
     def __init__(
             self,
-            base_char: Character,
             speed: float = 102,
             ult_energy: int = 120
     ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.enemy_slowed = 0
         self.imprisoned = 0
         self.a2_buff = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.enemy_slowed = 0
         self.imprisoned = 0
         self.a2_buff = 0
@@ -52,11 +50,7 @@ class Welt(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         if self.skill_points > 0:
             self._use_skill()
@@ -173,7 +167,7 @@ class Welt(Character):
 
         self.check_if_enemy_weakness_broken()
 
-        if self.weakness_broken:
+        if self.enemy_weakness_broken:
             # simulate A6 trace
             dmg_multipliers.append(0.2)
 
@@ -184,7 +178,7 @@ class Welt(Character):
         else:
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
         res_multiplier = calculate_res_multipliers(res_multipliers)
 

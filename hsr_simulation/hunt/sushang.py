@@ -20,22 +20,21 @@ from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_mult
 
 
 class Sushang(Character):
-    def __init__(self, base_char: Character, speed=107, ult_energy=120):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+    def __init__(self, speed=107, ult_energy=120):
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.talent_spd_buff = 0
         self.default_speed = speed
         self.ult_buff = 0
         self.a4_trace_buff = 0
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
+        super().reset_character_data_for_each_battle()
         self.talent_spd_buff = 0
         self.speed = self.default_speed
         self.ult_buff = 0
@@ -49,24 +48,18 @@ class Sushang(Character):
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
         # simulate enemy turn
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+        self._simulate_enemy_weakness_broken()
 
         # reset stats when begins a new action
         self.speed = self.default_speed
         self.a4_trace_buff = 0
         self.char_action_value_for_action_forward = []
-        self.atk = 2000
+        self.atk = self.default_atk
 
         # talend speed buff only lasts for 2 turns
         if self.talent_spd_buff > 0:
-            self.speed = self.default_speed * 1.2
+            self.speed *= 1.2
             self.talent_spd_buff -= 1
-        else:
-            self.speed = self.default_speed
 
         if self.ult_buff > 0:
             self.atk *= 1.3
@@ -146,7 +139,7 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using sword stance...")
-        if self.weakness_broken:
+        if self.enemy_weakness_broken:
             dmg = self._calculate_damage(skill_multiplier=1, break_amount=0)
             sword_stance_dmg = self._handle_a4_trace(dmg)
         else:
@@ -181,7 +174,6 @@ class Sushang(Character):
         :param dmg_multipliers: DMG multipliers.
         :param res_multipliers: RES multipliers.
         :param can_crit: Whether the DMG can CRIT.
-        :param break_type: Break DMG Type, e.g., Physical, Fire, etc.
         :return: Damage.
         """
         main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
@@ -189,14 +181,16 @@ class Sushang(Character):
         self.check_if_enemy_weakness_broken()
 
         # simulate Talent Speed buff
-        if self.weakness_broken:
-            self.speed = self.default_speed * 1.2
+        if self.enemy_weakness_broken and self.talent_spd_buff <= 0:
+            self.speed *= 1.2
             self.talent_spd_buff = 2
 
         # simulate A6 trace
         if is_skill or is_basic_atk:
-            if self.weakness_broken:
-                self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=0.15))
+            if self.enemy_weakness_broken:
+                self.char_action_value_for_action_forward.append(
+                    self.simulate_action_forward(action_forward_percent=0.15)
+                )
 
         if random.random() < self.crit_rate and can_crit:
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
@@ -205,7 +199,7 @@ class Sushang(Character):
             base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.weakness_broken)
+        dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         res_multiplier = calculate_res_multipliers(res_multipliers)
         def_reduction = calculate_def_multipliers()
         total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,

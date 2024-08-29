@@ -1,8 +1,7 @@
-from hsr_simulation.character import Character
+import pytest
+
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.simulate_turns import simulate_turns_for_char_with_summon
-
-import pytest
 
 
 @pytest.mark.parametrize("index, speed, expected_turn_count", [
@@ -19,10 +18,8 @@ import pytest
 ])
 def test_spd(index, speed, expected_turn_count):
     # Given:
-    base_char = Character()
-    topaz = Topaz(base_char=base_char, speed=speed)
-    numby = topaz.summon_numby()
-    numby.inherit_topaz(topaz)
+    topaz = Topaz(speed=speed)
+    numby = topaz.summon_numby(topaz)
 
     max_cycles = 7
     cycles_action_val = 150 + ((max_cycles - 1) * 100)

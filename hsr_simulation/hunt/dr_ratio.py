@@ -19,23 +19,21 @@ from hsr_simulation.configure_logging import main_logger
 
 class DrRatio(Character):
     def __init__(self,
-                 base_char: Character,
                  speed=103,
                  ult_energy=140
                  ):
-        super().__init__(atk=base_char.default_atk, crit_rate=base_char.default_crit_rate,
-                         crit_dmg=base_char.crit_dmg, speed=speed, ult_energy=ult_energy)
+        super().__init__(speed=speed, ult_energy=ult_energy)
         self.debuff_on_enemy = []
 
-    def reset_character_data(self) -> None:
+    def reset_character_data_for_each_battle(self) -> None:
         """
         Reset character's stats, along with all battle-related data,
         and the dictionary that store the character's actions' data.
         :return: None
         """
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
-        super().reset_character_data()
-        self.debuff_on_enemy = []
+        super().reset_character_data_for_each_battle()
+        self.debuff_on_enemy: list[str] = []
 
     def take_action(self) -> None:
         """
@@ -48,19 +46,16 @@ class DrRatio(Character):
         self.crit_rate = 0.5
         self.crit_dmg = 1
 
-        # simulate applying debuff on enemy by allies
-        debuff_num = random.choice([1, 2, 3])
+        # simulate applying debuff on an enemy by allies
+        debuff_num: int = random.choice([0, 3])
         for _ in range(debuff_num):
             self.debuff_on_enemy.append('debuff')
 
         # simulate enemy turn
         if len(self.debuff_on_enemy) > 0:
-            self.debuff_on_enemy.pop(0)
-        if self.weakness_broken:
-            if self.enemy_turn_delayed_duration_weakness_broken > 0:
-                self.enemy_turn_delayed_duration_weakness_broken -= 1
-            else:
-                self.regenerate_enemy_toughness()
+            if 'debuff' in self.debuff_on_enemy:
+                self.debuff_on_enemy.remove('debuff')
+        self._simulate_enemy_weakness_broken()
 
         if self.skill_points > 0:
             self._use_skill()
@@ -162,8 +157,8 @@ class DrRatio(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
-        if self.current_enemy_toughness <= 0 and not self.weakness_broken:
+        if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
-            self.weakness_broken = True
+            self.enemy_weakness_broken = True
             self.debuff_on_enemy.append('debuff')
             main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')

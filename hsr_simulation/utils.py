@@ -38,7 +38,7 @@ def process_result_list(
     """
     main_logger.info(f'Processing result list of {character.__class__.__name__}...')
 
-    df = create_df_from_dict_list(dict_list)
+    df: pd.DataFrame = create_df_from_dict_list(dict_list)
 
     add_char_name_to_df(character, df)
 
