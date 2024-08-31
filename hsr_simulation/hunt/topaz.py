@@ -40,17 +40,19 @@ class Topaz(Character):
         self.numby = None
         self.windfall_bonanza = 0
 
-    def summon_numby(self, topaz) -> Character:
+    def summon_numby(self, topaz: 'Topaz', speed: int = 80) -> 'Numby':
         """
         Summon Numby.
         :param topaz: Topaz character.
-        :return: None.
+        :param speed: Numby's speed.
+        :return: Numby object.
         """
         main_logger.info('Summon Numby...')
-        self.numby = Numby(topaz=topaz, speed=80, ult_energy=0)
+        self.numby = Numby(topaz=topaz, speed=speed, ult_energy=0)
         return self.numby
 
-    def enemy_has_fire_weakness(self) -> bool:
+    @staticmethod
+    def enemy_has_fire_weakness() -> bool:
         main_logger.info('Whether the enemy has fire weakness...')
         if random.random() < 0.5:
             return True
@@ -162,6 +164,15 @@ class Numby(Character):
         )
         self.windfall_bonanza_attacks = 0
         self.topaz = topaz
+        self.is_test = False
+
+    def set_test(self, is_test: bool) -> None:
+        """
+        Set whether the test is running.
+        :param is_test: Whether the test is running.
+        :return: None
+        """
+        self.is_test = is_test
 
     def _numby_attack(self, with_ult_buff: bool = False) -> None:
         """
@@ -199,6 +210,8 @@ class Numby(Character):
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
+        self.topaz._simulate_enemy_weakness_broken()
+
         if self.topaz.windfall_bonanza > 0:
             self.crit_dmg += 0.25
 
@@ -227,6 +240,10 @@ class Numby(Character):
                     self.simulate_action_forward(action_forward_percent=0.5)
                 )
 
+        # for testing turn count
+        if self.is_test:
+            self.summon_action_value_for_action_forward = []
+
     def reset_summon_stat_for_each_turn(self) -> None:
         """
         Reset Numby stats
@@ -234,7 +251,6 @@ class Numby(Character):
         """
         main_logger.info(f'Resetting {self.__class__.__name__} stats ...')
         super().reset_summon_stat_for_each_turn()
-        self.speed = 80
         self.crit_dmg = 1
 
     def _calculate_damage(

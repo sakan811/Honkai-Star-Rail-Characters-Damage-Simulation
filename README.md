@@ -16,17 +16,12 @@
 This simulation **focuses exclusively** on the **elements** that **directly impact** character **damage** output, 
 as a result, **not all** aspects of character behavior, interactions, or game mechanics were simulated.
 
+Certain behaviors, interactions, or mechanics were simplified and may not exactly reflect their in-game counterparts 
+for the sake of easier simulation.
+
 Simulate each character for 1,000 battles, 10 cycles each.
 
-Every simulated character has 2,000 ATK, 50% Crit Rate, and 100% Crit Damage.
-
-Basic ATK, Skill, Ultimate, Talent, and Trace are at level 10.
-
-Character's level is 80.
-
-Eidolons, Light Cones, and Relics were not considered.
-
-Each character starts with 1 skill point.
+Simulated single-target damage except for Erudition characters as multi-target damage was also simulated.
 
 [Click here](docs/DISCLAIMERS.md) to read more about the simulation details.
 

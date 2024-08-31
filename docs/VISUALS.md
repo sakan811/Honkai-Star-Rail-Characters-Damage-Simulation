@@ -22,3 +22,11 @@
 [Facebook](https://www.facebook.com/share/p/sN1h8Zo6mWq9EqGC/)  
 
 [Instagram](https://www.instagram.com/p/C_QZawSv8V0/?img_index=1)
+
+## Erudition Characters
+[Power BI](https://app.powerbi.com/view?r=eyJrIjoiOWE4MTY1Y2MtODc4NC00Mzk3LTk0ZTgtY2EwYThiMTZhYTVmIiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
+
+[Facebook](https://www.facebook.com/share/p/jEchctd2NqgtcSNv/)  
+
+[Instagram](https://www.instagram.com/p/C_VeHg9MDie/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+

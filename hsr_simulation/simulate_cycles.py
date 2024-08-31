@@ -19,6 +19,7 @@ from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.destruction.firefly import FireFly
 from hsr_simulation.destruction.xueyi import Xueyi
+from hsr_simulation.erudition.jingyuan import Jingyuan
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.topaz import Topaz
@@ -107,6 +108,8 @@ def simulate_cycles_for_character_with_summon(
     # re-initialize characters' summon
     if isinstance(character, Topaz):
         summon = character.summon_numby(character)
+    elif isinstance(character, Jingyuan):
+        summon = character.summon_lightning_lord(character)
 
     # Indicate that the battle starts
     character.start_battle()

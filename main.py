@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 from destruction_main import start_sim_destruction
+from erudition_main import start_sim_erudition
 from hsr_simulation.configure_logging import main_logger
 from hunt_main import start_sim_hunt
 from nihility_main import start_sim_nihility
@@ -25,6 +26,7 @@ if __name__ == '__main__':
         start_sim_hunt(simulation_num, max_cycles)
         start_sim_nihility(simulation_num, max_cycles)
         start_sim_destruction(simulation_num, max_cycles)
+        start_sim_erudition(simulation_num, max_cycles)
     except Exception as e:
         main_logger.error(e, exc_info=True)
         main_logger.error("Unexpected error occurred.")
