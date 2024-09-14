@@ -19,7 +19,9 @@ from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.danheng import DanHeng
 from hsr_simulation.hunt.dr_ratio import DrRatio
+from hsr_simulation.hunt.feixiao import Feixiao
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
+from hsr_simulation.hunt.moze import Moze
 from hsr_simulation.hunt.seele import Seele
 from hsr_simulation.hunt.sushang import Sushang
 from hsr_simulation.hunt.topaz import Topaz
@@ -52,7 +54,7 @@ def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
 
     # Hunt characters list
     hunt_char_list: list[Character] = [Seele(), DanHeng(), YanQing(), Sushang(), Topaz(), DrRatio(), Boothill(),
-                                       March7thHunt()]
+                                       March7thHunt(), Feixiao(), Moze()]
 
     for hunt_char in hunt_char_list:
         # when the character is Topaz

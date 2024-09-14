@@ -44,6 +44,8 @@ class Character:
         self.default_ult_energy: int = ult_energy
         self.default_enemy_weakness_broken: bool = False
         self.default_skill_points: int = 1
+        self.default_break_effect: float = 1
+        self.default_effect_hit_rate: float = 0
 
         # character stats
         self.atk: float = self.default_atk
@@ -53,8 +55,8 @@ class Character:
         self.skill_points: int = self.default_skill_points
         self.ult_energy: int = self.default_ult_energy
         self.current_ult_energy: int = 0
-        self.break_effect: float = 1
-        self.effect_hit_rate: float = 0
+        self.break_effect: float = self.default_break_effect
+        self.effect_hit_rate: float = self.default_effect_hit_rate
 
         # summon stats
         self.summon_action_value_for_action_forward: list[float] = []
@@ -130,6 +132,8 @@ class Character:
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        self._simulate_enemy_weakness_broken()
+
         if self.skill_points > 0:
             self._use_skill()
         else:
