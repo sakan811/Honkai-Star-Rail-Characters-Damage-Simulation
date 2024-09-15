@@ -25,6 +25,9 @@ class Herta(Character):
     ):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_is_frozen = random.choice([True, False])
+        self.can_use_follow_up = random.choice([True, False])
+        self.enemy_current_hp_less_than_50_percent = random.choice([True, False])
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -37,6 +40,9 @@ class Herta(Character):
         main_logger.info(f'Resetting {self.__class__.__name__} data...')
         super().reset_character_data_for_each_battle()
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_is_frozen = random.choice([True, False])
+        self.can_use_follow_up = random.choice([True, False])
+        self.enemy_current_hp_less_than_50_percent = random.choice([True, False])
 
     def take_action(self) -> None:
         """
@@ -84,8 +90,7 @@ class Herta(Character):
         dmg_multiplier = 0
 
         # simulate enemy current HP
-        enemy_current_hp_more_than_50_percent = random.choice([True, False])
-        if enemy_current_hp_more_than_50_percent:
+        if not self.enemy_current_hp_less_than_50_percent:
             dmg_multiplier += 0.2
 
             # simulate A2 trace
@@ -111,8 +116,7 @@ class Herta(Character):
         dmg_multiplier = 0
 
         # simulate A6 trace
-        enemy_is_frozen = random.choice([True, False])
-        if enemy_is_frozen:
+        if self.enemy_is_frozen:
             dmg_multiplier += 0.2
 
         dmg = self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
@@ -130,17 +134,17 @@ class Herta(Character):
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using follow-up attack...")
-        # simulate enemy with current HP lower than 50%
-        enemy_on_field_list = [i for i in range(1, self.enemy_on_field + 1)]
-        enemy_on_field_list.append(0)
-        num_enemy_current_hp_less_than_50_percent = random.choice(enemy_on_field_list)
+        if self.can_use_follow_up:
+            num_enemy_current_hp_less_than_50_percent = self.enemy_on_field
 
-        for _ in range(num_enemy_current_hp_less_than_50_percent):
-            dmg = self._calculate_damage(skill_multiplier=0.4, break_amount=5)
+            for _ in range(num_enemy_current_hp_less_than_50_percent):
+                dmg = self._calculate_damage(skill_multiplier=0.4, break_amount=5)
 
-            # other target DMG
-            for _ in range(num_enemy_current_hp_less_than_50_percent - 1):
-                dmg += self._calculate_damage(skill_multiplier=0.4, break_amount=5)
+                # other target DMG
+                for _ in range(num_enemy_current_hp_less_than_50_percent - 1):
+                    dmg += self._calculate_damage(skill_multiplier=0.4, break_amount=5)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Talent')
+                self.data['DMG'].append(dmg)
+                self.data['DMG_Type'].append('Talent')
+
+

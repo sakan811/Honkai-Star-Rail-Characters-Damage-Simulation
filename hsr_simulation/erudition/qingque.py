@@ -31,6 +31,7 @@ class Qingque(Character):
         self.a2_trace_buff = True
         self.a4_trace_buff = False
         self.enemy_on_field = random.choice([0, 1, 2, 3, 4, 5])
+        self.past_ally_turn: int = random.choice([1, 2, 3])
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -49,6 +50,7 @@ class Qingque(Character):
         self.a2_trace_buff = True
         self.a4_trace_buff = False
         self.enemy_on_field = random.choice([0, 1, 2, 3, 4, 5])
+        self.past_ally_turn: int = random.choice([1, 2, 3])
 
     def take_action(self) -> None:
         """
@@ -60,8 +62,7 @@ class Qingque(Character):
         self._simulate_enemy_weakness_broken()
 
         # simulate drawing tiles on ally turn
-        past_ally_turn = random.choice([1, 3])
-        self._draw_tiles(draw_num=past_ally_turn)
+        self._draw_tiles(draw_num=self.past_ally_turn)
 
         # A6 trace speed buff only lasts for 1 turn
         self.speed = self.default_speed
@@ -80,7 +81,6 @@ class Qingque(Character):
 
         if self._can_use_ult():
             self._use_ult()
-
             self.current_ult_energy = 5
 
         # reset stats after taking actions

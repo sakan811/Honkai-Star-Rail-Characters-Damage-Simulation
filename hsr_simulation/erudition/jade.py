@@ -29,6 +29,8 @@ class Jade(Character):
         self.charge = 0
         self.pawned_asset = 0
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_enter_battle = random.choice([0, 1, 2, 3, 4, 5])
+        self.num_of_enemy_being_hit = random.choice([1, 2, 3, 4, 5])
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -45,6 +47,8 @@ class Jade(Character):
         self.charge = 0
         self.pawned_asset = 0
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_enter_battle = random.choice([0, 1, 2, 3, 4, 5])
+        self.num_of_enemy_being_hit = random.choice([1, 2, 3, 4, 5])
 
     def take_action(self) -> None:
         """
@@ -63,7 +67,7 @@ class Jade(Character):
         self._simulate_enemy_weakness_broken()
 
         # simulate enemies enter battle
-        self.pawned_asset += random.choice([0, 1, 2, 3, 4, 5])
+        self.pawned_asset += self.enemy_enter_battle
         self.pawned_asset = min(self.pawned_asset, 50)
 
         # simulate A6 trace
@@ -115,7 +119,7 @@ class Jade(Character):
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Basic ATK')
 
-        self._gain_charge()
+        self._gain_charge(target_num=3)
 
     def _use_skill(self) -> None:
         """
@@ -143,7 +147,7 @@ class Jade(Character):
 
         self.ult_buff = 2
 
-        self._gain_charge()
+        self._gain_charge(target_num=self.enemy_on_field)
 
     def _debt_collector_dmg(self) -> None:
         """
@@ -161,7 +165,7 @@ class Jade(Character):
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('Skill')
 
-        self._gain_charge()
+        self._gain_charge(target_num=self.num_of_enemy_being_hit)
 
     def _use_follow_up_atk(self) -> None:
         """
@@ -201,14 +205,14 @@ class Jade(Character):
         main_logger.info(f'{self.__class__.__name__} is gaining Critical Damage buff...')
         self.crit_dmg = self.default_crit_dmg + (0.024 * self.pawned_asset)
 
-    def _gain_charge(self) -> None:
+    def _gain_charge(self, target_num: int) -> None:
         """
         Simulate gaining Charge.
+        :param target_num: Number of targets being hit.
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is gaining Charge...')
-        num_of_enemy_being_hit = [1, 2, 3, 4, 5]
-        self.charge += random.choice(num_of_enemy_being_hit)
+        self.charge += target_num
         self.charge = min(self.charge, 8)
 
     def _gain_atk_buff(self) -> None:

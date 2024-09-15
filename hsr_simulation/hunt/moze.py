@@ -28,6 +28,7 @@ class Moze(Character):
         self.charge = 0
         self.charge_consumed = 0
         self.a2_trace_buff_cooldown = 0
+        self.ally_atk_num: int = random.choices([0, 1, 2, 3], [0.1, 0.6, 0.2, 0.1])[0]
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -43,6 +44,7 @@ class Moze(Character):
         self.charge = 0
         self.charge_consumed = 0
         self.a2_trace_buff_cooldown = 0
+        self.ally_atk_num: int = random.choices([0, 1, 2, 3], [0.1, 0.6, 0.2, 0.1])[0]
 
     def take_action(self) -> None:
         """
@@ -72,9 +74,8 @@ class Moze(Character):
 
             self.current_ult_energy = 5
 
-        # simulate allies atk
-        ally_atk_num = random.choices([0, 1, 2, 3, 4, 5, 6], [0.1, 0.5, 0.2, 0.1, 0.05, 0.025, 0.025])[0]
-        for _ in range(ally_atk_num):
+        # simulate allies attacks
+        for _ in range(self.ally_atk_num):
             self._talent_additional_dmg()
 
     def _use_basic_atk(self) -> None:

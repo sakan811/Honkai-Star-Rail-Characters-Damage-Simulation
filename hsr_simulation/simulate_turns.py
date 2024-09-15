@@ -23,10 +23,10 @@ def process_character_turn(character: Character, cycles_action_val: float) -> fl
     :param cycles_action_val: Current cycles action value.
     :return: Updated cycles action value.
     """
-    character.take_action()
-
     char_action_val = character.calculate_action_value(character.speed)
     cycles_action_val -= char_action_val
+
+    character.take_action()
 
     # simulate Action Forward
     main_logger.debug(f'{character.__class__.__name__} current speed: {character.speed}')
@@ -112,10 +112,10 @@ def simulate_turns_for_char_with_summon(
 
                 # calculate whether Summon has turns left
                 if cycles_action_value_for_summon >= summon_action_val:
-                    summon.take_action()
-
                     cycles_action_value_for_summon -= summon_action_val
                     summon_turn_count += 1
+
+                    summon.take_action()
 
                     # simulate Action Forward
                     main_logger.debug(f'{summon.__class__.__name__} current speed: {summon.speed}')

@@ -26,7 +26,10 @@ class Himeko(Character):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.charge = 0
         self.burn = 0
-        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_on_field: int = random.choice([1, 2, 3, 4, 5])
+        self.enemy_defeated: int = random.choice([i for i in range(0, self.enemy_on_field + 1)])
+        self.enemy_weakness_broken_num: int = random.choice([i for i in range(0, self.enemy_on_field + 1)])
+        self.ult_is_used = False
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -40,7 +43,10 @@ class Himeko(Character):
         super().reset_character_data_for_each_battle()
         self.charge = 0
         self.burn = 0
-        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_on_field: int = random.choice([1, 2, 3, 4, 5])
+        self.enemy_defeated: int = random.choice([i for i in range(0, self.enemy_on_field + 1)])
+        self.enemy_weakness_broken_num: int = random.choice([i for i in range(0, self.enemy_on_field + 1)])
+        self.ult_is_used = False
 
     def take_action(self) -> None:
         """
@@ -52,12 +58,13 @@ class Himeko(Character):
         self._simulate_enemy_weakness_broken()
 
         if self.burn > 0:
-            self.burn -= 1
             self._apply_burn_dmg()
+            self.burn -= 1
+        else:
+            self.ult_is_used = False
 
         # simulate teammates weakness-break enemies
-        enemy_weakness_broken = random.choice([0, 1, 2, 3, 4, 5])
-        self.charge += enemy_weakness_broken
+        self.charge += self.enemy_weakness_broken_num
         self.charge = min(self.charge, 3)
 
         if self.battle_start:
@@ -80,9 +87,7 @@ class Himeko(Character):
             self.current_ult_energy = 5
 
             # simulate defeating the enemy
-            enemy_defeated_list = [i for i in range(1, self.enemy_on_field + 1)]
-            enemy_defeated_list.append(0)
-            enemy_defeated = random.choice(enemy_defeated_list)
+            enemy_defeated = self.enemy_defeated
             self.current_ult_energy += enemy_defeated * 5
 
         # simulate teammate attack
@@ -147,6 +152,8 @@ class Himeko(Character):
 
         self._simulate_a2_trace()
 
+        self.ult_is_used = True
+
     def _use_follow_up_atk(self) -> None:
         """
         Simulate follow-up attack damage.
@@ -181,9 +188,7 @@ class Himeko(Character):
             self.enemy_weakness_broken = True
             main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
 
-            enemy_weakness_broken_list = [i for i in range(1, self.enemy_on_field + 1)]
-            enemy_weakness_broken_list.append(0)
-            self.charge += random.choice(enemy_weakness_broken_list)
+            self.charge += self.enemy_weakness_broken_num
             self.charge = min(self.charge, 3)
 
     def _apply_burn_dmg(self) -> None:
@@ -192,10 +197,10 @@ class Himeko(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__}: Applying Burn Damage...')
-        dmg = self._calculate_damage(skill_multiplier=0.3, break_amount=0, can_crit=False)
-
-        # other target DMG
-        for _ in range(self.enemy_on_field - 1):
+        dmg = 0
+        max_targets = 5 if self.ult_is_used else 3
+        enemy_on_field = min(self.enemy_on_field, max_targets)
+        for _ in range(enemy_on_field):
             dmg += self._calculate_damage(skill_multiplier=0.3, break_amount=0, can_crit=False)
 
         self.data['DMG'].append(dmg)

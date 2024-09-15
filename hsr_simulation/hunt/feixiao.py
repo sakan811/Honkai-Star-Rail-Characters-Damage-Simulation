@@ -29,6 +29,7 @@ class Feixiao(Character):
         self.talent_buff = 0
         self.a6_trace_buff = 0
         self.talent_is_used = False
+        self.ally_atk_num: int = random.choices([0, 1, 2, 3], [0.1, 0.6, 0.2, 0.1])[0]
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -45,6 +46,7 @@ class Feixiao(Character):
         self.talent_buff = 0
         self.a6_trace_buff = 0
         self.talent_is_used = False
+        self.ally_atk_num: int = random.choices([0, 1, 2, 3], [0.1, 0.6, 0.2, 0.1])[0]
 
     def take_action(self) -> None:
         """
@@ -81,14 +83,11 @@ class Feixiao(Character):
             self._use_ult()
             self.flying_aureus -= 6
 
-        # simulate allies attack
-        ally_atk_num = random.choices([0, 1, 2, 3, 4, 5, 6], [0.1, 0.5, 0.2, 0.1, 0.05, 0.025, 0.025])[0]
-
-        if ally_atk_num > 0 and self.can_use_talent:
+        # simulate allies attacks
+        if self.ally_atk_num > 0 and self.can_use_talent:
             self._use_follow_up_atk()
             self.can_use_talent = False
-
-        for _ in range(ally_atk_num):
+        for _ in range(self.ally_atk_num):
             self._gain_flying_aureus_stack()
 
     def _use_basic_atk(self) -> None:

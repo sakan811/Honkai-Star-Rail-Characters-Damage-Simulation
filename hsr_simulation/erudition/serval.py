@@ -26,7 +26,8 @@ class Serval(Character):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.shock = 0
         self.a6_trace_buff = 0
-        self.enemy_on_field = random.choice([0, 1, 2, 3, 4, 5])
+        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_defeated = random.choice([True, False])
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -40,7 +41,8 @@ class Serval(Character):
         super().reset_character_data_for_each_battle()
         self.shock = 0
         self.a6_trace_buff = 0
-        self.enemy_on_field = random.choice([0, 1, 2, 3, 4, 5])
+        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_defeated = random.choice([True, False])
 
     def take_action(self) -> None:
         """
@@ -92,7 +94,7 @@ class Serval(Character):
         self.data['DMG_Type'].append('Basic ATK')
 
         if self.shock > 0:
-            self._apply_talent_dmg()
+            self._apply_talent_dmg(target_num=1)
 
     def _use_skill(self) -> None:
         """
@@ -105,7 +107,7 @@ class Serval(Character):
         # adjacent target DMG
         adjacent_target = min(self.enemy_on_field - 1, 2)
         for _ in range(adjacent_target):
-            dmg += self._calculate_damage(skill_multiplier=0.5, break_amount=10)
+            dmg += self._calculate_damage(skill_multiplier=0.6, break_amount=10)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -121,7 +123,7 @@ class Serval(Character):
             self.shock = 2
 
         if self.shock > 0:
-            self._apply_talent_dmg()
+            self._apply_talent_dmg(target_num=3)
 
     def _use_ult(self) -> None:
         """
@@ -140,7 +142,7 @@ class Serval(Character):
 
         if self.shock > 0:
             self.shock += 2
-            self._apply_talent_dmg()
+            self._apply_talent_dmg(target_num=self.enemy_on_field)
 
     def _apply_shock_dmg(self) -> None:
         """
@@ -148,26 +150,26 @@ class Serval(Character):
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is applying shock damage...')
-        dmg = self._calculate_damage(skill_multiplier=1.04, break_amount=0, can_crit=False)
+        dmg = 0
 
-        # other target DMG
-        enemy_on_field = self.enemy_on_field - 1
+        # only up to 3 targets can be affected by shock
+        max_targets = 3
+        enemy_on_field = min(self.enemy_on_field, max_targets)
         for _ in range(enemy_on_field):
             dmg += self._calculate_damage(skill_multiplier=1.04, break_amount=0, can_crit=False)
 
         self.data['DMG'].append(dmg)
         self.data['DMG_Type'].append('DoT')
 
-    def _apply_talent_dmg(self) -> None:
+    def _apply_talent_dmg(self, target_num: int) -> None:
         """
         Simulate applying talent damage.
+        :param target_num: Number of targets to apply talent damage.
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is applying talent damage...')
-        dmg = self._calculate_damage(skill_multiplier=0.72, break_amount=0)
-
-        # other target DMG
-        for _ in range(self.enemy_on_field - 1):
+        dmg = 0
+        for _ in range(target_num):
             dmg += self._calculate_damage(skill_multiplier=0.72, break_amount=0)
 
         self.data['DMG'].append(dmg)
@@ -175,11 +177,10 @@ class Serval(Character):
 
     def _simulate_defeating_enemy(self) -> None:
         """
-        Simulate defeating enemy.
+        Simulate defeating the enemy.
         :return: None
         """
         main_logger.info(f'{self.__class__.__name__} is defeating enemy...')
-        enemy_defeated = random.choices([True, False], weights=[0.2, 0.8])[0]
-        if enemy_defeated:
+        if self.enemy_defeated:
             self.a6_trace_buff = 2
             self.atk = self.default_atk * 1.2

@@ -52,8 +52,7 @@ class Argenti(Character):
         self._simulate_enemy_weakness_broken()
 
         # simulate A4 trace
-        num_enemy_enter_battle = self.enemy_on_field - 1
-        self.current_ult_energy += 2 * num_enemy_enter_battle
+        self.current_ult_energy += 2 * self.enemy_on_field
 
         if self.battle_start:
             self.battle_start = False

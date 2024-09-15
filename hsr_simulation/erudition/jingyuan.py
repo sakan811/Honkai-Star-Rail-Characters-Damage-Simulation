@@ -28,7 +28,7 @@ class Jingyuan(Character):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.lightning_lord = None
         self.lighting_lord_hit_per_action = 3
-        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_on_field = random.choice([1, 2, 3])
         self.skill_buff = 0
 
     def reset_character_data_for_each_battle(self) -> None:
@@ -43,7 +43,7 @@ class Jingyuan(Character):
         super().reset_character_data_for_each_battle()
         self.lightning_lord = None
         self.lighting_lord_hit_per_action = 3
-        self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
+        self.enemy_on_field = random.choice([1, 2, 3])
         self.skill_buff = 0
 
     def take_action(self) -> None:
@@ -180,7 +180,8 @@ class LightingLord(Character):
         if self.jingyuan.lighting_lord_hit_per_action >= 6:
             self.crit_dmg += 0.25
 
-        increased_hit_per_action = self.jingyuan.lighting_lord_hit_per_action - 3
+        increased_hit_per_action = (self.jingyuan.lighting_lord_hit_per_action - 3
+                                    if self.jingyuan.lighting_lord_hit_per_action > 3 else 0)
         self.speed += 10 * increased_hit_per_action
 
         if self.jingyuan.lighting_lord_hit_per_action > 0:
@@ -259,4 +260,3 @@ class LightingLord(Character):
                                            def_reduction_multiplier=def_reduction)
 
         return total_dmg
-
