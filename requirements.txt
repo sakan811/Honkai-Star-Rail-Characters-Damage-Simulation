@@ -3,4 +3,4 @@ numpy~=1.26.4
 pandas~=2.2.1
 python-dotenv~=1.0.1
 pdf2image~=1.17.0
-SQLAlchemy~=2.0.29
+SQLAlchemy~=2.0.35
