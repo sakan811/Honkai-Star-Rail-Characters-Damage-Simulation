@@ -201,19 +201,18 @@ class Character:
         self.current_enemy_toughness = self.enemy_toughness
         self.enemy_weakness_broken = False
 
-    def do_break_dmg(self, break_type: str = 'None') -> None:
+    def do_break_dmg(self, break_type: str = 'None') -> float:
         """
         Do break damage if enemy is weakness broken.
         :param break_type: Break type, e.g., Physical, Fire, etc.
-        :return: None
+        :return: Break damage.
         """
         main_logger.info(f'{self.__class__.__name__}: Doing break damage...')
         break_dmg = calculate_break_damage(break_type=break_type, target_max_toughness=self.enemy_toughness)
 
         break_dmg *= self.break_effect
 
-        self.data['DMG'].append(break_dmg)
-        self.data['DMG_Type'].append('Break DMG')
+        return break_dmg
 
     def _calculate_damage(
             self,
