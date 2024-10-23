@@ -11,6 +11,7 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+import random
 from typing import Any
 
 import numpy as np
@@ -20,6 +21,7 @@ from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.destruction.firefly import FireFly
 from hsr_simulation.destruction.xueyi import Xueyi
 from hsr_simulation.erudition.jingyuan import Jingyuan
+from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.hunt.boothill import Boothill
 from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.topaz import Topaz
@@ -52,6 +54,8 @@ def set_stats_for_some_char(character: Character) -> None:
         character.set_break_effect(1, 3.6)
     elif isinstance(character, Xueyi):
         character.set_break_effect(1, 2.4)
+    elif isinstance(character, Rappa):
+        character.atk = random.choice([2400, 3200])
 
 
 def simulate_cycles(character: Character, max_cycles: int, simulate_round: int) -> dict[str, list[Any]]:
