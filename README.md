@@ -25,7 +25,7 @@ Simulated single-target damage except for Erudition characters as multi-target d
 
 [Click here](docs/DISCLAIMERS.md) to read more about the simulation details.
 
-## To Run a Simulation
+## How to Run a Simulation
 ### Setup a Project
 - Clone this repo: https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios.git
 - Create **.env** file with the following variables:
@@ -35,7 +35,9 @@ Simulated single-target damage except for Erudition characters as multi-target d
   ```
 
 ### Setup a Database
-- Install **[PostgreSQL](https://www.postgresql.org/)**
+- Install **[PostgreSQL](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)**
+  - Make sure that PostgreSQL server is installed
+  - Setup your superuser's **password** as instructed.
 - install **[pgAdmin](https://www.pgadmin.org/)**
 - Enter your superuser's **password** in **.env** file for **DB_PASSWORD** variable. 
 - Run **pgAdmin**
