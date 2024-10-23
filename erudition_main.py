@@ -21,6 +21,7 @@ from hsr_simulation.erudition.himeko import Himeko
 from hsr_simulation.erudition.jade import Jade
 from hsr_simulation.erudition.jingyuan import Jingyuan
 from hsr_simulation.erudition.qingque import Qingque
+from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.erudition.serval import Serval
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
 from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
@@ -49,7 +50,8 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
     drop_view(postgres_url, view_name)
 
     # Erudition characters list
-    erudition_char_list: list[Character] = [Qingque(), Argenti(), Herta(), Himeko(), Serval(), Jade(), Jingyuan()]
+    erudition_char_list: list[Character] = [Qingque(), Argenti(), Herta(), Himeko(), Serval(), Jade(), Jingyuan(),
+                                            Rappa()]
 
     for erudition_char in erudition_char_list:
         if isinstance(erudition_char, Jingyuan):
