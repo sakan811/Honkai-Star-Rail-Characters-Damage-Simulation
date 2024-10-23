@@ -17,3 +17,4 @@
 **/*.pbix
 /graph/pdf_to_image.py
 **/*.sql
+post_template.txt
