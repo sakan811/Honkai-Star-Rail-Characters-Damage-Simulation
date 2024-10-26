@@ -28,30 +28,28 @@ Simulated single-target damage except for Erudition characters as multi-target d
 ## How to Run a Simulation
 ### Setup a Project
 - Clone this repo: https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios.git
-- Create **.env** file with the following variables:
-  ```
-  DB_NAME=hsr_char_action_dmg
-  DB_PASSWORD=
-  ```
+- Rename **.env.example** to **.env**
+
 
 ### Setup a Database
-- Install **[PostgreSQL](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)**
-  - Make sure that PostgreSQL server is installed
-  - Setup your superuser's **password** as instructed.
-- install **[pgAdmin](https://www.pgadmin.org/)**
-- Enter your superuser's **password** in **.env** file for **DB_PASSWORD** variable. 
-- Run **pgAdmin**
-- Open **SQL** console in **pgAdmin**
-- Execute:
+- Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Run:
+  ```bash 
+  docker compose up
   ```
-  create database hsr_char_action_dmg;
+  - The container is mapped to port 6000 by default, change it if needed, for example:
+    - ```bash
+      export HOST_POSTGRES_PORT=5432
+      ```
+  - The container is mapped to a volume `postgres_data` to store the data. 
+    It will be inside your current working directory, change it if needed, for example:
+    - ```bash
+      export POSTGRES_DATA_PATH=/path/to/your_new_postgres_data
+      ```
+
+### Run a Simulation
+- Make sure Docker Desktop and Postgres container are running.
+- Run:
+  ```bash
+  python main.py
   ```
-
-## Codebase Details
-### Test Status
-[![CodeQL](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml/badge.svg)](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/codeql.yml)
-
-[![Python application](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/python-app.yml/badge.svg)](https://github.com/sakan811/Honkai-Star-Rail-Characters-Damage-By-Scenarios/actions/workflows/python-app.yml)
-
-### Brief Codebase Documents
-[Click here](docs/DOCS.md) to read a brief docs of this codebase.
