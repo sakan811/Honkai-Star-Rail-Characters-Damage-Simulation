@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    hostname: hsr_postgres
+    container_name: hsr_postgres
+    environment:
+      POSTGRES_DB: hsr_char_action_dmg
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: hsr_postgres
+    ports:
+      - ${HOST_POSTGRES_PORT:-6000}:5432
+    volumes:
+      - ${POSTGRES_DATA_PATH:-./postgres_data}:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
