@@ -33,11 +33,11 @@ def get_db_postgre_url() -> str:
     main_logger.info('Getting PostgreSQL connection URL...')
 
     db_params = {
-        'dbname': os.getenv('DB_NAME'),
-        'user': 'postgres',
-        'password': os.getenv('DB_PASSWORD'),
-        'host': 'localhost',
-        'port': '5432'
+        'dbname': os.getenv('POSTGRES_DB'),
+        'user': os.getenv('POSTGRES_USER'),
+        'password': os.getenv('POSTGRES_PASSWORD'),
+        'host': os.getenv('POSTGRES_HOST'),
+        'port': os.getenv('POSTGRES_PORT')
     }
 
     # Format the PostgreSQL connection URL
