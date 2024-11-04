@@ -35,7 +35,7 @@ Simulated single-target damage except for Erudition characters as multi-target d
 - Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Run:
   ```bash 
-  docker compose up
+  docker compose up -d
   ```
   - The container is mapped to port 6000 by default, change it if needed, for example:
     - ```bash
