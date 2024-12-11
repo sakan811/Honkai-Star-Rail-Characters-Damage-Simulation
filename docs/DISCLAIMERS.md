@@ -43,15 +43,6 @@ based on [PrydwenGG](https://www.prydwen.gg/) data
 When an enemy is weakness-broken, 1 turn delays its turn; 
 hence the character can deal more damage to it for at least 1 turn, which simulates what happens in the game.
 
-For **ease** of **Erudition** character **simulation**, **toughness reduction** for **AoE** attacks was applied 
-as if all the damage was **concentrated** on a **single** enemy. 
-For example: 
-- If an AoE attack reduces the main target's toughness by 20 and adjacent targets' toughness by 10, 
-  the simulation combines this, reducing the main target's toughness by 30. 
-  - This simplification reflects the increased damage to all enemies when multiple targets are broken in the game.
-
-Erudition characters' were simulated to fight against 1 - 5 enemies which randomized each battle.
-
 Every simulated character has 2,000 ATK, 50% Crit Rate, and 100% Crit Damage.
 
 Basic ATK, Skill, Ultimate, Talent, and Trace are at level 10.
@@ -61,3 +52,19 @@ Character's level is 80.
 Eidolons, Light Cones, and Relics were not considered.
 
 Each character starts with 1 skill point.
+
+# Erudition Characters
+For **ease** of **Erudition** character **simulation**, **toughness reduction** for **AoE** attacks was applied 
+as if all the damage was **concentrated** on a **single** enemy. 
+For example: 
+- If an AoE attack reduces the main target's toughness by 20 and adjacent targets' toughness by 10, 
+  the simulation combines this, reducing the main target's toughness by 30. 
+  - This simplification reflects the increased damage to all enemies when multiple targets are broken in the game.
+
+Erudition characters' were simulated to fight against 1 - 5 enemies which randomized each battle.
+
+# Harmony Characters
+- The potential damage increased is calculated using Physical Trailblazer stats as a baseline.
+- Harmony characters share the same CRIT RATE and CRIT DMG as Physical Trailblazer, which are 50% and 100% respectively.
+- If the DMG buff varies by situations, the buff is averaged.
+  - Sunday's buff from Skill varies by ally's Summon, so his buff is averaged.
