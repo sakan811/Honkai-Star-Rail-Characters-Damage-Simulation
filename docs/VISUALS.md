@@ -30,3 +30,10 @@
 
 [Instagram](https://www.instagram.com/p/DBeP-2BhF2L/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
+## 
+[Power BI](https://app.powerbi.com/view?r=eyJrIjoiMDMzZjNkZWItODcyYy00MjlkLWE5NGItNjM4OTk3N2NiNTA1IiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
+
+[Facebook](https://www.facebook.com/photo?fbid=122191320254120872&set=a.122097908642120872)  
+
+[Instagram](https://www.instagram.com/p/DD1ybTcvKkT/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+
