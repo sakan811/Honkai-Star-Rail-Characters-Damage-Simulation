@@ -292,7 +292,7 @@ class HarmonyTrailblazer(HarmonyCharacter):
 
     def ult_buff(self, *args, **kwargs) -> float:
         break_effect = self.default_break_effect * 1.3
-        return calculate_super_break_dmg(base_toughness_reduce=30, break_effect=break_effect)
+        return calculate_super_break_dmg(base_toughness_reduce=20, break_effect=break_effect)
 
     def a2_trace_buff(self, *args, **kwargs) -> float:
         super_break_dmg_multiplier = 0.6
@@ -303,4 +303,26 @@ class HarmonyTrailblazer(HarmonyCharacter):
 
         super_break_dmg = self.ult_buff() * (1 + self.a2_trace_buff())
         buffed_dmg = self.calculate_trailblazer_dmg(super_break_dmg=super_break_dmg)
+        return self.calculate_percent_change(base_dmg, buffed_dmg)
+
+
+class Yukong(HarmonyCharacter):
+    def __init__(self):
+        super().__init__()
+
+    def skill_buff(self, *args, **kwargs) -> float:
+        atk_buff = 0.8
+        return atk_buff
+
+    def potential_buff(self, *args, **kwargs) -> float:
+        base_dmg = self.calculate_trailblazer_dmg()
+
+        atk_buff = self.skill_buff()
+
+        final_crit_rate = self.trailblazer_crit_rate + 0.28
+        final_crit_dmg = self.trailblazer_crit_dmg + 0.65
+
+        crit_buff = self.crit_buff(final_crit_rate, final_crit_dmg)
+
+        buffed_dmg = self.calculate_trailblazer_dmg(atk_bonus=atk_buff, dmg_bonus_multiplier=crit_buff)
         return self.calculate_percent_change(base_dmg, buffed_dmg)
