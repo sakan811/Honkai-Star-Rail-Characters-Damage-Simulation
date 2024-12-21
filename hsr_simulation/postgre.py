@@ -91,36 +91,46 @@ def load_df_to_stage_table(
         conn.close()
 
 
+def generate_dmg_view_query(view_name: str, stage_table_name: str) -> str:
+    """
+    Generate an SQL query to create or replace a view summarizing damage data.
+
+    :param view_name: The name of the view to be created or replaced.
+    :param stage_table_name: The name of the stage table used in the query.
+    :return: The constructed SQL query as a string.
+    """
+    return f'''
+    CREATE OR REPLACE VIEW public.\"{view_name}\" AS
+    WITH DMGbyRound AS (
+        SELECT "Character", 
+               SUM("DMG") AS "AvgDMGbyRound", 
+               "DMG_Type",
+               "Simulate Round No."
+        FROM public.\"{stage_table_name}\"
+        GROUP BY "Character", "Simulate Round No.", "DMG_Type"
+        ORDER BY "Character"
+    )
+    SELECT "Character", AVG("AvgDMGbyRound") AS "AvgDMG", "DMG_Type"
+    FROM DMGbyRound
+    GROUP BY "Character", "DMG_Type"
+    ORDER BY "Character"
+    '''
+
+
 def create_view(postgres_url: str,
                 view_name: str,
-                stage_table_name: str) -> None:
+                query: str) -> None:
     """
     Create a view in the database.
     :param postgres_url: Postgres database URL.
     :param view_name: View name.
-    :param stage_table_name: Stage table name.
+    :param query: Query to create the view.
     :return: None
     """
     main_logger.info(f'Creating view {view_name}...')
     try:
         engine = create_engine(postgres_url)
         with engine.connect() as conn:
-            query = f'''
-            CREATE OR REPLACE VIEW public.\"{view_name}\" as
-            with DMGbyRound as (
-                select  "Character", 
-                        sum("DMG") as "AvgDMGbyRound", 
-                        "DMG_Type",
-                        "Simulate Round No."
-                from public.\"{stage_table_name}\"
-                group by "Character", "Simulate Round No.", "DMG_Type"
-                order by "Character"
-            ) 
-            select "Character", avg("AvgDMGbyRound") as "AvgDMG", "DMG_Type"
-            from DMGbyRound
-            group by "Character", "DMG_Type"
-            order by "Character"
-            '''
             conn.execute(text(query))
             conn.commit()
     except sqlalchemy.OperationalError as e:

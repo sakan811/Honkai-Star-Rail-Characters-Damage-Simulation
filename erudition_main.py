@@ -23,7 +23,7 @@ from hsr_simulation.erudition.jingyuan import Jingyuan
 from hsr_simulation.erudition.qingque import Qingque
 from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.erudition.serval import Serval
-from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
+from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view, generate_dmg_view_query
 from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.utils import process_result_list
 
@@ -63,4 +63,5 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
             result_list: list[dict[str, list]] = start_simulations(erudition_char, max_cycles, simulation_num)
             process_result_list(erudition_char, engine, result_list, stage_table_name)
 
-    create_view(postgres_url, view_name, stage_table_name)
+    query = generate_dmg_view_query(view_name, stage_table_name)
+    create_view(postgres_url, view_name, query)
