@@ -26,7 +26,7 @@ from hsr_simulation.destruction.misha import Misha
 from hsr_simulation.destruction.trailblazer_physical import TrailblazerPhysical
 from hsr_simulation.destruction.xueyi import Xueyi
 from hsr_simulation.destruction.yunli import Yunli
-from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view
+from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view, generate_dmg_view_query
 from hsr_simulation.simulate_battles import start_simulations
 from hsr_simulation.utils import process_result_list
 
@@ -60,4 +60,5 @@ def start_sim_destruction(simulation_num: int, max_cycles: int) -> None:
         result_list: list[dict[str, list]] = start_simulations(destruction_char, max_cycles, simulation_num)
         process_result_list(destruction_char, engine, result_list, stage_table_name)
 
-    create_view(postgres_url, view_name, stage_table_name)
+    query = generate_dmg_view_query(view_name, stage_table_name)
+    create_view(postgres_url, view_name, query)
