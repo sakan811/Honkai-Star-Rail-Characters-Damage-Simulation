@@ -64,7 +64,19 @@ For example:
 Erudition characters' were simulated to fight against 1 - 5 enemies which randomized each battle.
 
 # Harmony Characters
+**_This calculation was simplified for ease of simulation and might not reflect the actual in-game situation._**
 - The potential damage increased is calculated using Physical Trailblazer stats as a baseline.
-- Harmony characters share the same CRIT RATE and CRIT DMG as Physical Trailblazer, which are 50% and 100% respectively.
+- Simulate each character for one battle, 5 cycles each.
+- Assume that all possible buffs were applied to all ally's attacks.
+- Assume that Harmony characters have 3 starting Skill points.
+- Harmony characters share the same CRIT RATE, CRIT DMG, and ATK as Physical Trailblazer, which are 50%, 100%, and 2000 respectively.
 - If the DMG buff varies by situations, the buff is averaged.
   - Sunday's buff from Skill varies by ally's Summon, so his buff is averaged.
+- Buff related to Skill point were ignored.
+- CRIT-related buffs were evaluated based on their impact on average damage output. The calculation uses this formula:
+  ```(1 - crit_rate) * 1 + crit_rate * (1 * crit_dmg)```
+  - This formula represents the potential DMG increased from CRIT rate or CRIT damage, accounting for both non-critical and critical hits. 
+- Energy Regen-related buffs were evaluated using this formular: `total_ult_energy_gain / trailblazer_ult_energy`
+  - This formular represents the potential DMG increased from Energy Regen, accounting for both non-ult and ult hits.
+- If the buff is based on a stat of a Harmony character, that stat is based on average value from **PRYDWEN.GG**.
+- If the buff has a maximum value, the maximum value is used.
