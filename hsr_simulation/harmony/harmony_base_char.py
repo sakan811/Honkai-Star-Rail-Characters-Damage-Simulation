@@ -66,6 +66,15 @@ class HarmonyCharacter:
         else:
             return 0  # No bonus turns
 
+    def reduce_enemy_toughness(self, amount: int) -> None:
+        """
+        Reduce the enemy's toughness and reset if necessary.
+        :param amount: Amount to reduce toughness by
+        """
+        self.enemy_toughness -= amount
+        if self.enemy_toughness <= 0:
+            self.enemy_toughness = 0  # Prevent negative toughness
+
     def handle_super_break_damage(self, dmg_list: list, super_break_dmg: float) -> None:
         """
         Handle the logic for applying super break damage and updating enemy toughness states.
@@ -80,7 +89,7 @@ class HarmonyCharacter:
             self.enemy_toughness = self.default_enemy_toughness
             self.has_broken_once = False
         else:
-            self.enemy_toughness -= 20
+            self.reduce_enemy_toughness(amount=20)
 
     def handle_break_damage(self, dmg_list: list, break_dmg: float, super_break_dmg: float) -> None:
         """
@@ -154,12 +163,6 @@ class HarmonyCharacter:
                            res_pen_multiplier)
                 dmg_list.append(ult_dmg)
                 self.trailblazer_current_energy = 0
-
-                # Apply toughness reduction and super break damage
-                self.enemy_toughness -= 20
-                if self.enemy_turn_delay > 0:
-                    dmg_list.append(super_break_dmg)
-                    self.enemy_turn_delay -= 1
 
                 # Handle super break damage
                 self.handle_super_break_damage(dmg_list, super_break_dmg)
