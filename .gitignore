@@ -19,3 +19,4 @@
 **/*.sql
 post_template.txt
 /query.ipynb
+**/*.pyc
