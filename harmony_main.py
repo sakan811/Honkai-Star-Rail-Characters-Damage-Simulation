@@ -20,7 +20,7 @@ from sqlalchemy import create_engine
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 from hsr_simulation.harmony.harmony_char import Sunday, Asta, Bronya, Hanya, Robin, RuanMei, Sparkle, Tingyun, \
-    HarmonyTrailblazer
+    HarmonyTrailblazer, Yukong
 from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view, load_df_to_stage_table
 
 
@@ -45,7 +45,7 @@ def start_sim_harmony() -> None:
 
     # Harmony characters list
     harmony_char_list: list[HarmonyCharacter] = [Sunday(), Asta(), Bronya(), Hanya(), Robin(), RuanMei(), Sparkle(),
-                                                 Tingyun(), HarmonyTrailblazer()]
+                                                 Tingyun(), HarmonyTrailblazer(), Yukong()]
 
     # Collect results to store
     results = []
