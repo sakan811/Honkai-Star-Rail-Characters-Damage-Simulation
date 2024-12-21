@@ -35,45 +35,38 @@ class HarmonyCharacter:
 
     def calculate_spd_breakpoint(self, bonus_spd: int = 0) -> int:
         """
-        Calculate the SPD breakpoint for Trailblazer.
-        :param bonus_spd: Bonus SPD
-        :return: Bonus turns within five cycles
+        Calculates the additional bonus turns a character earns based on their speed
+        and a given bonus speed. This calculation is determined by matching the
+        character's total speed to predefined speed breakpoints.
+
+        The method iterates through a set of breakpoint thresholds and their
+        corresponding bonus turns. If the character's speed meets or exceeds a
+        threshold, the corresponding bonus turns are returned. Otherwise, the
+        default value of 0 is returned if no thresholds are met.
+
+        :param bonus_spd: An integer representing the additional speed bonus to be
+            added to the base trailblazer speed.
+        :return: An integer representing the number of bonus turns earned based on
+            the calculated speed.
         """
         trailblazer_spd = self.trailblazer_spd + bonus_spd
+        spd_breakpoints = [
+            (200, 6), (182, 5), (178, 4), (172, 4),
+            (164, 4), (160, 3), (156, 3), (146, 3),
+            (143, 2), (134, 2), (120, 1)
+        ]
 
-        if trailblazer_spd >= 200:
-            return 6  # 3 turns in the first cycle, 2 in others (11 total - 5 defaults = 6 bonus)
-        elif trailblazer_spd >= 182:
-            return 5  # 2 turns in all 5 cycles (10 total - 5 default = 5 bonus)
-        elif trailblazer_spd >= 178:
-            return 4  # 2 turns in 1st, 2nd, 3rd, and 4th cycles
-        elif trailblazer_spd >= 172:
-            return 4  # 2 turns in 1st, 2nd, 3rd, and 5th cycles
-        elif trailblazer_spd >= 164:
-            return 4  # 2 turns in 1st, 2nd, 4th, and 5th cycles
-        elif trailblazer_spd >= 160:
-            return 3  # 2 turns in 1st, 2nd, and 4th cycles
-        elif trailblazer_spd >= 156:
-            return 3  # 2 turns in 1st, 3rd, and 4th cycles
-        elif trailblazer_spd >= 146:
-            return 3  # 2 turns in 1st, 3rd, and 5th cycles
-        elif trailblazer_spd >= 143:
-            return 2  # 2 turns in 1st and 3rd cycles
-        elif trailblazer_spd >= 134:
-            return 2  # 2 turns in 1st and 4th cycles
-        elif trailblazer_spd >= 120:
-            return 1  # 2 turns in 2nd cycle
-        else:
-            return 0  # No bonus turns
+        for threshold, bonus_turns in spd_breakpoints:
+            if trailblazer_spd >= threshold:
+                return bonus_turns
+        return 0
 
     def reduce_enemy_toughness(self, amount: int) -> None:
         """
         Reduce the enemy's toughness and reset if necessary.
         :param amount: Amount to reduce toughness by
         """
-        self.enemy_toughness -= amount
-        if self.enemy_toughness <= 0:
-            self.enemy_toughness = 0  # Prevent negative toughness
+        self.enemy_toughness = max(self.enemy_toughness - amount, 0)
 
     def handle_super_break_damage(self, dmg_list: list, super_break_dmg: float) -> None:
         """
@@ -104,6 +97,62 @@ class HarmonyCharacter:
             dmg_list.append(super_break_dmg)
             self.has_broken_once = True
             self.enemy_turn_delay = 1
+
+    def regenerate_energy(self, amount: int = 30) -> None:
+        """
+        Regenerate energy for Trailblazer.
+        :param amount: Amount of energy to regenerate
+        """
+        self.trailblazer_current_energy = min(
+            self.trailblazer_current_energy + amount,
+            self.trailblazer_ult_energy
+        )
+
+    def apply_ultimate(
+            self,
+            dmg_list: list,
+            atk: float,
+            dmg_bonus_multiplier: float,
+            elemental_dmg_multiplier: float,
+            res_pen_multiplier: float,
+            additional_dmg: float,
+            super_break_dmg: float,
+            break_dmg: float,
+    ) -> None:
+        """
+        Applies the ultimate ability of the Trailblazer character. If the character's current
+        energy meets or exceeds the required energy for their ultimate ability, it calculates
+        and applies the damage dealt by the ability. The calculated damage is based on the
+        character's attack power, additional damage, and multipliers. Additionally, it handles
+        super break damage and break damage effects. The final damage values are stored in
+        the provided damage list, and the character's energy is reset.
+
+        :param dmg_list: The list where the calculated damage values will be appended.
+        :param atk: The attack power of the character.
+        :param dmg_bonus_multiplier: Multiplier applied to the ultimate's base damage.
+        :param elemental_dmg_multiplier: Multiplier applied to account for elemental damage.
+        :param res_pen_multiplier: Multiplier for resistance penetration effects.
+        :param additional_dmg: Additional flat damage added to the ultimate calculation.
+        :param super_break_dmg: The amount of damage applied due to super break effects.
+        :param break_dmg: The amount of damage applied due to standard break effects.
+        :return: None
+        """
+        if self.trailblazer_current_energy >= self.trailblazer_ult_energy:
+            ult_dmg = (
+                    (atk * 4.25 + additional_dmg)
+                    * dmg_bonus_multiplier
+                    * elemental_dmg_multiplier
+                    * res_pen_multiplier
+            )
+
+            dmg_list.append(ult_dmg)
+            self.trailblazer_current_energy = 0
+
+            # Handle super break damage
+            self.handle_super_break_damage(dmg_list, super_break_dmg)
+
+            # Handle break damage
+            self.handle_break_damage(dmg_list, break_dmg, super_break_dmg)
 
     def calculate_trailblazer_dmg(self,
                                   atk_bonus: float = None,
@@ -148,8 +197,8 @@ class HarmonyCharacter:
                          res_pen_multiplier)
             dmg_list.append(skill_dmg)
 
-            # Regenerate energy and reduce toughness
-            self.trailblazer_current_energy += 30
+            # Regenerate energy
+            self.regenerate_energy(amount=30)
 
             # Handle super break damage
             self.handle_super_break_damage(dmg_list, super_break_dmg)
@@ -158,17 +207,16 @@ class HarmonyCharacter:
             self.handle_break_damage(dmg_list, break_dmg, super_break_dmg)
 
             # Handle ultimate damage
-            if self.trailblazer_current_energy >= self.trailblazer_ult_energy:
-                ult_dmg = (((atk * 4.25) + additional_dmg) * dmg_bonus_multiplier * elemental_dmg_multiplier *
-                           res_pen_multiplier)
-                dmg_list.append(ult_dmg)
-                self.trailblazer_current_energy = 0
-
-                # Handle super break damage
-                self.handle_super_break_damage(dmg_list, super_break_dmg)
-
-                # Handle break damage
-                self.handle_break_damage(dmg_list, break_dmg, super_break_dmg)
+            self.apply_ultimate(
+                dmg_list=dmg_list,
+                atk=atk,
+                dmg_bonus_multiplier=dmg_bonus_multiplier,
+                elemental_dmg_multiplier=elemental_dmg_multiplier,
+                res_pen_multiplier=res_pen_multiplier,
+                additional_dmg=additional_dmg,
+                super_break_dmg=super_break_dmg,
+                break_dmg=break_dmg
+            )
 
         total_dmg = sum(dmg_list)
         return total_dmg
