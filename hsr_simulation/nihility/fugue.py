@@ -134,6 +134,8 @@ class Fugue(Character):
         self._simulate_enemy_weakness_broken()
         self._apply_talent_dmg()  # Process any pending super break damage
 
+        self.foxian_player -= 1
+
         if self.skill_points > 0 and self.foxian_player <= 0:
             self._use_skill()
         elif self.foxian_player > 0:
