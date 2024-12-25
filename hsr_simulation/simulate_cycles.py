@@ -27,6 +27,7 @@ from hsr_simulation.hunt.march7th_hunt import March7thHunt
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
+from hsr_simulation.nihility.fugue import Fugue
 from hsr_simulation.nihility.jiaoqiu import Jiaoqiu
 from hsr_simulation.nihility.luka import Luka
 from hsr_simulation.simulate_turns import simulate_turns, simulate_turns_for_char_with_summon
@@ -38,7 +39,7 @@ def set_stats_for_some_char(character: Character) -> None:
     :param character: Character to set stats for.
     :return: None.
     """
-    if isinstance(character, Boothill):
+    if isinstance(character, Boothill) or isinstance(character, Fugue):
         character.set_break_effect(1, 3)
     elif isinstance(character, BlackSwan):
         character.set_effect_hit_rate(0, 1.2)
