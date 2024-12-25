@@ -18,6 +18,7 @@ from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.nihility.acheron import Acheron
 from hsr_simulation.nihility.black_swan import BlackSwan
+from hsr_simulation.nihility.fugue import Fugue
 from hsr_simulation.nihility.guinanfei import Guinanfei
 from hsr_simulation.nihility.jiaoqiu import Jiaoqiu
 from hsr_simulation.nihility.kafka import Kafka
@@ -56,7 +57,7 @@ def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
     nihility_char_list: list[Character] = [Kafka(), BlackSwan(), Acheron(),
                                            Guinanfei(), Pela(), Luka(),
                                            SilverWolf(), Sampo(), Welt(),
-                                           Jiaoqiu()]
+                                           Jiaoqiu(), Fugue()]
 
     for nihility_char in nihility_char_list:
         result_list: list[dict[str, list]] = start_simulations(nihility_char, max_cycles, simulation_num)
