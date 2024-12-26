@@ -226,15 +226,15 @@ def simulate_cycles(
 ) -> Dict[str, List[Any]]:
     """
     Simulate battle cycles for a character.
-    
+
     This function simulates battle cycles for a single character by:
     1. Calling the BattleSimulator to run a regular battle simulation
     2. Processing the results through the specified number of cycles
-    
+
     :param character: Character to simulate battle for
     :type character: Character
     :param max_cycles: Maximum number of cycles to simulate
-    :type max_cycles: int 
+    :type max_cycles: int
     :param simulate_round: Current simulation round number
     :type simulate_round: int
     :return: Dictionary containing battle simulation data
@@ -250,16 +250,16 @@ def simulate_cycles_for_character_with_summon(
 ) -> Dict[str, List[Any]]:
     """
     Simulate battle cycles for a character with summon.
-    
+
     This function simulates battle cycles for a character and their summon by:
     1. Calling the BattleSimulator to run a battle simulation with summon
     2. Processing turns for both the main character and summon
     3. Handling the interaction between character and summon actions
-    
+
     :param character: Main character to simulate battle for
     :type character: Character
     :param summon: Summon character to simulate battle for
-    :type summon: Character 
+    :type summon: Character
     :param max_cycles: Maximum number of cycles to simulate
     :type max_cycles: int
     :param simulate_round: Current simulation round number

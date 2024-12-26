@@ -13,7 +13,6 @@
 #    limitations under the License.
 
 import pandas as pd
-import sqlalchemy
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger

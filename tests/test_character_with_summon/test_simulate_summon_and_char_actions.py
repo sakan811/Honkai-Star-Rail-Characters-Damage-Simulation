@@ -1,7 +1,7 @@
 import pytest
 
 from hsr_simulation.erudition.jingyuan import Jingyuan
-from hsr_simulation.hunt.topaz import Topaz, Numby
+from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.simulate_turns import simulate_turns_for_char_with_summon
 
 

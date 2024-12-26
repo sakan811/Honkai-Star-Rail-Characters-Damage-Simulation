@@ -78,6 +78,6 @@ def test_character_reset():
     
     assert character.current_ult_energy == 0
     assert character.skill_points == Character.DEFAULT_SKILL_POINTS
-    assert character.enemy_weakness_broken == False
+    assert character.enemy_weakness_broken is False
     assert character.data == {'DMG': [], 'DMG_Type': [], 'Simulate Round No.': []}
 
