@@ -30,12 +30,11 @@ def calculate_base_dmg(
     """
     main_logger.info('Calculating base damage...')
 
+    extra_multipliers_sum = 0
     if extra_multipliers is not None:
-        extra_multipliers = sum(extra_multipliers)
-    else:
-        extra_multipliers = 0
+        extra_multipliers_sum = sum(extra_multipliers)
 
-    return (skill_multiplier + extra_multipliers) * atk + extra_dmg
+    return (skill_multiplier + extra_multipliers_sum) * atk + extra_dmg
 
 
 def calculate_dmg_multipliers(
@@ -44,23 +43,17 @@ def calculate_dmg_multipliers(
         dmg_multipliers: list[float] = None) -> float:
     """
     Calculates base damage multipliers.
-    :param crit_dmg: Critical damage.
-    :param dot_dmg: Dot damage.
-    :param dmg_multipliers: Dmg multipliers.
-    :return: Damage
+    :param crit_dmg: Critical damage multiplier
+    :param dot_dmg: List of DoT damage multipliers
+    :param dmg_multipliers: List of damage multipliers
+    :return: Final damage multiplier
     """
     main_logger.info('Calculating damage multipliers...')
-    if dot_dmg is None:
-        dot_dmg = 0
-    else:
-        dot_dmg = sum(dot_dmg)
 
-    if dmg_multipliers is None:
-        dmg_multipliers = 0
-    else:
-        dmg_multipliers = sum(dmg_multipliers)
+    dot_dmg_sum = 0 if dot_dmg is None else sum(dot_dmg)
+    dmg_multipliers_sum = 0 if dmg_multipliers is None else sum(dmg_multipliers)
 
-    damage_multiplier = (1 + crit_dmg) * (1 + dot_dmg + dmg_multipliers)
+    damage_multiplier = (1 + crit_dmg) * (1 + dot_dmg_sum + dmg_multipliers_sum)
 
     return damage_multiplier
 
@@ -74,42 +67,34 @@ def calculate_universal_dmg_reduction(weakness_broken: bool) -> float:
     main_logger.info('Returning universal dmg reduction multiplier...')
 
     if weakness_broken:
-        main_logger.debug(f'No damage reduction')
+        main_logger.debug('No damage reduction')
         return 1
     else:
-        main_logger.debug(f'Reduce dmg')
+        main_logger.debug('Reduce dmg')
         return 0.9
-
 
 def calculate_res_multipliers(res_pen: list[float] = None) -> float:
     """
-    Calculates RES multipliers
-    :param res_pen: Resistance penetration multiplier.
-    :return: Res multiplier
-    """
-    main_logger.info('Calculating RES multipliers...')
-    # calculate RES PEN multiplier
-    if res_pen is None:
-        res_pen = 1
-    else:
-        res_pen = sum(res_pen) + 1
+    Calculates RES multipliers.
 
-    return res_pen
+    :param res_pen: Resistance penetration multiplier
+    :type res_pen: list[float], optional
+    :return: Res multiplier
+    :rtype: float
+    """
+    return 1 if res_pen is None else 1 + sum(res_pen)
 
 
 def calculate_def_multipliers(def_reduction_multiplier: list[float] = None) -> float:
     """
-    Calculates DEF multipliers
-    :param def_reduction_multiplier: DEF reduction multiplier.
-    :return: Res multiplier
-    """
-    main_logger.info('Calculating DEF reduction multipliers...')
-    if def_reduction_multiplier is None:
-        def_reduction_multiplier = 1
-    else:
-        def_reduction_multiplier = sum(def_reduction_multiplier) + 1
+    Calculates DEF multipliers.
 
-    return def_reduction_multiplier
+    :param def_reduction_multiplier: List of DEF reduction multipliers
+    :type def_reduction_multiplier: list[float], optional
+    :return: Final DEF reduction multiplier
+    :rtype: float
+    """
+    return 1 if def_reduction_multiplier is None else 1 + sum(def_reduction_multiplier)
 
 
 def calculate_break_effect(break_amount: int, break_effect: float) -> float:
