@@ -28,6 +28,26 @@ class Character:
     and handling various battle-related states.
     """
 
+    # Constants for default values
+    DEFAULT_ENEMY_TOUGHNESS = 100
+    DEFAULT_SKILL_POINTS = 1
+    DEFAULT_BREAK_EFFECT = 1
+    DEFAULT_EFFECT_HIT_RATE = 0
+    DEFAULT_ULT_ENERGY_AFTER_ULT = 5
+    ACTION_VALUE_BASE = 10000
+
+    # Constants for skill multipliers and break amounts
+    BASIC_ATK_MULTIPLIER = 1
+    BASIC_ATK_BREAK_AMOUNT = 10
+    SKILL_MULTIPLIER = 2
+    SKILL_BREAK_AMOUNT = 20
+    ULT_MULTIPLIER = 4
+    ULT_BREAK_AMOUNT = 30
+
+    # Constants for energy gains
+    BASIC_ATK_ENERGY_GAIN = 20
+    SKILL_ENERGY_GAIN = 30
+
     def __init__(
             self,
             atk: float = 2000,
@@ -36,49 +56,63 @@ class Character:
             speed: float = 90,
             ult_energy: int = 140
     ):
-        # default character stats
-        self.default_atk: float = atk
-        self.default_crit_rate: float = crit_rate
-        self.default_crit_dmg: float = crit_dmg
-        self.default_speed: float = speed
-        self.default_ult_energy: int = ult_energy
-        self.default_enemy_weakness_broken: bool = False
-        self.default_skill_points: int = 1
-        self.default_break_effect: float = 1
-        self.default_effect_hit_rate: float = 0
+        # Initialize default stats
+        self._init_default_stats(atk, crit_rate, crit_dmg, speed, ult_energy)
+        # Initialize current stats
+        self._init_current_stats()
+        # Initialize enemy stats
+        self._init_enemy_stats()
+        # Initialize battle data
+        self._init_battle_data()
 
-        # character stats
-        self.atk: float = self.default_atk
-        self.crit_rate: float = self.default_crit_rate
-        self.crit_dmg: float = self.default_crit_dmg
-        self.speed: float = self.default_speed
-        self.skill_points: int = self.default_skill_points
-        self.ult_energy: int = self.default_ult_energy
-        self.current_ult_energy: int = 0
-        self.break_effect: float = self.default_break_effect
-        self.effect_hit_rate: float = self.default_effect_hit_rate
+    def _init_default_stats(self, atk, crit_rate, crit_dmg, speed, ult_energy) -> None:
+        """Initialize default character statistics"""
+        self.default_atk = atk
+        self.default_crit_rate = crit_rate
+        self.default_crit_dmg = crit_dmg
+        self.default_speed = speed
+        self.default_ult_energy = ult_energy
+        self.default_enemy_weakness_broken = False
+        self.default_skill_points = self.DEFAULT_SKILL_POINTS
+        self.default_break_effect = self.DEFAULT_BREAK_EFFECT
+        self.default_effect_hit_rate = self.DEFAULT_EFFECT_HIT_RATE
 
-        # summon stats
-        self.summon_action_value_for_action_forward: list[float] = []
+    def _init_current_stats(self) -> None:
+        """Initialize current character statistics"""
+        self.atk = self.default_atk
+        self.crit_rate = self.default_crit_rate
+        self.crit_dmg = self.default_crit_dmg
+        self.speed = self.default_speed
+        self.skill_points = self.default_skill_points
+        self.ult_energy = self.default_ult_energy
+        self.current_ult_energy = 0
+        self.break_effect = self.default_break_effect
+        self.effect_hit_rate = self.default_effect_hit_rate
+        self.summon_action_value_for_action_forward = []
 
-        # enemy-related stats
-        self.default_enemy_toughness: int = 100
-        self.enemy_toughness: int = self.default_enemy_toughness
-        self.current_enemy_toughness: int = self.enemy_toughness
-        self.enemy_turn_delayed_duration_weakness_broken: int = 0
-        self.enemy_weakness_broken: bool = self.default_enemy_weakness_broken
+    def _init_enemy_stats(self) -> None:
+        """Initialize enemy-related statistics"""
+        self.default_enemy_toughness = self.DEFAULT_ENEMY_TOUGHNESS
+        self.enemy_toughness = self.default_enemy_toughness
+        self.current_enemy_toughness = self.enemy_toughness
+        self.enemy_turn_delayed_duration_weakness_broken = 0
+        self.enemy_weakness_broken = self.default_enemy_weakness_broken
 
-        # dictionary for storing character actions
+    def _init_battle_data(self) -> None:
+        """Initialize battle-related data"""
         self.data = {
             'DMG': [],
             'DMG_Type': [],
             'Simulate Round No.': []
         }
+        self.battle_start = True
+        self.char_action_value_for_action_forward = []
+        self.char_action_value = 0.0
 
-        # other stats
-        self.battle_start: bool = True
-        self.char_action_value_for_action_forward: list[float] = []
-        self.char_action_value: float = 0.0
+    def _record_damage(self, dmg: float, dmg_type: str) -> None:
+        """Record damage and its type in battle data"""
+        self.data['DMG'].append(dmg)
+        self.data['DMG_Type'].append(dmg_type)
 
     def reset_summon_stat_for_each_turn(self) -> None:
         """
@@ -145,41 +179,34 @@ class Character:
             self.current_ult_energy = 5
 
     def _use_basic_atk(self) -> None:
-        """
-        Simulate basic atk damage.
-        :return: None
-        """
+        """Simulate basic attack damage."""
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
-
-        self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        dmg = self._calculate_damage(
+            skill_multiplier=self.BASIC_ATK_MULTIPLIER,
+            break_amount=self.BASIC_ATK_BREAK_AMOUNT
+        )
+        self._update_skill_point_and_ult_energy(1, self.BASIC_ATK_ENERGY_GAIN)
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
-        """
-        Simulate skill damage.
-        :return: None
-        """
+        """Simulate skill damage."""
         main_logger.info(f"{self.__class__.__name__} is using skill...")
-        dmg = self._calculate_damage(skill_multiplier=2, break_amount=20)
-
-        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        dmg = self._calculate_damage(
+            skill_multiplier=self.SKILL_MULTIPLIER,
+            break_amount=self.SKILL_BREAK_AMOUNT
+        )
+        self._update_skill_point_and_ult_energy(-1, self.SKILL_ENERGY_GAIN)
+        self._record_damage(dmg, 'Skill')
 
     def _use_ult(self) -> None:
-        """
-        Simulate ultimate damage.
-        :return: None
-        """
+        """Simulate ultimate damage."""
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        dmg = self._calculate_damage(skill_multiplier=4, break_amount=30)
-
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        dmg = self._calculate_damage(
+            skill_multiplier=self.ULT_MULTIPLIER,
+            break_amount=self.ULT_BREAK_AMOUNT
+        )
+        self._record_damage(dmg, 'Ultimate')
+        self.current_ult_energy = self.DEFAULT_ULT_ENERGY_AFTER_ULT
 
     def check_if_enemy_weakness_broken(self) -> None:
         """
@@ -251,9 +278,12 @@ class Character:
         def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
         res_multiplier = calculate_res_multipliers(res_multipliers)
 
-        total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
-                                           res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
-                                           def_reduction_multiplier=def_reduction)
+        total_dmg = calculate_total_damage(
+            base_dmg=base_dmg,
+            dmg_multipliers=dmg_multiplier,
+            res_multipliers=res_multiplier,
+            dmg_reduction=dmg_reduction,
+            def_reduction_multiplier=def_reduction)
 
         return total_dmg
 
@@ -313,13 +343,9 @@ class Character:
         return current_char_action_value * action_forward_percent
 
     def calculate_action_value(self, speed: float) -> float:
-        """
-        Calculate action value
-        :param speed: Character speed
-        :return: Action value
-        """
+        """Calculate action value based on speed"""
         main_logger.info(f'Calculating action value...')
-        char_action_value = 10000 / speed
+        char_action_value = self.ACTION_VALUE_BASE / speed
         self.char_action_value = char_action_value
         return char_action_value
 
