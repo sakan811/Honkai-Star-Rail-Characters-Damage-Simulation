@@ -14,6 +14,8 @@
 
 
 import os
+from functools import wraps
+from typing import Callable
 
 import pandas as pd
 import sqlalchemy
@@ -25,89 +27,104 @@ from hsr_simulation.configure_logging import main_logger
 
 load_dotenv()
 
+def db_error_handler(func: Callable) -> Callable:
+    """Decorator to handle database operation errors"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        conn = None
+        try:
+            return func(*args, **kwargs)
+        except sqlalchemy.exc.OperationalError as e:
+            main_logger.error('OperationalError')
+            main_logger.error(e, exc_info=True)
+            if conn is not None:
+                conn.rollback()
+                conn.close()
+        except Exception as e:
+            main_logger.error(f'Unexpected error: {str(e)}')
+            main_logger.error(e, exc_info=True)
+            if conn is not None:
+                conn.rollback()
+                conn.close()
+    return wrapper
 
-def get_db_postgre_url() -> str:
-    """
-    Get a PostgreSQL connection URL from environment variables.
-    :return: PostgreSQL connection URL
-    """
-    main_logger.info('Getting PostgreSQL connection URL...')
-
-    db_params = {
-        'dbname': os.getenv('POSTGRES_DB'),
-        'user': os.getenv('POSTGRES_USER'),
-        'password': os.getenv('POSTGRES_PASSWORD'),
-        'host': os.getenv('POSTGRES_HOST'),
-        'port': os.getenv('POSTGRES_PORT')
-    }
-
-    # Format the PostgreSQL connection URL
-    url = (
-        f"postgresql://{db_params['user']}:{db_params['password']}"
-        f"@{db_params['host']}:{db_params['port']}/{db_params['dbname']}"
-    )
-
-    return url
-
-
-def drop_stage_table(postgres_url: str, stage_table_name: str):
-    """
-    Drop a stage table in the database
-    :param postgres_url: Postgres URL
-    :param stage_table_name: Stage table name
-    :return: None
-    """
-    main_logger.info(f'Dropping view {stage_table_name}...')
-    try:
-        engine = create_engine(postgres_url)
-        with engine.connect() as conn:
-            conn.execute(text(f"DROP TABLE IF EXISTS public.\"{stage_table_name}\" CASCADE;"))
+class PostgresConnection:
+    """Base class for PostgreSQL database operations"""
+    
+    def __init__(self):
+        self.url = self._get_db_url()
+        
+    def _get_db_url(self) -> str:
+        """Get PostgreSQL connection URL from environment variables"""
+        main_logger.info('Getting PostgreSQL connection URL...')
+        
+        db_params = {
+            'dbname': os.getenv('POSTGRES_DB'),
+            'user': os.getenv('POSTGRES_USER'),
+            'password': os.getenv('POSTGRES_PASSWORD'),
+            'host': os.getenv('POSTGRES_HOST'),
+            'port': os.getenv('POSTGRES_PORT')
+        }
+        
+        return (
+            f"postgresql://{db_params['user']}:{db_params['password']}"
+            f"@{db_params['host']}:{db_params['port']}/{db_params['dbname']}"
+        )
+    
+    def get_engine(self) -> sqlalchemy.engine.Engine:
+        """Create and return a SQLAlchemy engine"""
+        return create_engine(self.url)
+    
+    @db_error_handler
+    def execute_query(self, query: str) -> None:
+        """Execute a SQL query"""
+        with self.get_engine().connect() as conn:
+            conn.execute(text(query))
             conn.commit()
-    except sqlalchemy.exc.OperationalError as e:
-        main_logger.error('OperationalError')
-        main_logger.error(e, exc_info=True)
-        conn.rollback()
-        conn.close()
 
-
-def load_df_to_stage_table(
-        df: pd.DataFrame,
-        engine: sqlalchemy.engine,
-        stage_table_name: str) -> None:
-    """
-    Load a dataframe to a stage table in the database
-    :param df: Dataframe
-    :param engine: SQLAlchemy engine
-    :param stage_table_name: Stage table name
-    :return: None
-    """
-    main_logger.info(f'Loading dataframe to {stage_table_name}...')
-    try:
-        with engine.connect() as conn:
-            df.to_sql(stage_table_name, conn, if_exists='append', index=False)
-    except sqlalchemy.exc.OperationalError as e:
-        main_logger.error('OperationalError')
-        main_logger.error(e, exc_info=True)
-        conn.rollback()
-        conn.close()
-
+class PostgresOperations(PostgresConnection):
+    """Class for PostgreSQL specific operations"""
+    
+    def __init__(self):
+        super().__init__()
+    
+    @db_error_handler
+    def drop_stage_table(self, table_name: str) -> None:
+        """Drop a stage table in the database"""
+        main_logger.info(f'Dropping table {table_name}...')
+        query = f'DROP TABLE IF EXISTS public."{table_name}" CASCADE;'
+        self.execute_query(query)
+    
+    @db_error_handler
+    def drop_view(self, view_name: str) -> None:
+        """Drop a view in the database"""
+        main_logger.info(f'Dropping view {view_name}...')
+        query = f'DROP VIEW IF EXISTS public."{view_name}" CASCADE;'
+        self.execute_query(query)
+    
+    @db_error_handler
+    def create_view(self, view_name: str, query: str) -> None:
+        """Create a view in the database"""
+        main_logger.info(f'Creating view {view_name}...')
+        self.execute_query(query)
+    
+    @db_error_handler
+    def load_dataframe(self, df: pd.DataFrame, table_name: str) -> None:
+        """Load a DataFrame to a stage table"""
+        main_logger.info(f'Loading dataframe to {table_name}...')
+        with self.get_engine().connect() as conn:
+            df.to_sql(table_name, conn, if_exists='append', index=False)
 
 def generate_dmg_view_query(view_name: str, stage_table_name: str) -> str:
-    """
-    Generate an SQL query to create or replace a view summarizing damage data.
-
-    :param view_name: The name of the view to be created or replaced.
-    :param stage_table_name: The name of the stage table used in the query.
-    :return: The constructed SQL query as a string.
-    """
+    """Generate SQL query for damage view"""
     return f'''
-    CREATE OR REPLACE VIEW public.\"{view_name}\" AS
+    CREATE OR REPLACE VIEW public."{view_name}" AS
     WITH DMGbyRound AS (
         SELECT "Character", 
                SUM("DMG") AS "AvgDMGbyRound", 
                "DMG_Type",
                "Simulate Round No."
-        FROM public.\"{stage_table_name}\"
+        FROM public."{stage_table_name}"
         GROUP BY "Character", "Simulate Round No.", "DMG_Type"
         ORDER BY "Character"
     )
@@ -117,45 +134,7 @@ def generate_dmg_view_query(view_name: str, stage_table_name: str) -> str:
     ORDER BY "Character"
     '''
 
-
-def create_view(postgres_url: str,
-                view_name: str,
-                query: str) -> None:
-    """
-    Create a view in the database.
-    :param postgres_url: Postgres database URL.
-    :param view_name: View name.
-    :param query: Query to create the view.
-    :return: None
-    """
-    main_logger.info(f'Creating view {view_name}...')
-    try:
-        engine = create_engine(postgres_url)
-        with engine.connect() as conn:
-            conn.execute(text(query))
-            conn.commit()
-    except sqlalchemy.exc.OperationalError as e:
-        main_logger.error('OperationalError')
-        main_logger.error(e, exc_info=True)
-        conn.rollback()
-        conn.close()
-
-
-def drop_view(postgres_url: str, view_name: str) -> None:
-    """
-    Drop a view in the database
-    :param postgres_url: Postgres URL
-    :param view_name: View name
-    :return: None
-    """
-    main_logger.info(f'Dropping view {view_name}...')
-    try:
-        engine = create_engine(postgres_url)
-        with engine.connect() as conn:
-            conn.execute(text(f"DROP VIEW IF EXISTS public.\"{view_name}\" CASCADE;"))
-            conn.commit()
-    except sqlalchemy.exc.OperationalError as e:
-        main_logger.error('OperationalError')
-        main_logger.error(e, exc_info=True)
-        conn.rollback()
-        conn.close()
+def load_df_to_stage_table(df: pd.DataFrame, stage_table_name: str) -> None:
+    """Legacy function for loading DataFrame"""
+    db = PostgresOperations()
+    db.load_dataframe(df, stage_table_name)
