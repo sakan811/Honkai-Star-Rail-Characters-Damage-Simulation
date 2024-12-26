@@ -47,7 +47,7 @@ class Guinanfei(Character):
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
 
-        main_logger.info(f'Simulate enemy turn')
+        main_logger.info('Simulate enemy turn')
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
 
@@ -61,7 +61,7 @@ class Guinanfei(Character):
                     self.firekiss = []
 
         if self.battle_start:
-            main_logger.debug(f'Battle Start. Apply A4 trace effect')
+            main_logger.debug('Battle Start. Apply A4 trace effect')
             self.battle_start = False
             self.speed *= 1.25
         else:
@@ -98,12 +98,11 @@ class Guinanfei(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
         # simulate A2 Trace
         if random.random() < 0.8:
-            main_logger.debug(f'Apply Burn from A2 trace effect')
+            main_logger.debug('Apply Burn from A2 trace effect')
             self.burn = 2
 
     def _use_skill(self) -> None:
@@ -122,8 +121,7 @@ class Guinanfei(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self.burn = 2
 
@@ -142,8 +140,7 @@ class Guinanfei(Character):
             dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
                                          dmg_multipliers=[self.a6_dmg_multiplier])
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         if self.burn > 0:
             self._apply_dot(ult_trigger=True)
@@ -167,8 +164,7 @@ class Guinanfei(Character):
         if ult_trigger:
             dmg *= 0.92
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('DoT')
+        self._record_damage(dmg, 'DoT')
 
         if len(self.firekiss) < 3:
             self.firekiss.append(3)

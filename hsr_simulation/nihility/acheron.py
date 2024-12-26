@@ -87,8 +87,7 @@ class Acheron(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, slash_dream=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -102,8 +101,7 @@ class Acheron(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, slash_dream=1)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self.crimson_knot += 1
         self.crimson_knot = min(9, self.crimson_knot)
@@ -168,8 +166,7 @@ class Acheron(Character):
         final_total_dmg = float(sum(total_dmg))
         final_dmg = min(final_total_dmg, max_dmg)
 
-        self.data['DMG'].append(final_dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(final_dmg, 'Ultimate')
 
         # A6 Trace DMG
         for _ in range(6):
@@ -177,8 +174,7 @@ class Acheron(Character):
                                                     dmg_multipliers=[self.a4_dmg_multiplier,
                                                                      self.a6_dmg_multiplier],
                                                     res_multipliers=res_pen)
-            self.data['DMG'].append(additional_dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self._record_damage(additional_dmg, 'Ultimate')
 
     def _remove_crimson_knot(self, remove_amount: int = 3) -> tuple[float, int]:
         """

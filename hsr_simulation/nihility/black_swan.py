@@ -54,7 +54,7 @@ class BlackSwan(Character):
 
         # simulate A4 Trace
         if self.battle_start:
-            main_logger.debug(f'Battle starts')
+            main_logger.debug('Battle starts')
             self.battle_start = False
             self._apply_arcana()
 
@@ -71,7 +71,7 @@ class BlackSwan(Character):
             self.current_ult_energy = 5
 
         # simulate A4 Trace br randomizing ally's DoT attack
-        main_logger.debug(f'Randomizing ally DoT attack...')
+        main_logger.debug('Randomizing ally DoT attack...')
         if random.random() < 0.5:
             self._apply_arcana()
 
@@ -100,8 +100,7 @@ class BlackSwan(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
         # generate Arcana stack
         self._apply_arcana()
@@ -127,8 +126,7 @@ class BlackSwan(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         # generate Arcana
         self.arcana += 1
@@ -149,8 +147,7 @@ class BlackSwan(Character):
             dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
                                          dmg_multipliers=[self.a6_dmg_multiplier])
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.epiphany = 2
 
@@ -193,9 +190,8 @@ class BlackSwan(Character):
                                              dmg_multipliers=dmg_multiplier,
                                              can_crit=False)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('DoT')
+            self._record_damage(dmg, 'DoT')
 
             if self.epiphany <= 0:
-                main_logger.debug(f'Epiphany stack is zero or less. Reset Arcana stack to 1.')
+                main_logger.debug('Epiphany stack is zero or less. Reset Arcana stack to 1.')
                 self.arcana = 1

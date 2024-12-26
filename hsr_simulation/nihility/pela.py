@@ -86,8 +86,7 @@ class Pela(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -109,8 +108,7 @@ class Pela(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         # A6 trace
         if self.enemy_has_buff:
@@ -136,7 +134,6 @@ class Pela(Character):
 
         dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.exposed = 2

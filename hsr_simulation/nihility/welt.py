@@ -77,8 +77,7 @@ class Welt(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -93,8 +92,7 @@ class Welt(Character):
                                          dmg_multipliers=dmg_multiplier)
             self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._record_damage(dmg, 'Skill')
 
             # simulate Talent
             if random.random() < 0.75:
@@ -111,8 +109,7 @@ class Welt(Character):
         dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
                                      dmg_multipliers=dmg_multiplier)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self._apply_talent_dmg()
 
@@ -138,8 +135,7 @@ class Welt(Character):
             dmg_multiplier = self._apply_a2_trace()
             dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=0,
                                          dmg_multipliers=dmg_multiplier)
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Talent')
+            self._record_damage(dmg, 'Talent')
 
     def _calculate_damage(
             self,

@@ -167,8 +167,7 @@ class Fugue(Character):
         )
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data["DMG"].append(dmg)
-        self.data["DMG_Type"].append("Basic ATK")
+        self._record_damage(dmg, "Basic ATK")
 
     def _use_enhance_basic_atk(self) -> None:
         """
@@ -189,8 +188,7 @@ class Fugue(Character):
         )
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data["DMG"].append(dmg)
-        self.data["DMG_Type"].append("Enhanced Basic ATK")
+        self._record_damage(dmg, "Enhanced Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -210,8 +208,7 @@ class Fugue(Character):
     
         self.foxian_player = 3  # Reset Foxian Player duration
 
-        self.data["DMG"].append(dmg)
-        self.data["DMG_Type"].append("Skill")
+        self._record_damage(dmg, "Skill")
 
     def _use_ult(self) -> None:
         """
@@ -229,8 +226,7 @@ class Fugue(Character):
             def_reduction_multiplier=[def_reduce]
         )
 
-        self.data["DMG"].append(dmg)
-        self.data["DMG_Type"].append("Ultimate")
+        self._record_damage(dmg, "Ultimate")
 
     def _simulate_a4_trace(self) -> None:
         """

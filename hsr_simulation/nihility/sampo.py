@@ -82,8 +82,7 @@ class Sampo(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
         self._inflict_wind_shear()
 
@@ -100,8 +99,7 @@ class Sampo(Character):
 
             self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=6)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Skill')
+            self._record_damage(dmg, 'Skill')
 
         self._inflict_wind_shear()
 
@@ -113,8 +111,7 @@ class Sampo(Character):
         main_logger.info(f'{self.__class__.__name__} is using ultimate...')
         dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.ult_buff = 2
 
@@ -153,5 +150,4 @@ class Sampo(Character):
             dmg = self._calculate_damage(skill_multiplier=0.52, break_amount=0,
                                          dot_dmg_multipliers=dot_dmg_multiplier, can_crit=False)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('DoT')
+            self._record_damage(dmg, 'DoT')

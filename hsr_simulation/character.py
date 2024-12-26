@@ -313,13 +313,9 @@ class Character:
         return current_char_action_value * action_forward_percent
 
     def calculate_action_value(self, speed: float) -> float:
-        """
-        Calculate action value
-        :param speed: Character speed
-        :return: Action value
-        """
-        main_logger.info(f'Calculating action value...')
-        char_action_value = 10000 / speed
+        """Calculate action value based on speed"""
+        main_logger.info('Calculating action value...')
+        char_action_value = self.ACTION_VALUE_BASE / speed
         self.char_action_value = char_action_value
         return char_action_value
 
