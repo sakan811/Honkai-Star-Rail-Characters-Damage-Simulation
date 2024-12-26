@@ -11,7 +11,6 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-from sqlalchemy import create_engine
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
@@ -23,9 +22,10 @@ from hsr_simulation.erudition.jingyuan import Jingyuan
 from hsr_simulation.erudition.qingque import Qingque
 from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.erudition.serval import Serval
-from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view, generate_dmg_view_query
+from hsr_simulation.postgre import generate_dmg_view_query
 from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.utils import process_result_list
+from hsr_simulation.postgre import PostgresOperations
 
 
 def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
@@ -37,17 +37,13 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
     """
     main_logger.info('Starting Erudition characters simulations...')
 
-    # get PostgreSQL connection URL
-    postgres_url = get_db_postgre_url()
-    engine = create_engine(postgres_url)
+    db = PostgresOperations()
 
-    # drop stage table if exists
+    # Setup database tables
     stage_table_name = 'EruditionStage'
-    drop_stage_table(postgres_url, stage_table_name)
-
-    # drop view if exist
     view_name = 'Erudition'
-    drop_view(postgres_url, view_name)
+    db.drop_stage_table(stage_table_name)
+    db.drop_view(view_name)
 
     # Erudition characters list
     erudition_char_list: list[Character] = [Qingque(), Argenti(), Herta(), Himeko(), Serval(), Jade(), Jingyuan(),
@@ -55,13 +51,12 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
 
     for erudition_char in erudition_char_list:
         if isinstance(erudition_char, Jingyuan):
-            lightning_lord: Character = erudition_char.summon_lightning_lord(erudition_char)
-            dict_list: list[dict[str, list]] = start_simulations_for_char_with_summon(erudition_char, lightning_lord,
-                                                                                      max_cycles, simulation_num)
-            process_result_list(erudition_char, engine, dict_list, stage_table_name)
+            lightning_lord = erudition_char.summon_lightning_lord(erudition_char)
+            dict_list = start_simulations_for_char_with_summon(erudition_char, lightning_lord,
+                                                              max_cycles, simulation_num)
         else:
-            result_list: list[dict[str, list]] = start_simulations(erudition_char, max_cycles, simulation_num)
-            process_result_list(erudition_char, engine, result_list, stage_table_name)
+            dict_list = start_simulations(erudition_char, max_cycles, simulation_num)
+        process_result_list(erudition_char, dict_list, stage_table_name)
 
     query = generate_dmg_view_query(view_name, stage_table_name)
-    create_view(postgres_url, view_name, query)
+    db.create_view(view_name, query)

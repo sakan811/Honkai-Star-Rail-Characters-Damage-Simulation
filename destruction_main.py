@@ -11,7 +11,6 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
-from sqlalchemy import create_engine
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
@@ -26,39 +25,33 @@ from hsr_simulation.destruction.misha import Misha
 from hsr_simulation.destruction.trailblazer_physical import TrailblazerPhysical
 from hsr_simulation.destruction.xueyi import Xueyi
 from hsr_simulation.destruction.yunli import Yunli
-from hsr_simulation.postgre import get_db_postgre_url, drop_stage_table, drop_view, create_view, generate_dmg_view_query
+from hsr_simulation.postgre import generate_dmg_view_query
 from hsr_simulation.simulate_battles import start_simulations
 from hsr_simulation.utils import process_result_list
+from hsr_simulation.postgre import PostgresOperations
 
 
 def start_sim_destruction(simulation_num: int, max_cycles: int) -> None:
-    """
-    Start simulations for Destruction characters
-    :param simulation_num: Number of simulations
-    :param max_cycles: Maximum number of cycles to simulate
-    :return: None
-    """
+    """Start simulations for Destruction characters"""
     main_logger.info('Starting Destruction characters simulations...')
 
-    # get PostgreSQL connection URL
-    postgres_url = get_db_postgre_url()
-    engine = create_engine(postgres_url)
+    db = PostgresOperations()
 
-    # drop stage table if exists
+    # Setup database tables
     stage_table_name = 'DestructionStage'
-    drop_stage_table(postgres_url, stage_table_name)
-
-    # drop view if exist
     view_name = 'Destruction'
-    drop_view(postgres_url, view_name)
+    db.drop_stage_table(stage_table_name)
+    db.drop_view(view_name)
 
     # Destruction characters list
-    destruction_char_list: list[Character] = [Jingliu(), Hook(), Arlan(), Blade(), Clara(), ImbibitorLunae(), FireFly(),
-                                              TrailblazerPhysical(), Misha(), Xueyi(), Yunli()]
+    destruction_char_list: list[Character] = [Jingliu(), Hook(), Arlan(), Blade(), 
+                                            Clara(), ImbibitorLunae(), FireFly(),
+                                            TrailblazerPhysical(), Misha(), Xueyi(), 
+                                            Yunli()]
 
     for destruction_char in destruction_char_list:
-        result_list: list[dict[str, list]] = start_simulations(destruction_char, max_cycles, simulation_num)
-        process_result_list(destruction_char, engine, result_list, stage_table_name)
+        dict_list = start_simulations(destruction_char, max_cycles, simulation_num)
+        process_result_list(destruction_char, dict_list, stage_table_name)
 
     query = generate_dmg_view_query(view_name, stage_table_name)
-    create_view(postgres_url, view_name, query)
+    db.create_view(view_name, query)

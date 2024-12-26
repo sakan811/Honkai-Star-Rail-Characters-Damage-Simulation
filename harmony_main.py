@@ -14,8 +14,6 @@
 
 
 import pandas as pd
-import sqlalchemy
-from sqlalchemy import create_engine
 
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.harmony.asta import Asta
@@ -29,67 +27,43 @@ from hsr_simulation.harmony.sparkle import Sparkle
 from hsr_simulation.harmony.sunday import Sunday
 from hsr_simulation.harmony.tingyun import Tingyun
 from hsr_simulation.harmony.yukong import Yukong
-from hsr_simulation.postgre import (
-    create_view,
-    drop_stage_table,
-    drop_view,
-    get_db_postgre_url,
-    load_df_to_stage_table,
-)
+from hsr_simulation.postgre import PostgresOperations
 
 
 def start_sim_harmony() -> None:
-    """
-    Start simulations for Harmony characters and store the results in the database.
-    :return: None
-    """
+    """Start simulations for Harmony characters"""
     main_logger.info("Starting Harmony characters simulations...")
 
-    # Get PostgreSQL connection URL
-    postgres_url: str = get_db_postgre_url()
-    engine: sqlalchemy.engine = create_engine(postgres_url)
+    db = PostgresOperations()
 
-    # Drop stage table if exists
-    stage_table_name: str = "HarmonyStage"
-    drop_stage_table(postgres_url, stage_table_name)
-
-    # Drop view if exists
-    view_name: str = "Harmony"
-    drop_view(postgres_url, view_name)
+    # Setup database tables
+    stage_table_name = "HarmonyStage"
+    view_name = "Harmony"
+    db.drop_stage_table(stage_table_name)
+    db.drop_view(view_name)
 
     # Harmony characters list
     harmony_char_list: list[HarmonyCharacter] = [
-        Sunday(),
-        Asta(),
-        Bronya(),
-        Hanya(),
-        Robin(),
-        RuanMei(),
-        Sparkle(),
-        Tingyun(),
-        HarmonyTrailblazer(),
+        Sunday(), Asta(), Bronya(), Hanya(), Robin(),
+        RuanMei(), Sparkle(), Tingyun(), HarmonyTrailblazer(),
         Yukong(),
     ]
 
-    # Collect results to store
-    results = []
-    for harmony_char in harmony_char_list:
-        char_name = harmony_char.__class__.__name__
-        buff_value = harmony_char.potential_buff()
-        results.append({"Character": char_name, "PotentialDMGIncreased": buff_value})
+    # Collect results
+    results = [
+        {"Character": harmony_char.__class__.__name__,
+         "PotentialDMGIncreased": harmony_char.potential_buff()}
+        for harmony_char in harmony_char_list
+    ]
 
-    # Store results in the database
     if results:
-        results_df = pd.DataFrame(results)  # Create a DataFrame from the results
-        main_logger.info(
-            f"Storing Harmony simulation results into {stage_table_name}..."
-        )
-        load_df_to_stage_table(results_df, engine, stage_table_name)
+        results_df = pd.DataFrame(results)
+        main_logger.info(f"Storing Harmony simulation results into {stage_table_name}...")
+        db.load_dataframe(results_df, stage_table_name)
 
-    # Create a view for summarized data
-    query = f"""
+    query = f'''
     CREATE OR REPLACE VIEW public."{view_name}" AS
     SELECT * FROM public."{stage_table_name}"
     ORDER BY "PotentialDMGIncreased" DESC;
-    """
-    create_view(postgres_url, view_name, query)
+    '''
+    db.create_view(view_name, query)
