@@ -23,7 +23,6 @@ from hsr_simulation.postgre import load_df_to_stage_table
 
 def process_result_list(
         character: Character,
-        engine: sqlalchemy.engine,
         dict_list: list,
         stage_table_name: str) -> None:
     """
@@ -31,7 +30,6 @@ def process_result_list(
     converting the results into a DataFrame, adding the character's name to the DataFrame,
     and loading the DataFrame into a specified stage table in a database.
     :param character: Character class
-    :param engine: SQLAlchemy engine
     :param dict_list: A list of dictionary that contains action details of the given character.
     :param stage_table_name: Stage table name
     :return: None
@@ -42,7 +40,7 @@ def process_result_list(
 
     add_char_name_to_df(character, df)
 
-    load_df_to_stage_table(df, engine, stage_table_name)
+    load_df_to_stage_table(df, stage_table_name)
 
 
 def add_char_name_to_df(character: Character, df: pd.DataFrame) -> None:
