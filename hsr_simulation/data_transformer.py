@@ -23,6 +23,9 @@ def create_df_from_dict_list(dict_list: list[dict]) -> pd.DataFrame:
     :return: Dataframe created from a list of dictionaries.
     """
     main_logger.info('Creating dataframe from a list of dictionary...')
+    if not dict_list:
+        return pd.DataFrame(columns=['DMG', 'DMG_Type', 'Simulate Round No.'])
+        
     df_list = []
     for entry in dict_list:
         df = pd.DataFrame({

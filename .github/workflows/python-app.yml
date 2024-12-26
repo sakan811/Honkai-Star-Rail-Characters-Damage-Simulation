@@ -36,6 +36,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        # Full git history is needed to get a proper list of changed files
+        fetch-depth: 0
 
     - name: Cache pip dependencies
       id: cache
