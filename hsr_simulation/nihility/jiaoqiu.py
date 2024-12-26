@@ -96,8 +96,7 @@ class Jiaoqiu(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Enhanced Basic ATK')
 
         self._inflict_ashen_roast()
 
@@ -112,8 +111,7 @@ class Jiaoqiu(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self._inflict_ashen_roast()
 
@@ -128,8 +126,7 @@ class Jiaoqiu(Character):
             dmg_multiplier += 0.15
         dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multiplier])
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.zone = 3
 
@@ -165,8 +162,7 @@ class Jiaoqiu(Character):
             dmg = self._calculate_damage(skill_multiplier=1.8, break_amount=0, dmg_multipliers=[dmg_multiplier],
                                          can_crit=False)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('DoT')
+            self._record_damage(dmg, 'DoT')
 
     def _simulate_enemy_turn(self) -> None:
         """

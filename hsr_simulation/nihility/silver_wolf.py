@@ -100,8 +100,7 @@ class SilverWolf(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -143,8 +142,7 @@ class SilverWolf(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
     def _use_ult(self) -> None:
         """
@@ -170,8 +168,7 @@ class SilverWolf(Character):
                                      def_reduction_multiplier=def_reduction_multiplier,
                                      res_multipliers=res_reduction_multiplier)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
     def _apply_bugs(self, a2_trace_trigger: bool = False) -> None:
         """

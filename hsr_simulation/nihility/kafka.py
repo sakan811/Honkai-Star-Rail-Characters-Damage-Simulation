@@ -76,8 +76,7 @@ class Kafka(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -87,8 +86,7 @@ class Kafka(Character):
         main_logger.info("Using skill...")
         dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -106,8 +104,7 @@ class Kafka(Character):
         main_logger.info('Using ultimate...')
         dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.shock = 2
 
@@ -124,8 +121,7 @@ class Kafka(Character):
         self.shock = 2
         self.talent_cooldown = True
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self._record_damage(dmg, 'Talent')
 
     def _use_shock(self, skill_trigger: bool = False) -> float:
         """
@@ -140,8 +136,7 @@ class Kafka(Character):
         else:
             dmg = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('DoT')
+        self._record_damage(dmg, 'DoT')
 
         return dmg
 

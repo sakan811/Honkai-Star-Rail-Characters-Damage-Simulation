@@ -93,8 +93,7 @@ class Luka(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
         self._get_fighting_will(fighting_will_amount=1)
 
@@ -108,8 +107,7 @@ class Luka(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self.bleed = 3
         self._get_fighting_will(fighting_will_amount=1)
@@ -126,8 +124,7 @@ class Luka(Character):
         else:
             dmg = self._calculate_damage(skill_multiplier=3.3, break_amount=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self._get_fighting_will(fighting_will_amount=2)
         self.ult_buff = 3
@@ -149,8 +146,7 @@ class Luka(Character):
         if talent_trigger:
             dmg *= 0.85
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('DoT')
+        self._record_damage(dmg, 'DoT')
 
     def _use_enhanced_basic_atk(self) -> None:
         """
@@ -176,15 +172,13 @@ class Luka(Character):
                 additional_dmg = 0
             dmg += additional_dmg
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Enhanced Basic ATK')
+            self._record_damage(dmg, 'Enhanced Basic ATK')
 
         # simulate Rising Uppercut
         dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=20,
                                      dmg_multipliers=dmg_multiplier)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Basic ATK')
+        self._record_damage(dmg, 'Enhanced Basic ATK')
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=20)
 
