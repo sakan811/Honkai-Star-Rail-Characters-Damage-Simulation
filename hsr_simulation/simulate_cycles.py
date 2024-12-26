@@ -12,9 +12,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 import random
-from typing import Any
+from typing import Any, Dict, List
 
-import numpy as np
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
@@ -30,121 +29,244 @@ from hsr_simulation.nihility.black_swan import BlackSwan
 from hsr_simulation.nihility.fugue import Fugue
 from hsr_simulation.nihility.jiaoqiu import Jiaoqiu
 from hsr_simulation.nihility.luka import Luka
-from hsr_simulation.simulate_turns import simulate_turns, simulate_turns_for_char_with_summon
+from hsr_simulation.simulate_turns import (
+    simulate_turns,
+    simulate_turns_for_char_with_summon,
+)
 
 
-def set_stats_for_some_char(character: Character) -> None:
+class CharacterStatsInitializer:
+    @staticmethod
+    def initialize_stats(character: Character) -> None:
+        """
+        Initialize character-specific stats based on character type.
+
+        This method sets up initial stats and effects for different characters based on their class type.
+        For example, it sets break effects for Boothill/Fugue, effect hit rates for Black Swan, etc.
+
+        :param character: The character instance to initialize stats for
+        :type character: Character
+        :return: None
+        :rtype: None
+        """
+        stats_handlers = {
+            (Boothill, Fugue): lambda c: c.set_break_effect(1, 3),
+            BlackSwan: lambda c: c.set_effect_hit_rate(0, 1.2),
+            Acheron: lambda c: c.random_nihility_teammate(),
+            March7thHunt: lambda c: c.set_shifu(),
+            Luka: lambda c: c.random_enemy_hp(),
+            Jiaoqiu: lambda c: c.set_effect_hit_rate(0, 1.4),
+            FireFly: lambda c: c.set_break_effect(1, 3.6),
+            Xueyi: lambda c: c.set_break_effect(1, 2.4),
+            Rappa: lambda c: setattr(c, "atk", random.choice([2400, 3200])),
+        }
+
+        for char_types, handler in stats_handlers.items():
+            if isinstance(char_types, tuple):
+                if any(isinstance(character, char_type) for char_type in char_types):
+                    handler(character)
+                    break
+            elif isinstance(character, char_types):
+                handler(character)
+                break
+
+
+class BattleSimulator:
+    @staticmethod
+    def calculate_cycles_action_value(max_cycles: int) -> int:
+        """
+        Calculate total action value for given cycles.
+
+        :param max_cycles: Maximum number of cycles to simulate
+        :type max_cycles: int
+        :return: Total action value for the cycles
+        :rtype: int
+        """
+        return 150 + ((max_cycles - 1) * 100)
+
+    @staticmethod
+    def prepare_simulation_data(
+        character: Character, simulate_round: int, row_num: int
+    ) -> None:
+        """
+        Prepare simulation data for the character.
+
+        :param character: Character to prepare data for
+        :type character: Character
+        :param simulate_round: Current simulation round number
+        :type simulate_round: int
+        :param row_num: Number of rows of data to prepare
+        :type row_num: int
+        :return: None
+        :rtype: None
+        """
+        character.data["Simulate Round No."] = [simulate_round for _ in range(row_num)]
+
+    @staticmethod
+    def simulate_regular_battle(
+        character: Character, max_cycles: int, simulate_round: int
+    ) -> Dict[str, List[Any]]:
+        """
+        Simulate battle for regular characters.
+
+        This method simulates a battle for characters without summons. It:
+        1. Calculates total action value based on cycles
+        2. Initializes character stats
+        3. Simulates turns
+        4. Prepares and returns battle data
+
+        :param character: Character to simulate battle for
+        :type character: Character
+        :param max_cycles: Maximum number of cycles to simulate
+        :type max_cycles: int
+        :param simulate_round: Current simulation round number
+        :type simulate_round: int
+        :return: Dictionary containing battle simulation data
+        :rtype: Dict[str, List[Any]]
+        """
+        main_logger.info(f"Simulating turns for {character.__class__.__name__}...")
+
+        cycles_action_val = BattleSimulator.calculate_cycles_action_value(max_cycles)
+        main_logger.debug(f"Total cycles action value: {cycles_action_val}")
+
+        CharacterStatsInitializer.initialize_stats(character)
+        character.start_battle()
+
+        char_turn_count = simulate_turns(character, cycles_action_val)
+        main_logger.debug(
+            f"Total number of {character.__class__.__name__} turns: {char_turn_count}"
+        )
+
+        BattleSimulator.prepare_simulation_data(
+            character, simulate_round, len(character.data["DMG"])
+        )
+        data_dict = character.data
+        character.reset_character_data_for_each_battle()
+
+        return data_dict
+
+    @staticmethod
+    def initialize_summon(character: Character, summon: Character) -> Character:
+        """
+        Initialize summon based on character type.
+
+        :param character: Main character that summons
+        :type character: Character
+        :param summon: Summon character to initialize
+        :type summon: Character
+        :return: Initialized summon character
+        :rtype: Character
+        """
+        summon_initializers = {
+            Topaz: lambda c: c.summon_numby(c),
+            Jingyuan: lambda c: c.summon_lightning_lord(c),
+        }
+
+        for char_type, initializer in summon_initializers.items():
+            if isinstance(character, char_type):
+                return initializer(character)
+        return summon
+
+    @staticmethod
+    def simulate_battle_with_summon(
+        character: Character, summon: Character, max_cycles: int, simulate_round: int
+    ) -> Dict[str, List[Any]]:
+        """
+        Simulate battle for characters with summons.
+
+        This method simulates a battle for characters with summons. It:
+        1. Calculates total action value based on cycles
+        2. Initializes the summon
+        3. Simulates turns for both character and summon
+        4. Prepares and returns battle data
+
+        :param character: Main character to simulate battle for
+        :type character: Character
+        :param summon: Summon character to simulate battle for
+        :type summon: Character
+        :param max_cycles: Maximum number of cycles to simulate
+        :type max_cycles: int
+        :param simulate_round: Current simulation round number
+        :type simulate_round: int
+        :return: Dictionary containing battle simulation data
+        :rtype: Dict[str, List[Any]]
+        """
+        main_logger.info(
+            f"Simulating turns for {character.__class__.__name__} and {summon.__class__.__name__}..."
+        )
+
+        cycles_action_val = BattleSimulator.calculate_cycles_action_value(max_cycles)
+        main_logger.debug(f"Total cycles action value: {cycles_action_val}")
+
+        summon = BattleSimulator.initialize_summon(character, summon)
+        character.start_battle()
+
+        summon_turn_count, char_turn_count = simulate_turns_for_char_with_summon(
+            cycles_action_val, cycles_action_val, summon, False, character, False
+        )
+
+        main_logger.debug(
+            f"Total number of {character.__class__.__name__} turns: {char_turn_count}"
+        )
+        main_logger.debug(
+            f"Total number of {summon.__class__.__name__} turns: {summon_turn_count}"
+        )
+
+        BattleSimulator.prepare_simulation_data(
+            character, simulate_round, len(character.data["DMG"])
+        )
+        data_dict = character.data
+        character.reset_character_data_for_each_battle()
+
+        return data_dict
+
+
+def simulate_cycles(
+    character: Character, max_cycles: int, simulate_round: int
+) -> Dict[str, List[Any]]:
     """
-    Set stats for some character.
-    :param character: Character to set stats for.
-    :return: None.
+    Simulate battle cycles for a character.
+    
+    This function simulates battle cycles for a single character by:
+    1. Calling the BattleSimulator to run a regular battle simulation
+    2. Processing the results through the specified number of cycles
+    
+    :param character: Character to simulate battle for
+    :type character: Character
+    :param max_cycles: Maximum number of cycles to simulate
+    :type max_cycles: int 
+    :param simulate_round: Current simulation round number
+    :type simulate_round: int
+    :return: Dictionary containing battle simulation data
+    :rtype: Dict[str, List[Any]]
     """
-    if isinstance(character, Boothill) or isinstance(character, Fugue):
-        character.set_break_effect(1, 3)
-    elif isinstance(character, BlackSwan):
-        character.set_effect_hit_rate(0, 1.2)
-    elif isinstance(character, Acheron):
-        character.random_nihility_teammate()
-    elif isinstance(character, March7thHunt):
-        character.set_shifu()
-    elif isinstance(character, Luka):
-        character.random_enemy_hp()
-    elif isinstance(character, Jiaoqiu):
-        character.set_effect_hit_rate(0, 1.4)
-    elif isinstance(character, FireFly):
-        character.set_break_effect(1, 3.6)
-    elif isinstance(character, Xueyi):
-        character.set_break_effect(1, 2.4)
-    elif isinstance(character, Rappa):
-        character.atk = random.choice([2400, 3200])
-
-
-def simulate_cycles(character: Character, max_cycles: int, simulate_round: int) -> dict[str, list[Any]]:
-    """
-    Simulate cycles
-    :param character: Character to simulate.
-    :param max_cycles: Cycles to simulate.
-    :param simulate_round: Indicate the current round of the simulation.
-    :return: Dictionary that contains action details of the character.
-    """
-    main_logger.info(f'Simulating turns for {character.__class__.__name__}...')
-
-    cycles_action_val = 150 + ((max_cycles - 1) * 100)
-    main_logger.debug(f'Total cycles action value: {cycles_action_val}')
-
-    set_stats_for_some_char(character)
-
-    # Indicate that the battle starts
-    character.start_battle()
-
-    # simulate turns for character within the given cycles
-    char_turn_count = simulate_turns(character, cycles_action_val)
-
-    main_logger.debug(f'Total number of {character.__class__.__name__} turns: {char_turn_count}')
-
-    row_num = len(character.data['DMG'])
-    character.data['Simulate Round No.'] = [simulate_round for _ in range(row_num)]
-    data_dict: dict[str, list] = character.data
-
-    # reset the character data
-    character.reset_character_data_for_each_battle()
-
-    return data_dict
+    return BattleSimulator.simulate_regular_battle(
+        character, max_cycles, simulate_round
+    )
 
 
 def simulate_cycles_for_character_with_summon(
-        character: Character,
-        summon: Character,
-        max_cycles: int,
-        simulate_round: int) -> dict[str, list[Any]]:
+    character: Character, summon: Character, max_cycles: int, simulate_round: int
+) -> Dict[str, List[Any]]:
     """
-    Simulate cycles for Character and their summon.
-    :param character: Character
-    :param summon: Summon of the given character
-    :param max_cycles: Cycles to simulate.
-    :param simulate_round: Indicate the current round of the simulation.
-    :return: Dictionary that contains action details of Topaz.
+    Simulate battle cycles for a character with summon.
+    
+    This function simulates battle cycles for a character and their summon by:
+    1. Calling the BattleSimulator to run a battle simulation with summon
+    2. Processing turns for both the main character and summon
+    3. Handling the interaction between character and summon actions
+    
+    :param character: Main character to simulate battle for
+    :type character: Character
+    :param summon: Summon character to simulate battle for
+    :type summon: Character 
+    :param max_cycles: Maximum number of cycles to simulate
+    :type max_cycles: int
+    :param simulate_round: Current simulation round number
+    :type simulate_round: int
+    :return: Dictionary containing battle simulation data
+    :rtype: Dict[str, List[Any]]
     """
-    main_logger.info(f'Simulating turns for {character.__class__.__name__} and {summon.__class__.__name__}...')
-
-    cycles_action_val = 150 + ((max_cycles - 1) * 100)
-    main_logger.debug(f'Total cycles action value: {cycles_action_val}')
-
-    # re-initialize characters' summon
-    if isinstance(character, Topaz):
-        summon = character.summon_numby(character)
-    elif isinstance(character, Jingyuan):
-        summon = character.summon_lightning_lord(character)
-
-    # Indicate that the battle starts
-    character.start_battle()
-
-    cycles_action_value_for_character = cycles_action_val
-    cycles_action_value_for_summon = cycles_action_val
-
-    character_end = False
-    summon_end = False
-
-    # simulate character and their summon turns within the given cycles
-    summon_turn_count, character_turn_count = simulate_turns_for_char_with_summon(cycles_action_value_for_summon,
-                                                                                  cycles_action_value_for_character,
-                                                                                  summon,
-                                                                                  summon_end,
-                                                                                  character, character_end)
-
-    main_logger.debug(f'Total number of {character.__class__.__name__} turns: {character_turn_count}')
-    main_logger.debug(f'Total number of {summon.__class__.__name__} turns: {summon_turn_count}')
-
-    # find the number of character turns within the given cycles
-    num_turn = len(character.data['DMG'])
-
-    # add Simulate Round No. to data dictionary
-    character.data['Simulate Round No.'] = np.full(num_turn, simulate_round)
-
-    # assign character data dictionary to a variable
-    data_dict = character.data
-
-    # reset the character and their summon data
-    character.reset_character_data_for_each_battle()
-
-    return data_dict
+    return BattleSimulator.simulate_battle_with_summon(
+        character, summon, max_cycles, simulate_round
+    )
