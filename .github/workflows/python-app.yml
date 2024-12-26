@@ -56,6 +56,9 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+    - name: Super-Linter
+      uses: super-linter/super-linter@v7.2.1
+            
     - name: Test with pytest
       env:
         POSTGRES_DB: postgres
