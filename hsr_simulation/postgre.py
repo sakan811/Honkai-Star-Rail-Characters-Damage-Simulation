@@ -19,6 +19,7 @@ import pandas as pd
 import sqlalchemy
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+import sqlalchemy.exc
 
 from hsr_simulation.configure_logging import main_logger
 
@@ -62,7 +63,7 @@ def drop_stage_table(postgres_url: str, stage_table_name: str):
         with engine.connect() as conn:
             conn.execute(text(f"DROP TABLE IF EXISTS public.\"{stage_table_name}\" CASCADE;"))
             conn.commit()
-    except sqlalchemy.OperationalError as e:
+    except sqlalchemy.exc.OperationalError as e:
         main_logger.error('OperationalError')
         main_logger.error(e, exc_info=True)
         conn.rollback()
@@ -84,7 +85,7 @@ def load_df_to_stage_table(
     try:
         with engine.connect() as conn:
             df.to_sql(stage_table_name, conn, if_exists='append', index=False)
-    except sqlalchemy.OperationalError as e:
+    except sqlalchemy.exc.OperationalError as e:
         main_logger.error('OperationalError')
         main_logger.error(e, exc_info=True)
         conn.rollback()
@@ -133,7 +134,7 @@ def create_view(postgres_url: str,
         with engine.connect() as conn:
             conn.execute(text(query))
             conn.commit()
-    except sqlalchemy.OperationalError as e:
+    except sqlalchemy.exc.OperationalError as e:
         main_logger.error('OperationalError')
         main_logger.error(e, exc_info=True)
         conn.rollback()
@@ -153,7 +154,7 @@ def drop_view(postgres_url: str, view_name: str) -> None:
         with engine.connect() as conn:
             conn.execute(text(f"DROP VIEW IF EXISTS public.\"{view_name}\" CASCADE;"))
             conn.commit()
-    except sqlalchemy.OperationalError as e:
+    except sqlalchemy.exc.OperationalError as e:
         main_logger.error('OperationalError')
         main_logger.error(e, exc_info=True)
         conn.rollback()

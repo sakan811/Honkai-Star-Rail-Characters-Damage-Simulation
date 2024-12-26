@@ -32,11 +32,17 @@ def start_simulations(character: Character, max_cycles: int, simulation_num: int
     """
     main_logger.info(f'Starting battle simulations for {character.__class__.__name__}...')
 
+    if simulation_num <= 0:
+        return []
+
     # Use NumPy to create an array of simulation indices
     sim_indices = np.arange(simulation_num)
 
-    # Use NumPy's vectorize to apply simulate_cycles function to all indices
-    vectorized_simulate = np.vectorize(lambda i: simulate_cycles(character, max_cycles, i))
+    # Use NumPy's vectorize with specified output type
+    vectorized_simulate = np.vectorize(
+        lambda i: simulate_cycles(character, max_cycles, i),
+        otypes=[object]
+    )
     result_list = vectorized_simulate(sim_indices)
 
     return result_list.tolist()
@@ -53,15 +59,21 @@ def start_simulations_for_char_with_summon(
     :param summon: Summon of the given character
     :param max_cycles: Max number of cycles to simulate
     :param simulation_num: The Number of battles to simulate
-    :return: A list of Topaz's action details as a dictionary.
+    :return: A list of Character's action details as a dictionary.
     """
     main_logger.info(f'Start battle simulations for {character.__class__.__name__} and {summon.__class__.__name__}...')
+
+    if simulation_num <= 0:
+        return []
 
     # Use NumPy to create an array of simulation indices
     sim_indices = np.arange(simulation_num)
 
-    # Use NumPy's vectorize to apply simulate_cycles_for_character_with_summon function to all indices
-    vectorized_simulate = np.vectorize(lambda i: simulate_cycles_for_character_with_summon(character, summon, max_cycles, i))
+    # Use NumPy's vectorize with specified output type
+    vectorized_simulate = np.vectorize(
+        lambda i: simulate_cycles_for_character_with_summon(character, summon, max_cycles, i),
+        otypes=[object]
+    )
     result_list = vectorized_simulate(sim_indices)
 
     return result_list.tolist()
