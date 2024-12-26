@@ -22,3 +22,4 @@ post_template.txt
 **/*.pyc
 **/*.db
 .venv/
+/postgres_sql_vscode.pgsql
