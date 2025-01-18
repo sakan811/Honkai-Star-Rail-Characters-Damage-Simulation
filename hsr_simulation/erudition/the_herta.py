@@ -248,8 +248,9 @@ class TheHerta(Character):
         primary_target = self._get_priority_target()
         hit_enemies = set()
 
-        # Skill hits 2 times
-        for _ in range(2):
+        num_hits = random.randint(1, 2)
+        # Skill may hits 2 times at most
+        for _ in range(num_hits):
             # Primary target hit
             total_dmg += self._calculate_damage(
                 skill_multiplier=self.SKILL_MULTIPLIER,
