@@ -22,6 +22,7 @@ from hsr_simulation.erudition.jingyuan import Jingyuan
 from hsr_simulation.erudition.qingque import Qingque
 from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.erudition.serval import Serval
+from hsr_simulation.erudition.the_herta import TheHerta
 from hsr_simulation.postgre import generate_dmg_view_query
 from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
 from hsr_simulation.utils import process_result_list
@@ -47,7 +48,7 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
 
     # Erudition characters list
     erudition_char_list: list[Character] = [Qingque(), Argenti(), Herta(), Himeko(), Serval(), Jade(), Jingyuan(),
-                                            Rappa()]
+                                            Rappa(), TheHerta()]
 
     for erudition_char in erudition_char_list:
         if isinstance(erudition_char, Jingyuan):
