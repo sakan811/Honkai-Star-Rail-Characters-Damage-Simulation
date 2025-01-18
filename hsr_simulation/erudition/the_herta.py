@@ -158,9 +158,10 @@ class TheHerta(Character):
     def _calculate_interpretation_multiplier(self, enemy_id: int, is_primary_target: bool = False) -> float:
         """
         Calculate damage multiplier from interpretation stacks.
+        Returns the additional multiplier (without base 1.0).
         :param enemy_id: ID of the enemy
         :param is_primary_target: Whether this is the primary target
-        :return: Damage multiplier
+        :return: Additional damage multiplier from interpretation
         """
         stacks = self.enemy_interpretation_stacks.get(enemy_id, 0)
         
@@ -171,12 +172,12 @@ class TheHerta(Character):
             base_boost = self.INTERPRETATION_DMG_BOOST_OTHERS
             path_bonus = self.ERUDITION_PATH_BONUS_OTHERS
             
-        # Calculate total boost per stack
+        # Calculate total boost per stack (returns only the additional multiplier)
         boost_per_stack = base_boost
         if self.erudition_chars_in_team >= 2:
             boost_per_stack += path_bonus
             
-        return 1 + (boost_per_stack * stacks)
+        return boost_per_stack * stacks
         
     def take_action(self) -> None:
         """
@@ -292,16 +293,17 @@ class TheHerta(Character):
 
         # Check for Ice DMG boost before damage calculation
         self._check_and_apply_ice_dmg_boost(primary_target)
-        dmg_multipliers = [self.A2_ICE_DMG_BOOST] if self.ice_dmg_boost_active else []
+        # Ice DMG boost is additional multiplier
+        ice_boost = self.A2_ICE_DMG_BOOST if self.ice_dmg_boost_active else 0
 
         # First two hits (80% ATK)
         for _ in range(2):
             # Primary target
             primary_multiplier = self._calculate_interpretation_multiplier(primary_target, True)
             total_dmg += self._calculate_damage(
-                skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER * primary_multiplier,
+                skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER,
                 break_amount=self.ENHANCED_SKILL_BREAK_AMOUNT,
-                dmg_multipliers=dmg_multipliers
+                dmg_multipliers=[primary_multiplier, ice_boost]  # Pass both additional multipliers
             )
             self._apply_interpretation_on_hit(primary_target)
             hit_enemies.add(primary_target)
@@ -313,9 +315,9 @@ class TheHerta(Character):
                 if adjacent_target != primary_target:
                     other_multiplier = self._calculate_interpretation_multiplier(adjacent_target, False)
                     total_dmg += self._calculate_damage(
-                        skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER * other_multiplier,
+                        skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER,
                         break_amount=self.ENHANCED_SKILL_ADJACENT_BREAK,
-                        dmg_multipliers=dmg_multipliers
+                        dmg_multipliers=[other_multiplier, ice_boost]  # Pass both additional multipliers
                     )
                     self._apply_interpretation_on_hit(adjacent_target)
                     hit_enemies.add(adjacent_target)
@@ -324,9 +326,9 @@ class TheHerta(Character):
         for enemy_id in range(self.enemy_on_field):
             other_multiplier = self._calculate_interpretation_multiplier(enemy_id, False)
             total_dmg += self._calculate_damage(
-                skill_multiplier=self.ENHANCED_SKILL_AOE_MULTIPLIER * other_multiplier,
+                skill_multiplier=self.ENHANCED_SKILL_AOE_MULTIPLIER,
                 break_amount=0,
-                dmg_multipliers=dmg_multipliers
+                dmg_multipliers=[other_multiplier, ice_boost]  # Pass both additional multipliers
             )
             self._apply_interpretation_on_hit(enemy_id)
             hit_enemies.add(enemy_id)
@@ -362,8 +364,8 @@ class TheHerta(Character):
         # Apply ATK boost (80% for 3 turns)
         self._apply_atk_boost()
         
-        # Calculate A6 damage boost from Answer stacks
-        dmg_multipliers = [self.answer_stacks * self.ANSWER_DMG_BOOST_PER_STACK]
+        # Calculate A6 damage boost from Answer stacks (returns only the additional multiplier)
+        answer_multiplier = self.answer_stacks * self.ANSWER_DMG_BOOST_PER_STACK
         main_logger.debug(f"A6: Ultimate boosted by {self.answer_stacks}% from Answer stacks")
         
         # Deal AoE damage to all enemies (200% ATK)
@@ -372,7 +374,7 @@ class TheHerta(Character):
             total_dmg += self._calculate_damage(
                 skill_multiplier=self.ULT_MULTIPLIER,
                 break_amount=self.ULT_BREAK_AMOUNT,
-                dmg_multipliers=dmg_multipliers
+                dmg_multipliers=[answer_multiplier]  # Only pass the additional multiplier
             )
         
         # Record damage
