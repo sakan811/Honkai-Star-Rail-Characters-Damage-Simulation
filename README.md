@@ -65,3 +65,34 @@ Simulated single-target damage except for Erudition characters as multi-target d
   ```bash
   python main.py
   ```
+
+### Command-line Arguments
+
+You can customize the simulation using the following command-line arguments:
+
+- `--paths`: Specify which character paths to simulate. Multiple paths can be specified.
+
+  ```bash
+  python main.py --paths Erudition Hunt  # Run only Erudition and Hunt paths
+  ```
+
+  Valid paths: Hunt, Nihility, Destruction, Erudition, Harmony
+  If not specified, all paths will be simulated.
+
+- `--sim-count`: Number of battle simulations to run (default: 1000)
+
+  ```bash
+  python main.py --sim-count 500  # Run 500 simulations
+  ```
+
+- `--max-cycles`: Maximum number of cycles to simulate per battle (default: 10)
+
+  ```bash
+  python main.py --max-cycles 15  # Run for 15 cycles
+  ```
+
+You can combine multiple arguments:
+
+```bash
+python main.py --paths Erudition --sim-count 2000 --max-cycles 20
+```
