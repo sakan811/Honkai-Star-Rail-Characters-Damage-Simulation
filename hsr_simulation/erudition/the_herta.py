@@ -99,11 +99,15 @@ class TheHerta(Character):
         """
         Handle start of wave effects.
         50% chance to have an elite enemy. If present, applies 25 interpretation stacks to it.
+        If there were existing stacks from previous wave, transfers them to the elite enemy.
         Otherwise, applies to a random enemy.
         All previous enemies are considered defeated when starting a new wave.
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} starting wave...")
+        
+        # Store total existing stacks before clearing
+        total_existing_stacks = sum(self.enemy_interpretation_stacks.values())
         
         # Clear previous wave's data since all enemies are defeated
         self.enemy_interpretation_stacks.clear()
@@ -123,17 +127,23 @@ class TheHerta(Character):
         for enemy_id in range(self.enemy_on_field):
             self.enemy_interpretation_stacks[enemy_id] = 1
             
-        # Apply 25 stacks to elite enemy or random enemy
+        # Apply stacks to elite enemy or random enemy
         if self.enemy_on_field > 0:
             if self.has_elite_enemy:
                 target_enemy = self.elite_enemy_id
                 main_logger.debug(f"Applying stacks to elite enemy {target_enemy}")
+                # Transfer existing stacks if any, otherwise use initial stacks
+                final_stacks = min(
+                    total_existing_stacks + self.INITIAL_WAVE_INTERPRETATION_STACKS,
+                    self.MAX_INTERPRETATION_STACKS
+                ) if total_existing_stacks > 0 else self.INITIAL_WAVE_INTERPRETATION_STACKS
             else:
                 target_enemy = random.randint(0, self.enemy_on_field - 1)
                 main_logger.debug(f"Applying stacks to random enemy {target_enemy}")
+                final_stacks = self.INITIAL_WAVE_INTERPRETATION_STACKS
                 
-            self.enemy_interpretation_stacks[target_enemy] = self.INITIAL_WAVE_INTERPRETATION_STACKS
-            main_logger.debug(f"Applied {self.INITIAL_WAVE_INTERPRETATION_STACKS} interpretation stacks to enemy {target_enemy}")
+            self.enemy_interpretation_stacks[target_enemy] = final_stacks
+            main_logger.debug(f"Applied {final_stacks} interpretation stacks to enemy {target_enemy}")
             
     def _get_priority_target(self) -> int:
         """
@@ -200,13 +210,13 @@ class TheHerta(Character):
     def _use_basic_atk(self) -> None:
         """
         Simulate basic atk damage.
+        Deals Ice DMG equal to 100% of The Herta's ATK to one designated enemy.
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
-
+        # Basic attack is single target, 100% ATK ratio
+        dmg = self._calculate_damage(skill_multiplier=1.0, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
-
         self._record_damage(dmg=dmg, dmg_type='Basic ATK')
 
     def _use_skill(self) -> None:
@@ -228,106 +238,123 @@ class TheHerta(Character):
     def _use_normal_skill(self) -> None:
         """
         Simulate normal skill "Big Brain Energy" damage.
+        Deals Ice DMG equal to 70% of The Herta's ATK to target and adjacent,
+        repeating 2 times.
         :return: None
         """
-        for _ in range(2):  # 2 repetitions
-            # Initial hit
-            dmg = self._calculate_damage(
+        main_logger.info(f"{self.__class__.__name__} using normal skill...")
+        total_dmg = 0
+        primary_target = self._get_priority_target()
+        hit_enemies = set()
+
+        # Skill hits 2 times
+        for _ in range(2):
+            # Primary target hit
+            total_dmg += self._calculate_damage(
                 skill_multiplier=self.SKILL_MULTIPLIER,
                 break_amount=self.SKILL_BREAK_AMOUNT
             )
+            self._apply_interpretation_on_hit(primary_target)
+            hit_enemies.add(primary_target)
             
-            # Adjacent target hits (repeats 2 times)
-            adjacent_target = min(self.enemy_on_field - 1, 2)
-            for _ in range(adjacent_target):
-                dmg += self._calculate_damage(
-                    skill_multiplier=self.SKILL_MULTIPLIER,
-                    break_amount=self.SKILL_ADJACENT_BREAK
-                )
-                
-        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=self.SKILL_ENERGY_GAIN)
-        self._record_damage(dmg=dmg, dmg_type='Skill')
+            # Adjacent targets (up to 2)
+            adjacent_count = min(self.enemy_on_field - 1, 2)
+            for _ in range(adjacent_count):
+                adjacent_target = random.randint(0, self.enemy_on_field - 1)
+                if adjacent_target != primary_target:
+                    total_dmg += self._calculate_damage(
+                        skill_multiplier=self.SKILL_MULTIPLIER,
+                        break_amount=self.SKILL_ADJACENT_BREAK
+                    )
+                    self._apply_interpretation_on_hit(adjacent_target)
+                    hit_enemies.add(adjacent_target)
+
+        # Apply A2 energy regen
+        self._apply_a2_energy_regen(len(hit_enemies))
         
+        # Apply A4 interpretation stacks
+        self._apply_a4_interpretation_stacks(list(hit_enemies))
+        
+        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=self.SKILL_ENERGY_GAIN)
+        self._record_damage(dmg=total_dmg, dmg_type='Skill')
+
     def _use_enhanced_skill(self) -> None:
         """
         Simulate enhanced skill "Hear Me Out" damage.
-        Prioritizes elite enemy as primary target if present.
-        Consumes 1 inspiration stack.
+        Deals Ice DMG equal to 80% ATK to primary target and adjacent 2 times,
+        then 40% ATK to all enemies.
         :return: None
         """
-        # Get priority target (elite if present, otherwise random)
+        main_logger.info(f"{self.__class__.__name__} using enhanced skill...")
+        total_dmg = 0
         primary_target = self._get_priority_target()
-        dmg = 0
-        targets_hit = 0
-        hit_enemies = set()  # Track hit enemies for A4
-        
+        hit_enemies = set()
+
         # Check for Ice DMG boost before damage calculation
         self._check_and_apply_ice_dmg_boost(primary_target)
-        
-        # Prepare damage multipliers
-        dmg_multipliers = []
-        if self.ice_dmg_boost_active:
-            dmg_multipliers.append(self.A2_ICE_DMG_BOOST)
-        
-        for _ in range(2):  # 2 repetitions
-            # Initial hit on primary target with interpretation multiplier
+        dmg_multipliers = [self.A2_ICE_DMG_BOOST] if self.ice_dmg_boost_active else []
+
+        # First two hits (80% ATK)
+        for _ in range(2):
+            # Primary target
             primary_multiplier = self._calculate_interpretation_multiplier(primary_target, True)
-            dmg += self._calculate_damage(
+            total_dmg += self._calculate_damage(
                 skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER * primary_multiplier,
                 break_amount=self.ENHANCED_SKILL_BREAK_AMOUNT,
                 dmg_multipliers=dmg_multipliers
             )
             self._apply_interpretation_on_hit(primary_target)
-            targets_hit += 1
             hit_enemies.add(primary_target)
-            
-            # Adjacent target hits
-            adjacent_target = min(self.enemy_on_field - 1, 2)
-            for enemy_id in range(adjacent_target):
-                if enemy_id != primary_target:
-                    other_multiplier = self._calculate_interpretation_multiplier(enemy_id, False)
-                    dmg += self._calculate_damage(
+
+            # Adjacent targets
+            adjacent_count = min(self.enemy_on_field - 1, 2)
+            for _ in range(adjacent_count):
+                adjacent_target = random.randint(0, self.enemy_on_field - 1)
+                if adjacent_target != primary_target:
+                    other_multiplier = self._calculate_interpretation_multiplier(adjacent_target, False)
+                    total_dmg += self._calculate_damage(
                         skill_multiplier=self.ENHANCED_SKILL_MULTIPLIER * other_multiplier,
                         break_amount=self.ENHANCED_SKILL_ADJACENT_BREAK,
                         dmg_multipliers=dmg_multipliers
                     )
-                    self._apply_interpretation_on_hit(enemy_id)
-                    targets_hit += 1
-                    hit_enemies.add(enemy_id)
-                
-        # Final AOE hit
+                    self._apply_interpretation_on_hit(adjacent_target)
+                    hit_enemies.add(adjacent_target)
+
+        # Final AOE hit (40% ATK to all)
         for enemy_id in range(self.enemy_on_field):
             other_multiplier = self._calculate_interpretation_multiplier(enemy_id, False)
-            dmg += self._calculate_damage(
+            total_dmg += self._calculate_damage(
                 skill_multiplier=self.ENHANCED_SKILL_AOE_MULTIPLIER * other_multiplier,
                 break_amount=0,
                 dmg_multipliers=dmg_multipliers
             )
             self._apply_interpretation_on_hit(enemy_id)
-            targets_hit += 1
             hit_enemies.add(enemy_id)
-            
-        # Apply A2 energy regeneration
-        self._apply_a2_energy_regen(targets_hit)
+
+        # Apply A2 energy regen
+        self._apply_a2_energy_regen(len(hit_enemies))
         
         # Apply A4 interpretation stacks
         self._apply_a4_interpretation_stacks(list(hit_enemies))
         
-        # Reset interpretation stacks on primary target and Ice DMG boost
+        # Reset interpretation stacks on primary target to 1
         self.enemy_interpretation_stacks[primary_target] = 1
-        self.ice_dmg_boost_active = False
-            
-        self.inspiration -= 1  # Consume inspiration stack
-        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=self.SKILL_ENERGY_GAIN)
-        self._record_damage(dmg=dmg, dmg_type='Enhanced Skill')
         
+        # Reset Ice DMG boost and consume inspiration
+        self.ice_dmg_boost_active = False
+        self.inspiration -= 1
+
+        self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=self.SKILL_ENERGY_GAIN)
+        self._record_damage(dmg=total_dmg, dmg_type='Enhanced Skill')
+
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage "Told Ya! Magic Happens".
-        Includes A6 Answer stack damage boost.
+        Rearranges Interpretation stacks, deals 200% ATK Ice DMG to all enemies,
+        boosts ATK by 80% for 3 turns, gains Inspiration, and takes another action.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f'{self.__class__.__name__} using ultimate...')
         
         # Rearrange Interpretation stacks
         self._rearrange_interpretation_stacks()
@@ -336,23 +363,24 @@ class TheHerta(Character):
         self._apply_atk_boost()
         
         # Calculate A6 damage boost from Answer stacks
-        dmg_multipliers = [(self.answer_stacks * self.ANSWER_DMG_BOOST_PER_STACK)]
+        dmg_multipliers = [self.answer_stacks * self.ANSWER_DMG_BOOST_PER_STACK]
         main_logger.debug(f"A6: Ultimate boosted by {self.answer_stacks}% from Answer stacks")
         
-        # Deal AoE damage to all enemies
-        dmg = 0
-        for _ in range(self.enemy_on_field):
-            dmg += self._calculate_damage(
+        # Deal AoE damage to all enemies (200% ATK)
+        total_dmg = 0
+        for enemy_id in range(self.enemy_on_field):
+            total_dmg += self._calculate_damage(
                 skill_multiplier=self.ULT_MULTIPLIER,
                 break_amount=self.ULT_BREAK_AMOUNT,
                 dmg_multipliers=dmg_multipliers
             )
         
         # Record damage
-        self._record_damage(dmg=dmg, dmg_type='Ultimate')
+        self._record_damage(dmg=total_dmg, dmg_type='Ultimate')
         
-        # Add Inspiration stack
+        # Add Inspiration stack (capped at 4)
         self.inspiration = min(self.inspiration + 1, self.MAX_INSPIRATION_STACKS)
+        main_logger.debug(f"Added Inspiration stack, current stacks: {self.inspiration}")
         
         # Set energy after ultimate
         self.current_ult_energy = self.ULT_ENERGY_GAIN
@@ -375,37 +403,33 @@ class TheHerta(Character):
         
     def _rearrange_interpretation_stacks(self) -> None:
         """
-        Rearrange Interpretation stacks, prioritizing the elite enemy if present.
-        Otherwise, transfers to a random enemy.
+        Rearrange Interpretation stacks, prioritizing the transfer to Elite-level targets.
+        All other enemies' stacks are reset to 1 after rearrangement.
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} rearranging interpretation stacks...")
         
-        if not self.has_elite_enemy or self.elite_enemy_id not in self.enemy_interpretation_stacks:
-            # If no elite enemy, randomly redistribute stacks
-            total_stacks = sum(self.enemy_interpretation_stacks.values())
-            enemies = list(self.enemy_interpretation_stacks.keys())
-            if enemies:
-                target_enemy = random.choice(enemies)
-                for enemy_id in self.enemy_interpretation_stacks:
-                    if enemy_id != target_enemy:
-                        self.enemy_interpretation_stacks[enemy_id] = 0
-                self.enemy_interpretation_stacks[target_enemy] = min(total_stacks, self.MAX_INTERPRETATION_STACKS)
-                main_logger.debug(f"Transferred {total_stacks} interpretation stacks to random enemy {target_enemy}")
-        else:
-            # Transfer to elite enemy
-            total_stacks = 0
-            for enemy_id, stacks in list(self.enemy_interpretation_stacks.items()):
-                if enemy_id != self.elite_enemy_id:
-                    total_stacks += stacks
-                    self.enemy_interpretation_stacks[enemy_id] = 0
+        if not self.enemy_interpretation_stacks:
+            return
             
-            current_elite_stacks = self.enemy_interpretation_stacks[self.elite_enemy_id]
-            self.enemy_interpretation_stacks[self.elite_enemy_id] = min(
-                current_elite_stacks + total_stacks,
-                self.MAX_INTERPRETATION_STACKS
-            )
-            main_logger.debug(f"Transferred {total_stacks} interpretation stacks to elite enemy")
+        total_stacks = sum(self.enemy_interpretation_stacks.values())
+        
+        # Reset all stacks to 1 first
+        for enemy_id in self.enemy_interpretation_stacks:
+            self.enemy_interpretation_stacks[enemy_id] = 1
+            
+        # Determine target for stack transfer
+        if self.has_elite_enemy and self.elite_enemy_id in self.enemy_interpretation_stacks:
+            target_enemy = self.elite_enemy_id
+            main_logger.debug(f"Transferring stacks to elite enemy {target_enemy}")
+        else:
+            # If no elite enemy, choose random target
+            target_enemy = random.choice(list(self.enemy_interpretation_stacks.keys()))
+            main_logger.debug(f"Transferring stacks to random enemy {target_enemy}")
+            
+        # Transfer stacks to target (capped at max)
+        self.enemy_interpretation_stacks[target_enemy] = min(total_stacks, self.MAX_INTERPRETATION_STACKS)
+        main_logger.debug(f"Transferred {self.enemy_interpretation_stacks[target_enemy]} interpretation stacks to enemy {target_enemy}")
         
     def end_turn(self) -> None:
         """
