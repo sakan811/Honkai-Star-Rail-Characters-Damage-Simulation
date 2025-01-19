@@ -99,8 +99,7 @@ class Topaz(Character):
             self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -120,8 +119,7 @@ class Topaz(Character):
             self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
     def _use_ult(self) -> None:
         """
@@ -186,31 +184,23 @@ class Numby(Character):
                 dmg = self._calculate_damage(skill_multiplier=3, break_amount=20,
                                              dmg_multipliers=[0.15])
 
-                self.topaz.data['DMG'].append(dmg)
-                self.topaz.data['DMG_Type'].append('Numby with Ult Buff')
-            else:
                 dmg = self._calculate_damage(skill_multiplier=3, break_amount=20)
 
-                self.topaz.data['DMG'].append(dmg)
-                self.topaz.data['DMG_Type'].append('Numby with Ult Buff')
+                self._record_damage(dmg, 'Numby with Ult Buff')
         else:
             main_logger.info('Numby attacking...')
             if self.topaz.enemy_has_fire_weakness():
                 dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
                                              dmg_multipliers=[0.15])
 
-                self.topaz.data['DMG'].append(dmg)
-                self.topaz.data['DMG_Type'].append('Numby')
+                self._record_damage(dmg, 'Numby')
             else:
                 dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20)
 
-                self.topaz.data['DMG'].append(dmg)
-                self.topaz.data['DMG_Type'].append('Numby')
+                self._record_damage(dmg, 'Numby')
 
     def take_action(self) -> None:
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
-
-        self.topaz._simulate_enemy_weakness_broken()
 
         if self.topaz.windfall_bonanza > 0:
             self.crit_dmg += 0.25

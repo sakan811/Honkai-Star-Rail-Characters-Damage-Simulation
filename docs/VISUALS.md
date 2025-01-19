@@ -32,6 +32,14 @@
 
 [Instagram](https://www.instagram.com/p/DE-S0lcPqFb/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
 
+## Remembrance Characters
+
+[Power BI](https://app.powerbi.com/view?r=eyJrIjoiNGQzMGY2M2ItNzQzNi00ZDAxLWE5N2UtZmZiYjFhNDljMWMxIiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
+
+[Facebook]()  
+
+[Instagram]()
+
 ## Harmony Characters
 
 [Power BI](https://app.powerbi.com/view?r=eyJrIjoiMDMzZjNkZWItODcyYy00MjlkLWE5NGItNjM4OTk3N2NiNTA1IiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
