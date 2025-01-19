@@ -86,8 +86,7 @@ class Jingyuan(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self._record_damage(dmg, 'Basic ATK')
 
     def _use_skill(self) -> None:
         """
@@ -103,8 +102,7 @@ class Jingyuan(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self._record_damage(dmg, 'Skill')
 
         self.lighting_lord_hit_per_action += 2
         self.lighting_lord_hit_per_action = min(self.lighting_lord_hit_per_action, 10)
@@ -126,8 +124,7 @@ class Jingyuan(Character):
         for _ in range(self.enemy_on_field - 1):
             dmg += self._calculate_damage(skill_multiplier=2, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self._record_damage(dmg, 'Ultimate')
 
         self.lighting_lord_hit_per_action += 3
         self.lighting_lord_hit_per_action = min(self.lighting_lord_hit_per_action, 10)
@@ -169,9 +166,7 @@ class LightingLord(Character):
         :return: None.
         """
         main_logger.info(f'{self.__class__.__name__} is taking actions...')
-
-        self.jingyuan._simulate_enemy_weakness_broken()
-
+        
         # reset stats for each action
         self.speed = self.default_speed
         self.crit_rate = self.jingyuan.crit_rate
@@ -205,8 +200,7 @@ class LightingLord(Character):
             for _ in range(self.jingyuan.enemy_on_field - 1):
                 dmg += self._calculate_damage(skill_multiplier=0.25, break_amount=5)
 
-            self.jingyuan.data['DMG'].append(dmg)
-            self.jingyuan.data['DMG_Type'].append('Lightning Lord')
+            self._record_damage(dmg, 'Lightning Lord')
 
     def reset_summon_stat_for_each_turn(self) -> None:
         """
