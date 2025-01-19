@@ -100,14 +100,14 @@ class Character:
 
     def _init_battle_data(self) -> None:
         """Initialize battle-related data"""
-        self.data = {
+        self.data: dict[str, list[float | str | int]] = {
             'DMG': [],
             'DMG_Type': [],
             'Simulate Round No.': []
         }
-        self.battle_start = True
-        self.char_action_value_for_action_forward = []
-        self.char_action_value = 0.0
+        self.battle_start: bool = True
+        self.char_action_value_for_action_forward: list[float] = []
+        self.char_action_value: float = 0.0
 
     def _record_damage(self, dmg: float, dmg_type: str) -> None:
         """Record damage and its type in battle data"""
@@ -149,16 +149,16 @@ class Character:
         self.enemy_weakness_broken = self.default_enemy_weakness_broken
 
         # dictionary for storing character actions
-        self.data = {
+        self.data: dict[str, list[float | str | int]] = {
             'DMG': [],
             'DMG_Type': [],
             'Simulate Round No.': []
         }
 
         # other stats
-        self.battle_start = True
-        self.char_action_value_for_action_forward = []
-        self.char_action_value = 0.0
+        self.battle_start: bool = True
+        self.char_action_value_for_action_forward: list[float] = []
+        self.char_action_value: float = 0.0
 
     def take_action(self) -> None:
         """
@@ -175,8 +175,6 @@ class Character:
 
         if self._can_use_ult():
             self._use_ult()
-
-            self.current_ult_energy = 5
 
     def _use_basic_atk(self) -> None:
         """Simulate basic attack damage."""
