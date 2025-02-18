@@ -15,6 +15,7 @@
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 from hsr_simulation.postgre import generate_dmg_view_query
+from hsr_simulation.remembrance.algaea import Algaea
 from hsr_simulation.remembrance.remembrance_trailblazer import RemembranceTrailblazer
 from hsr_simulation.simulate_battles import start_simulations
 from hsr_simulation.utils import process_result_list
@@ -39,7 +40,7 @@ def start_sim_remembrance(simulation_num: int, max_cycles: int) -> None:
     db.drop_view(view_name)
 
     # Remembrance characters list
-    remembrance_char_list: list[Character] = [RemembranceTrailblazer()]
+    remembrance_char_list: list[Character] = [RemembranceTrailblazer(), Algaea()]
 
     for remembrance_char in remembrance_char_list:
         dict_list = start_simulations(remembrance_char, max_cycles, simulation_num)
