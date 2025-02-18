@@ -12,6 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from random import random
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 
@@ -265,7 +266,8 @@ class Mem(Character):
         )
 
         dmg = 0
-        for _ in range(4):
+        hit_num = random.choice([1, 2, 3, 4])
+        for _ in range(hit_num):
             dmg += self.atk * self.SKILL_MULTIPLIER * (self.TRUE_DMG_MULTIPLIER)
 
         dmg += self.atk * self.SKILL_MULTIPLIER_FINAL_HIT * (self.TRUE_DMG_MULTIPLIER)
