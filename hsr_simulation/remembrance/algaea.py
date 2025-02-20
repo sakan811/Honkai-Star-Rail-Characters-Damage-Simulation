@@ -279,6 +279,7 @@ class Garmentmaker(Character):
         self.seam_stitch_target = False
         self.default_speed = speed
         self.default_atk = self.atk  # Store default ATK for reset
+        self.remaining_action_value = 0  # Track remaining action value for multiple actions
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -292,6 +293,7 @@ class Garmentmaker(Character):
         self.seam_stitch_target = False
         self.speed = self.default_speed  # Reset speed to base value
         self.atk = self.default_atk  # Reset ATK to base value
+        self.remaining_action_value = 0
 
     def _apply_speed_buff_without_increment(self) -> None:
         """Apply speed buff from retained stacks without incrementing the stack count."""
@@ -301,25 +303,44 @@ class Garmentmaker(Character):
 
     def take_action(self) -> None:
         """
-        Simulate taking actions.
-        :return: None.
+        Simulate taking actions. Always takes at least one action, then additional actions if speed allows.
+        :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # Reset stats for each action
         self.speed = self.default_speed
 
-        # enemy's turn
-        self._simulate_enemy_weakness_broken()
-
         # Apply speed buffs from previous stacks
         if self.speed_buff_stacks > 0:
             self.speed += self.SPEED_BUFF * self.speed_buff_stacks
 
-        # Garmentmaker's turn - always use skill
+        # Get Aglaea's action value for this turn if starting new turn
+        if self.remaining_action_value == 0:  # Only calculate if not continuing from previous turn
+            aglaea_action_value = self.aglaea.calculate_action_value(self.aglaea.speed)
+            self.remaining_action_value = aglaea_action_value
+            main_logger.info(f"{self.__class__.__name__} received {aglaea_action_value} action value from Aglaea")
+
+        # Always take at least one action
+        current_action_value = self.calculate_action_value(self.speed)
         self._use_skill()
         if self.seam_stitch_target:
             self._apply_speed_buff()
+        self.remaining_action_value -= current_action_value
+        main_logger.info(f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining after first action")
+
+        # Take additional actions if enough action value remains
+        while self.remaining_action_value > 0:
+            current_action_value = self.calculate_action_value(self.speed)
+            if current_action_value > self.remaining_action_value:
+                break
+
+            self._use_skill()
+            if self.seam_stitch_target:
+                self._apply_speed_buff()
+
+            self.remaining_action_value -= current_action_value
+            main_logger.info(f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining")
 
     def _use_skill(self) -> None:
         """Simulate skill damage."""
