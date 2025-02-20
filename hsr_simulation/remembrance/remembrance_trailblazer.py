@@ -12,7 +12,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from random import random
+import random
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
 
@@ -81,15 +81,16 @@ class RemembranceTrailblazer(Character):
         # Mem's turn
         if self.mem is not None:
             if not self._mem_can_use_ult():
+                hit_num = random.randint(1, 4)
                 if self.mem.mem_buff > 0:
-                    dmg = self.mem._use_skill()
+                    dmg = self.mem._use_skill(hit_num)
                     self._apply_a4_trace()
                     self._record_damage(dmg, "Mem Skill")
-                    true_dmg = self.mem._simulate_true_dmg_from_skill()
+                    true_dmg = self.mem._simulate_true_dmg_from_skill(hit_num)
                     self._record_damage(true_dmg, "Mem True Damage")
                     self.mem.mem_buff -= 1
                 else:
-                    dmg = self.mem._use_skill()
+                    dmg = self.mem._use_skill(hit_num)
                     self._apply_a4_trace()
                     self._record_damage(dmg, "Mem Skill")
             else:
@@ -242,12 +243,16 @@ class Mem(Character):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.mem_buff = 0
 
-    def _use_skill(self) -> float:
-        """Simulate skill damage."""
+    def _use_skill(self, hit_num: int) -> float:
+        """
+        Simulate skill damage.
+        :param hit_num: Number of hits to simulate
+        :return: Skill Damage
+        """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
 
         dmg = 0
-        for _ in range(4):
+        for _ in range(hit_num):
             dmg += self._calculate_damage(
                 skill_multiplier=self.SKILL_MULTIPLIER,
                 break_amount=self.SKILL_BREAK_AMOUNT,
@@ -259,14 +264,17 @@ class Mem(Character):
         )
         return dmg
 
-    def _simulate_true_dmg_from_skill(self) -> float:
-        """Simulate True Damage from skill."""
+    def _simulate_true_dmg_from_skill(self, hit_num: int) -> float:
+        """
+        Simulate True Damage from skill.
+        :param hit_num: Number of hits to simulate
+        :return: True Damage
+        """
         main_logger.info(
             f"{self.__class__.__name__} is simulating True Damage from skill..."
         )
 
         dmg = 0
-        hit_num = random.choice([1, 2, 3, 4])
         for _ in range(hit_num):
             dmg += self.atk * self.SKILL_MULTIPLIER * (self.TRUE_DMG_MULTIPLIER)
 
