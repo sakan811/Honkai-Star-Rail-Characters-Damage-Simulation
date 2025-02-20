@@ -322,19 +322,16 @@ class Garmentmaker(Character):
             main_logger.info(f"{self.__class__.__name__} received {aglaea_action_value} action value from Aglaea")
 
         # Always take at least one action
-        current_action_value = self.calculate_action_value(self.speed)
         self._use_skill()
         if self.seam_stitch_target:
             self._apply_speed_buff()
+            
+        current_action_value = self.calculate_action_value(self.speed)
         self.remaining_action_value -= current_action_value
         main_logger.info(f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining after first action")
 
         # Take additional actions if enough action value remains
         while self.remaining_action_value > 0:
-            current_action_value = self.calculate_action_value(self.speed)
-            if current_action_value > self.remaining_action_value:
-                break
-
             self._use_skill()
             if self.seam_stitch_target:
                 self._apply_speed_buff()
@@ -356,7 +353,8 @@ class Garmentmaker(Character):
         """Apply speed buff from talent when attacking seam stitch target."""
         if self.speed_buff_stacks < self.MAX_SPEED_BUFF_STACKS:
             self.speed_buff_stacks += 1
-            self.speed += self.SPEED_BUFF
+            # Recalculate speed from base speed plus all stacks
+            self.speed = self.default_speed + (self.SPEED_BUFF * self.speed_buff_stacks)
             main_logger.info(f"{self.__class__.__name__} gained speed buff stack {self.speed_buff_stacks}")
 
     def set_aglaea(self, aglaea: 'Algaea') -> None:
