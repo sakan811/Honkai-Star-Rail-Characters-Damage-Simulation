@@ -68,6 +68,10 @@ class HarmonyCharacter:
         :param additional_dmg: Additional flat damage
         :return: Calculated damage value
         """
+        # Ensure additional_dmg is not None
+        if additional_dmg is None:
+            additional_dmg = 0
+            
         return ((atk * multiplier + additional_dmg) 
                 * dmg_bonus_multiplier 
                 * elemental_dmg_multiplier 
@@ -102,6 +106,10 @@ class HarmonyCharacter:
         :param dmg_list: List to append damage values
         :param super_break_dmg: Super break damage value
         """
+        # Ensure super_break_dmg is not None
+        if super_break_dmg is None:
+            super_break_dmg = 0
+            
         if self.enemy_turn_delay > 0:
             dmg_list.append(super_break_dmg)
             self.enemy_turn_delay -= 1
@@ -123,6 +131,12 @@ class HarmonyCharacter:
         :param break_dmg: Break damage value
         :param super_break_dmg: Super break damage value
         """
+        # Ensure break_dmg and super_break_dmg are not None
+        if break_dmg is None:
+            break_dmg = 0
+        if super_break_dmg is None:
+            super_break_dmg = 0
+            
         if self.enemy_toughness <= 0 and not self.has_broken_once:
             dmg_list.extend([break_dmg, super_break_dmg])
             self.has_broken_once = True
@@ -146,9 +160,9 @@ class HarmonyCharacter:
             dmg_bonus_multiplier: float,
             elemental_dmg_multiplier: float,
             res_pen_multiplier: float,
-            additional_dmg: float,
-            super_break_dmg: float,
-            break_dmg: float,
+            additional_dmg: float = 0,
+            super_break_dmg: float = 0,
+            break_dmg: float = 0,
     ) -> None:
         """
         Applies the ultimate ability of the Trailblazer character.
@@ -164,6 +178,10 @@ class HarmonyCharacter:
         """
         if not self._can_use_ultimate():
             return
+
+        # Ensure additional_dmg is not None
+        if additional_dmg is None:
+            additional_dmg = 0
 
         ult_dmg = self._calculate_damage(
             atk=atk,
@@ -194,6 +212,10 @@ class HarmonyCharacter:
         :param super_break_dmg: Super break damage to apply
         :param break_dmg: Break damage to apply
         """
+        # Ensure ult_dmg is not None
+        if ult_dmg is None:
+            ult_dmg = 0
+            
         dmg_list.append(ult_dmg)
         self.trailblazer_current_energy = 0
         
@@ -301,6 +323,12 @@ class HarmonyCharacter:
         :return: None
         :rtype: None
         """
+        # Ensure additional_dmg is not None
+        additional_dmg = params.get('additional_dmg', 0)
+        if additional_dmg is None:
+            additional_dmg = 0
+            params['additional_dmg'] = 0
+            
         # Calculate and apply skill damage
         skill_dmg = self._calculate_damage(
             atk=atk,
@@ -308,7 +336,7 @@ class HarmonyCharacter:
             dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
             elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
             res_pen_multiplier=params['res_pen_multiplier'],
-            additional_dmg=params['additional_dmg']
+            additional_dmg=additional_dmg
         )
         dmg_list.append(skill_dmg)
 
@@ -317,11 +345,16 @@ class HarmonyCharacter:
         self.handle_super_break_damage(dmg_list, params['super_break_dmg'])
         self.handle_break_damage(dmg_list, params['break_dmg'], params['super_break_dmg'])
 
-        # Apply ultimate
+        # Apply ultimate - only pass the parameters that apply_ultimate expects
         self.apply_ultimate(
             dmg_list=dmg_list,
             atk=atk,
-            **params
+            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
+            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
+            res_pen_multiplier=params['res_pen_multiplier'],
+            additional_dmg=params.get('additional_dmg', 0),
+            super_break_dmg=params.get('super_break_dmg', 0),
+            break_dmg=params.get('break_dmg', 0)
         )
 
     def a2_trace_buff(self, *args, **kwargs) -> float:

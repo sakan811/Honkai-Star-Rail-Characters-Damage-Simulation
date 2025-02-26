@@ -26,6 +26,7 @@ from hsr_simulation.harmony.ruanmei import RuanMei
 from hsr_simulation.harmony.sparkle import Sparkle
 from hsr_simulation.harmony.sunday import Sunday
 from hsr_simulation.harmony.tingyun import Tingyun
+from hsr_simulation.harmony.tribbie import Tribbie
 from hsr_simulation.harmony.yukong import Yukong
 from hsr_simulation.postgre import PostgresOperations
 
@@ -46,7 +47,7 @@ def start_sim_harmony() -> None:
     harmony_char_list: list[HarmonyCharacter] = [
         Sunday(), Asta(), Bronya(), Hanya(), Robin(),
         RuanMei(), Sparkle(), Tingyun(), HarmonyTrailblazer(),
-        Yukong(),
+        Yukong(), Tribbie()
     ]
 
     # Collect results
