@@ -34,8 +34,44 @@ class Tribbie(HarmonyCharacter):
         """
         return 0.18 * self.hp
     
+    def ult_buff(self, *args, **kwargs) -> float:
+        """
+        Tribbie's ult DMG
+        :return: ult DMG
+        """
+        zone_additional_dmg_list = []
+        
+        # Initial DMG
+        zone_additional_dmg = 0.3 * self.hp
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # DMG for 1 enemy hit
+        zone_additional_dmg = 0.12 * self.hp
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # DMG for 2 enemy hits
+        zone_additional_dmg = 0.12 * self.hp * 2
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # DMG for 3 enemy hits
+        zone_additional_dmg = 0.12 * self.hp * 3
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # DMG for 4 enemy hits
+        zone_additional_dmg = 0.12 * self.hp * 4
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # DMG for 5 enemy hits
+        zone_additional_dmg = 0.12 * self.hp * 5
+        zone_additional_dmg_list.append(zone_additional_dmg)
+        
+        # Average DMG
+        avg_zone_additional_dmg = sum(zone_additional_dmg_list) / len(zone_additional_dmg_list)
+        
+        return avg_zone_additional_dmg
+    
     def a2_trace_buff(self, *args, **kwargs) -> float:
-        return 0.72
+        return 0.72 * 3
 
     def a4_trace_buff(self) -> float:
         # Use base_hp instead of hp to avoid circular reference
@@ -44,10 +80,9 @@ class Tribbie(HarmonyCharacter):
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
 
-        zone_additional_dmg = 0.3 * self.hp
-        additional_dmg = 0.12 * self.hp
-        
-        tribbie_dmg = (additional_dmg + zone_additional_dmg + self.talent_buff()) * (1 + self.a2_trace_buff())
+        total_zone_additional_dmg = self.ult_buff()
+
+        tribbie_dmg = (total_zone_additional_dmg + self.talent_buff()) * (1 + self.a2_trace_buff())
         
         buffed_dmg = self.calculate_trailblazer_dmg(
             res_pen_multiplier=self.skill_buff(),
