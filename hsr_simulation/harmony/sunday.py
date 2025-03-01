@@ -20,7 +20,8 @@ class Sunday(HarmonyCharacter):
         super().__init__()
 
     def talent_buff(self):
-        return self.trailblazer_crit_rate + 0.2
+        crit_rate_increase = 0.2
+        return crit_rate_increase
 
     def a2_trace_buff(self, ult_energy_regen):
         energy_gain_from_sunday_ult = self.trailblazer_ult_energy * 0.2
@@ -43,20 +44,18 @@ class Sunday(HarmonyCharacter):
         sunday_crit_dmg = self.trailblazer_crit_dmg + 2.0939
 
         crit_dmg_increased = ((0.3 * sunday_crit_dmg) + 0.12)
-        final_crit_dmg = self.trailblazer_crit_dmg + crit_dmg_increased
-        final_crit_rate = self.talent_buff()
+        self.trailblazer_crit_dmg += crit_dmg_increased
+        self.trailblazer_crit_rate += self.talent_buff()
 
-        crit_buff = self.crit_buff(final_crit_rate, final_crit_dmg)
-
-        return crit_buff + ult_energy_regen_buff
+        return ult_energy_regen_buff 
 
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
 
         dmg_buff = self.skill_buff() + self.ult_buff()
 
-        # assume Sunday give 3 extra turns in total from his Skill due to 3 starting skill points
-        bonus_turn = 3
+        # assume Sunday give 1 extra turns in total from his Skill
+        bonus_turn = 1
         buffed_dmg = self.calculate_trailblazer_dmg(dmg_bonus_multiplier=dmg_buff, bonus_turns=bonus_turn)
 
         return self.calculate_percent_change(base_dmg, buffed_dmg)

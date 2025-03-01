@@ -18,6 +18,7 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 class Robin(HarmonyCharacter):
     def __init__(self):
         super().__init__()
+        self.DEFAULT_ATK = 4198.12
 
     def skill_buff(self) -> float:
         return 0.5
@@ -27,7 +28,7 @@ class Robin(HarmonyCharacter):
         return crit_dmg
 
     def ult_buff(self) -> float:
-        atk_increased = (0.228 * self.trailblazer_atk) + 200
+        atk_increased = (0.228 * self.DEFAULT_ATK) + 200
         final_atk = self.trailblazer_atk + atk_increased
         atk_buff = self.calculate_percent_change(
             self.trailblazer_atk, final_atk, decimal_mode=True
@@ -44,16 +45,16 @@ class Robin(HarmonyCharacter):
 
         # assume Robin give 1 extra turn in total from her Ult
         bonus_turn = 1
+        
+        ult_crit_dmg_multiplier = 1 + 1.5
 
-        final_crit_dmg = (
-            self.trailblazer_crit_dmg + self.talent_buff() + self.a4_trace_buff()
-        )
-        crit_buff = self.crit_buff(self.trailblazer_crit_rate, final_crit_dmg)
-        additional_dmg = (1.2 * self.trailblazer_atk) * 1.5
+        self.trailblazer_crit_dmg += self.talent_buff() + self.a4_trace_buff()
+    
+        additional_dmg = (1.2 * self.DEFAULT_ATK) * (1 + self.skill_buff()) * ult_crit_dmg_multiplier
         buffed_dmg = self.calculate_trailblazer_dmg(
-            dmg_bonus_multiplier=self.skill_buff() + crit_buff,
+            dmg_bonus_multiplier=self.skill_buff(),
             atk_bonus=self.ult_buff(),
-            additional_dmg=additional_dmg,
+            dmg_from_harmony_char=additional_dmg,
             bonus_turns=bonus_turn,
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

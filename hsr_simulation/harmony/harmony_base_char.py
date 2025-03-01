@@ -29,11 +29,19 @@ class HarmonyCharacter:
     DEFAULT_BREAK_EFFECT = 1
     DEFAULT_ENERGY_REGEN = 30
     
+    # Basic attack multiplier
+    BASIC_ATK_MULTIPLIER = 1.0
+    # Skill attack multiplier
+    SKILL_MULTIPLIER = 1.25
+    # Ultimate attack multiplier
+    ULT_MULTIPLIER = 4.25
+    
     # Speed breakpoints for bonus turn calculations
+    # (speed, bonus_turns_in_1st_cycle)
     SPEED_BREAKPOINTS = [
-        (200, 6), (182, 5), (178, 4), (172, 4),
-        (164, 4), (160, 3), (156, 3), (146, 3),
-        (143, 2), (134, 2), (120, 1)
+        (200, 2), (182, 1), (178, 1), (172, 1),
+        (164, 1), (160, 1), (156, 1), (146, 1),
+        (143, 1), (134, 1), (120, 0)
     ]
 
     def __init__(self):
@@ -142,85 +150,80 @@ class HarmonyCharacter:
             self.has_broken_once = True
             self.enemy_turn_delay = 1
 
-    def regenerate_energy(self, amount: int = DEFAULT_ENERGY_REGEN) -> None:
+    def calculate_basic_attack_damage(self, 
+                                     atk: float,
+                                     dmg_bonus_multiplier: float,
+                                     elemental_dmg_multiplier: float,
+                                     res_pen_multiplier: float,
+                                     additional_dmg: float = 0) -> float:
         """
-        Regenerate energy with maximum cap.
+        Calculate basic attack damage.
         
-        :param amount: Energy regeneration amount
-        """
-        self.trailblazer_current_energy = min(
-            self.trailblazer_current_energy + amount,
-            self.trailblazer_ult_energy
-        )
-
-    def apply_ultimate(
-            self,
-            dmg_list: list,
-            atk: float,
-            dmg_bonus_multiplier: float,
-            elemental_dmg_multiplier: float,
-            res_pen_multiplier: float,
-            additional_dmg: float = 0,
-            super_break_dmg: float = 0,
-            break_dmg: float = 0,
-    ) -> None:
-        """
-        Applies the ultimate ability of the Trailblazer character.
-        
-        :param dmg_list: List to append damage values
-        :param atk: Attack power
-        :param dmg_bonus_multiplier: Base damage multiplier
-        :param elemental_dmg_multiplier: Elemental damage multiplier
-        :param res_pen_multiplier: Resistance penetration multiplier
+        :param atk: Attack value
+        :param dmg_bonus_multiplier: DMG bonus multiplier
+        :param elemental_dmg_multiplier: Elemental DMG multiplier
+        :param res_pen_multiplier: RES penetration multiplier
         :param additional_dmg: Additional flat damage
-        :param super_break_dmg: Super break damage
-        :param break_dmg: Break damage
+        :return: Calculated basic attack damage
         """
-        if not self._can_use_ultimate():
-            return
-
-        # Ensure additional_dmg is not None
-        if additional_dmg is None:
-            additional_dmg = 0
-
-        ult_dmg = self._calculate_damage(
+        return self._calculate_damage(
             atk=atk,
-            multiplier=4.25,
+            multiplier=self.BASIC_ATK_MULTIPLIER,
             dmg_bonus_multiplier=dmg_bonus_multiplier,
             elemental_dmg_multiplier=elemental_dmg_multiplier,
             res_pen_multiplier=res_pen_multiplier,
             additional_dmg=additional_dmg
         )
 
-        self._apply_ultimate_effects(
-            dmg_list=dmg_list,
-            ult_dmg=ult_dmg,
-            super_break_dmg=super_break_dmg,
-            break_dmg=break_dmg
+    def calculate_skill_damage(self, 
+                              atk: float,
+                              dmg_bonus_multiplier: float,
+                              elemental_dmg_multiplier: float,
+                              res_pen_multiplier: float,
+                              additional_dmg: float = 0) -> float:
+        """
+        Calculate skill damage.
+        
+        :param atk: Attack value
+        :param dmg_bonus_multiplier: DMG bonus multiplier
+        :param elemental_dmg_multiplier: Elemental DMG multiplier
+        :param res_pen_multiplier: RES penetration multiplier
+        :param additional_dmg: Additional flat damage
+        :return: Calculated skill damage
+        """
+        return self._calculate_damage(
+            atk=atk,
+            multiplier=self.SKILL_MULTIPLIER,
+            dmg_bonus_multiplier=dmg_bonus_multiplier,
+            elemental_dmg_multiplier=elemental_dmg_multiplier,
+            res_pen_multiplier=res_pen_multiplier,
+            additional_dmg=additional_dmg
         )
 
-    def _can_use_ultimate(self) -> bool:
-        """Check if character has enough energy for ultimate."""
-        return self.trailblazer_current_energy >= self.trailblazer_ult_energy
-
-    def _apply_ultimate_effects(self, dmg_list: list, ult_dmg: float, 
-                              super_break_dmg: float, break_dmg: float) -> None:
-        """Apply ultimate effects and handle break mechanics.
-        
-        :param dmg_list: List to append damage values to
-        :param ult_dmg: Calculated ultimate ability damage
-        :param super_break_dmg: Super break damage to apply
-        :param break_dmg: Break damage to apply
+    def calculate_ultimate_damage(self, 
+                                 atk: float,
+                                 dmg_bonus_multiplier: float,
+                                 elemental_dmg_multiplier: float,
+                                 res_pen_multiplier: float,
+                                 additional_dmg: float = 0) -> float:
         """
-        # Ensure ult_dmg is not None
-        if ult_dmg is None:
-            ult_dmg = 0
-            
-        dmg_list.append(ult_dmg)
-        self.trailblazer_current_energy = 0
+        Calculate ultimate damage.
         
-        self.handle_super_break_damage(dmg_list, super_break_dmg)
-        self.handle_break_damage(dmg_list, break_dmg, super_break_dmg)
+        :param atk: Attack value
+        :param dmg_bonus_multiplier: DMG bonus multiplier
+        :param elemental_dmg_multiplier: Elemental DMG multiplier
+        :param res_pen_multiplier: RES penetration multiplier
+        :param additional_dmg: Additional flat damage
+        :return: Calculated ultimate damage
+        """
+        return self._calculate_damage(
+            atk=atk,
+            multiplier=self.ULT_MULTIPLIER,
+            dmg_bonus_multiplier=dmg_bonus_multiplier,
+            elemental_dmg_multiplier=elemental_dmg_multiplier,
+            res_pen_multiplier=res_pen_multiplier,
+            additional_dmg=additional_dmg
+        )
 
     def calculate_trailblazer_dmg(self,
                                  atk_bonus: float = None,
@@ -228,21 +231,23 @@ class HarmonyCharacter:
                                  elemental_dmg_multiplier: float = None,
                                  additional_dmg: float = None,
                                  res_pen_multiplier: float = None,
-                                 bonus_turns: int = None,
                                  break_dmg: float = None,
-                                 super_break_dmg: float = None) -> float:
+                                 super_break_dmg: float = None,
+                                 dmg_from_harmony_char: float = None,
+                                 bonus_turns: float = None) -> float:
         """
-        Calculate the damage done by Trailblazer over five cycles.
+        Calculate the total damage done by Trailblazer in a single hit (basic attack + skill + ultimate).
         
         :param atk_bonus: ATK bonus
         :param dmg_bonus_multiplier: DMG bonus multiplier
         :param elemental_dmg_multiplier: Elemental DMG multiplier
         :param additional_dmg: Additional flat DMG
         :param res_pen_multiplier: RES pen multiplier
-        :param bonus_turns: Bonus turns
         :param break_dmg: Break DMG
         :param super_break_dmg: Super Break DMG
-        :return: Total DMG over five cycles
+        :param dmg_from_harmony_char: DMG from Harmony character
+        :param bonus_turns: Bonus turns parameter
+        :return: Total DMG as a single hit
         """
         params = self._prepare_damage_parameters(
             atk_bonus=atk_bonus,
@@ -255,15 +260,49 @@ class HarmonyCharacter:
         )
         
         dmg_list = []
-        turn_count = self._calculate_turn_count(bonus_turns)
         atk = self.trailblazer_atk * params['atk_bonus']
-
-        for _ in range(turn_count):
-            self._execute_turn_actions(
-                dmg_list=dmg_list,
-                atk=atk,
-                **params
-            )
+        
+        # Calculate basic attack damage
+        basic_atk_dmg = self.calculate_basic_attack_damage(
+            atk=atk,
+            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
+            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
+            res_pen_multiplier=params['res_pen_multiplier'],
+            additional_dmg=params.get('additional_dmg', 0)
+        )
+        
+        # Calculate skill damage
+        skill_dmg = self.calculate_skill_damage(
+            atk=atk,
+            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
+            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
+            res_pen_multiplier=params['res_pen_multiplier'],
+            additional_dmg=params.get('additional_dmg', 0)
+        )
+        
+        # Calculate ultimate damage
+        ult_dmg = self.calculate_ultimate_damage(
+            atk=atk,
+            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
+            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
+            res_pen_multiplier=params['res_pen_multiplier'],
+            additional_dmg=params.get('additional_dmg', 0)
+        )
+        
+        total_dmg = basic_atk_dmg + skill_dmg + ult_dmg
+        
+        if bonus_turns is not None:
+            total_dmg *= 1 + bonus_turns
+            
+        dmg_list.append(total_dmg)
+        
+        # Handle break mechanics
+        self.handle_break_damage(dmg_list, params['break_dmg'], params['super_break_dmg'])
+        self.handle_super_break_damage(dmg_list, params['super_break_dmg'])
+        
+        # Add direct damage from harmony character if provided
+        if dmg_from_harmony_char is not None:
+            dmg_list.append(dmg_from_harmony_char)
 
         return sum(dmg_list)
 
@@ -291,71 +330,6 @@ class HarmonyCharacter:
         :rtype: float
         """
         return 1 + value if value is not None else 1
-
-    def _calculate_turn_count(self, bonus_turns: int = None) -> int:
-        """
-        Calculate total number of turns including any bonus turns.
-
-        :param bonus_turns: Number of additional turns to add
-        :type bonus_turns: int, optional
-        :return: Total number of turns (base 5 turns plus any bonus)
-        :rtype: int
-        """
-        return 5 + (bonus_turns or 0)
-
-    def _execute_turn_actions(self, dmg_list: list, atk: float, **params) -> None:
-        """
-        Execute all actions for a single turn including skill damage, energy regeneration,
-        break mechanics and ultimate.
-
-        :param dmg_list: List to store calculated damage values
-        :type dmg_list: list
-        :param atk: Attack value to use for damage calculations
-        :type atk: float
-        :param params: Additional parameters for damage calculations including:
-            - dmg_bonus_multiplier: Damage bonus multiplier
-            - elemental_dmg_multiplier: Elemental damage multiplier  
-            - res_pen_multiplier: Resistance penetration multiplier
-            - additional_dmg: Additional flat damage
-            - super_break_dmg: Super break damage
-            - break_dmg: Break damage
-        :type params: dict
-        :return: None
-        :rtype: None
-        """
-        # Ensure additional_dmg is not None
-        additional_dmg = params.get('additional_dmg', 0)
-        if additional_dmg is None:
-            additional_dmg = 0
-            params['additional_dmg'] = 0
-            
-        # Calculate and apply skill damage
-        skill_dmg = self._calculate_damage(
-            atk=atk,
-            multiplier=1.25,
-            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
-            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
-            res_pen_multiplier=params['res_pen_multiplier'],
-            additional_dmg=additional_dmg
-        )
-        dmg_list.append(skill_dmg)
-
-        # Handle energy and break mechanics
-        self.regenerate_energy()
-        self.handle_super_break_damage(dmg_list, params['super_break_dmg'])
-        self.handle_break_damage(dmg_list, params['break_dmg'], params['super_break_dmg'])
-
-        # Apply ultimate - only pass the parameters that apply_ultimate expects
-        self.apply_ultimate(
-            dmg_list=dmg_list,
-            atk=atk,
-            dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
-            elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
-            res_pen_multiplier=params['res_pen_multiplier'],
-            additional_dmg=params.get('additional_dmg', 0),
-            super_break_dmg=params.get('super_break_dmg', 0),
-            break_dmg=params.get('break_dmg', 0)
-        )
 
     def a2_trace_buff(self, *args, **kwargs) -> float:
         """
@@ -434,3 +408,14 @@ class HarmonyCharacter:
         """
         return ((new_value - base_value) / base_value) * 100 if not decimal_mode \
             else (new_value - base_value) / base_value
+
+    def regenerate_energy(self, amount: int = DEFAULT_ENERGY_REGEN) -> None:
+        """
+        Regenerate energy with maximum cap.
+        
+        :param amount: Energy regeneration amount
+        """
+        self.trailblazer_current_energy = min(
+            self.trailblazer_current_energy + amount,
+            self.trailblazer_ult_energy
+        )

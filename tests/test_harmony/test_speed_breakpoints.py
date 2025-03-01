@@ -10,10 +10,10 @@ def test_speed_breakpoint_threshold():
     char = HarmonyCharacter()
     test_cases = [
         (100, 0),  # Below first threshold
-        (120, 1),  # At first threshold
-        (160, 3),  # Middle threshold
-        (200, 6),  # Maximum threshold
-        (220, 6)   # Above maximum threshold
+        (120, 0),  # At first threshold
+        (160, 1),  # Middle threshold
+        (200, 2),  # Maximum threshold
+        (220, 2)   # Above maximum threshold
     ]
     
     for speed_bonus, expected_turns in test_cases:

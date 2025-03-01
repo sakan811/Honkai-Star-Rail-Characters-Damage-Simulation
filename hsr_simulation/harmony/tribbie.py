@@ -16,13 +16,18 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 
 
 class Tribbie(HarmonyCharacter):
+    # Additional DMG from the zone only last for 2 turns within 5 cycles
+    ZONE_DMG_HIT_NUM = 2
+    
     def __init__(self):
         super().__init__()
         # Initialize with base HP first
-        self.base_hp = 5000
+        self.base_hp = 6000
         self.hp = self.base_hp
         # Update HP with trace buff after initialization
         self.hp = self.base_hp + self.a4_trace_buff()
+        
+        self.a2_multiplier = 1 + self.a2_trace_buff()
 
     def skill_buff(self) -> float:
         return 0.24
@@ -31,61 +36,90 @@ class Tribbie(HarmonyCharacter):
         """
         Tribbie's talent DMG from follow-up attacks
         :return: talent DMG
-        """
-        return 0.18 * self.hp
+        """ 
+        data = []
+               
+        # DMG for 1 Ult from ally
+        talent_dmg = 0.18 * self.hp * self.a2_multiplier
+        data.append(talent_dmg)
+        
+        # DMG for 2 Ult from ally
+        talent_dmg = 0.18 * self.hp * 2 * self.a2_multiplier
+        data.append(talent_dmg)
+        
+        # DMG for 3 Ult from ally
+        talent_dmg = 0.18 * self.hp * 3 * self.a2_multiplier
+        data.append(talent_dmg)
+        
+        # Average DMG
+        return sum(data) / len(data)
     
     def ult_buff(self, *args, **kwargs) -> float:
         """
         Tribbie's ult DMG
         :return: ult DMG
-        """
-        zone_additional_dmg_list = []
+        """   
+        data = []
         
-        # Initial DMG
-        zone_additional_dmg = 0.3 * self.hp
-        zone_additional_dmg_list.append(zone_additional_dmg)
+        # Initial hit on 1 enemy
+        initial_dmg = 0.3 * self.hp * self.a2_multiplier
+        data.append(initial_dmg)
+        
+        # Initial hit on 2 enemies
+        initial_dmg = 0.3 * self.hp * self.a2_multiplier * 2
+        data.append(initial_dmg)
+        
+        # Initial hit on 3 enemies
+        initial_dmg = 0.3 * self.hp * self.a2_multiplier * 3
+        data.append(initial_dmg)
+        
+        # Initial hit on 4 enemies
+        initial_dmg = 0.3 * self.hp * self.a2_multiplier * 4
+        data.append(initial_dmg)
+                     
+        # Initial hit on 5 enemies
+        initial_dmg = 0.3 * self.hp * self.a2_multiplier * 5
+        data.append(initial_dmg)
         
         # DMG for 1 enemy hit
-        zone_additional_dmg = 0.12 * self.hp
-        zone_additional_dmg_list.append(zone_additional_dmg)
+        zone_additional_dmg = 0.12 * self.hp * self.a2_multiplier * self.ZONE_DMG_HIT_NUM
+        data.append(zone_additional_dmg)
         
-        # DMG for 2 enemy hits
-        zone_additional_dmg = 0.12 * self.hp * 2
-        zone_additional_dmg_list.append(zone_additional_dmg)
+        # DMG for 2 enemy hit
+        zone_additional_dmg = 0.12 * self.hp * 2 * self.a2_multiplier * self.ZONE_DMG_HIT_NUM
+        data.append(zone_additional_dmg)
         
-        # DMG for 3 enemy hits
-        zone_additional_dmg = 0.12 * self.hp * 3
-        zone_additional_dmg_list.append(zone_additional_dmg)
+        # DMG for 3 enemy hit
+        zone_additional_dmg = 0.12 * self.hp * 3 * self.a2_multiplier * self.ZONE_DMG_HIT_NUM 
+        data.append(zone_additional_dmg)
         
-        # DMG for 4 enemy hits
-        zone_additional_dmg = 0.12 * self.hp * 4
-        zone_additional_dmg_list.append(zone_additional_dmg)
+        # DMG for 4 enemy hit
+        zone_additional_dmg = 0.12 * self.hp * 4 * self.a2_multiplier * self.ZONE_DMG_HIT_NUM
+        data.append(zone_additional_dmg)
         
-        # DMG for 5 enemy hits
-        zone_additional_dmg = 0.12 * self.hp * 5
-        zone_additional_dmg_list.append(zone_additional_dmg)
-        
-        # Average DMG
-        avg_zone_additional_dmg = sum(zone_additional_dmg_list) / len(zone_additional_dmg_list)
-        
-        return avg_zone_additional_dmg
+        # DMG for 5 enemy hit
+        zone_additional_dmg = 0.12 * self.hp * 5 * self.a2_multiplier * self.ZONE_DMG_HIT_NUM
+        data.append(zone_additional_dmg)
+
+        return sum(data) / len(data)
     
     def a2_trace_buff(self, *args, **kwargs) -> float:
         return 0.72 * 3
 
     def a4_trace_buff(self) -> float:
         # Use base_hp instead of hp to avoid circular reference
-        return 0.09 * (self.base_hp * 4)
+        return 0.09 * (self.base_hp * 3)
 
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
+        
+        zone_dmg_multiplier = 0.3
 
-        total_zone_additional_dmg = self.ult_buff()
-
-        tribbie_dmg = (total_zone_additional_dmg + self.talent_buff()) * (1 + self.a2_trace_buff())
+        tribbie_dmg = self.ult_buff() + self.talent_buff()
         
         buffed_dmg = self.calculate_trailblazer_dmg(
+            dmg_bonus_multiplier=zone_dmg_multiplier,
             res_pen_multiplier=self.skill_buff(),
-            additional_dmg=tribbie_dmg,
+            dmg_from_harmony_char=tribbie_dmg,
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

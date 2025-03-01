@@ -18,6 +18,7 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 class Hanya(HarmonyCharacter):
     def __init__(self):
         super().__init__()
+        self.DEFAULT_SPD = 164.47
 
     def ult_buff(self) -> float:
         atk_buff = 0.6
@@ -36,7 +37,7 @@ class Hanya(HarmonyCharacter):
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
 
-        bonus_turn = self.calculate_spd_breakpoint(bonus_spd=0.2 * self.trailblazer_spd)
+        bonus_turn = self.calculate_spd_breakpoint(bonus_spd=0.2 * self.DEFAULT_SPD)
 
         buffed_dmg = self.calculate_trailblazer_dmg(
             atk_bonus=self.ult_buff() + self.a2_trace_buff(),
