@@ -28,12 +28,10 @@ class Yukong(HarmonyCharacter):
 
         atk_buff = self.skill_buff()
 
-        final_crit_rate = self.trailblazer_crit_rate + 0.28
-        final_crit_dmg = self.trailblazer_crit_dmg + 0.65
-
-        crit_buff = self.crit_buff(final_crit_rate, final_crit_dmg)
+        self.trailblazer_crit_rate += 0.28
+        self.trailblazer_crit_dmg += 0.65
 
         buffed_dmg = self.calculate_trailblazer_dmg(
-            atk_bonus=atk_buff, dmg_bonus_multiplier=crit_buff
+            atk_bonus=atk_buff
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

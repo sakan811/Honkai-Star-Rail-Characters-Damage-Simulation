@@ -52,6 +52,6 @@ class RuanMei(HarmonyCharacter):
             dmg_bonus_multiplier=self.skill_buff() + self.a6_trace_buff(),
             res_pen_multiplier=self.ult_buff(),
             bonus_turns=bonus_turn,
-            break_dmg=final_break_dmg,
+            dmg_from_harmony_char=final_break_dmg,
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

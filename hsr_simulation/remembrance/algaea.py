@@ -208,6 +208,8 @@ class Algaea(Character):
         else:
             # Restore Garmentmaker
             self.garmentmaker.reset_character_data_for_each_battle()
+            
+        self.take_action()
 
         self._update_skill_point_and_ult_energy(-1, self.SKILL_ENERGY_GAIN)
         self.garmentmaker.take_action()

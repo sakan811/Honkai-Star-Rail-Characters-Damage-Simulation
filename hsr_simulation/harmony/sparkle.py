@@ -19,10 +19,9 @@ class Sparkle(HarmonyCharacter):
     def __init__(self):
         super().__init__()
 
-    def skill_buff(self) -> float:
+    def skill_buff(self) -> None:
         sparkle_crit_dmg = self.trailblazer_crit_dmg + 2.1019
-        final_crit_dmg = self.trailblazer_crit_dmg + ((0.24 * sparkle_crit_dmg) + 0.45)
-        return self.crit_buff(self.trailblazer_crit_rate, final_crit_dmg)
+        self.trailblazer_crit_dmg += ((0.24 * sparkle_crit_dmg) + 0.45)
 
     def talent_buff(self) -> float:
         dmg_buff = (0.06 + self.ult_buff()) * 3
@@ -38,13 +37,13 @@ class Sparkle(HarmonyCharacter):
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
 
-        # assume Sparkle give 50% action forward 3 times in total from her Skill
-        bonus_turn = round(3 * 0.5)
+        # assume Sparkle give 50% action forward 1 time in total from her Skill
+        bonus_turn = 0.5
+        
+        self.skill_buff()
 
         buffed_dmg = self.calculate_trailblazer_dmg(
-            dmg_bonus_multiplier=self.skill_buff()
-            + self.talent_buff()
-            + self.a6_trace_buff(),
+            dmg_bonus_multiplier=self.talent_buff() + self.a6_trace_buff(),
             atk_bonus=self.ult_buff(),
             bonus_turns=bonus_turn,
         )

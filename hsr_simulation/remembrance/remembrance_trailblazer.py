@@ -70,7 +70,7 @@ class RemembranceTrailblazer(Character):
             self.battle_start = False
 
         # Trailblazer's turn
-        if self.skill_points > 0:
+        if self.skill_points > 0 and self.mem is not None:
             self._use_skill()
         else:
             self._use_basic_atk()
@@ -138,6 +138,8 @@ class RemembranceTrailblazer(Character):
 
         if self._mem_can_use_ult():
             self._apply_mem_true_dmg_buff()
+            
+        self.take_action()
 
     def _use_ult(self) -> None:
         """Simulate ultimate damage."""

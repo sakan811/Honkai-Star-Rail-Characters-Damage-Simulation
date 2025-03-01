@@ -16,11 +16,13 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 
 
 class Bronya(HarmonyCharacter):
+    BONUS_TURNS = 1
     def __init__(self):
         super().__init__()
 
     def skill_buff(self) -> float:
-        return 0.66
+        skill_buff_value = 0.66
+        return skill_buff_value
 
     def ult_buff(self) -> float:
         return 0.55
@@ -32,16 +34,12 @@ class Bronya(HarmonyCharacter):
         base_dmg = self.calculate_trailblazer_dmg()
 
         bronya_crit_dmg = 1.8731 + self.trailblazer_crit_dmg
-        final_crit_dmg = self.trailblazer_crit_dmg + ((0.16 * bronya_crit_dmg) + 0.2)
-        crit_rate_buff = self.crit_buff(self.trailblazer_crit_rate, final_crit_dmg)
+        self.trailblazer_crit_dmg += ((0.16 * bronya_crit_dmg) + 0.2)
 
-        # assume Bronya give 3 extra turns in total from her Skill due to 3 starting skill points
-        bonus_turns = 3
-
-        dmg_buff = self.a6_trace_buff() + self.skill_buff() + crit_rate_buff
+        dmg_buff = self.a6_trace_buff() + self.skill_buff()
         buffed_dmg = self.calculate_trailblazer_dmg(
             dmg_bonus_multiplier=dmg_buff,
             atk_bonus=self.ult_buff(),
-            bonus_turns=bonus_turns,
+            bonus_turns=self.BONUS_TURNS,
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)
