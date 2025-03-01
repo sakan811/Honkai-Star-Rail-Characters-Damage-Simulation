@@ -40,11 +40,7 @@ class Tribbie(HarmonyCharacter):
         :return: ult DMG
         """
         zone_additional_dmg_list = []
-        
-        # Initial DMG
-        zone_additional_dmg = 0.3 * self.hp
-        zone_additional_dmg_list.append(zone_additional_dmg)
-        
+                
         # DMG for 1 enemy hit
         zone_additional_dmg = 0.12 * self.hp
         zone_additional_dmg_list.append(zone_additional_dmg)
@@ -81,10 +77,13 @@ class Tribbie(HarmonyCharacter):
         base_dmg = self.calculate_trailblazer_dmg()
 
         total_zone_additional_dmg = self.ult_buff()
+        
+        zone_dmg_multiplier = 0.3
 
         tribbie_dmg = (total_zone_additional_dmg + self.talent_buff()) * (1 + self.a2_trace_buff())
         
         buffed_dmg = self.calculate_trailblazer_dmg(
+            dmg_bonus_multiplier=zone_dmg_multiplier,
             res_pen_multiplier=self.skill_buff(),
             additional_dmg=tribbie_dmg,
         )
