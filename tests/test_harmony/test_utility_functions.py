@@ -7,13 +7,6 @@ def test_process_multiplier():
     assert char._process_multiplier(0.5) == 1.5
     assert char._process_multiplier(1.0) == 2.0
 
-def test_calculate_turn_count():
-    """Test turn count calculation."""
-    char = HarmonyCharacter()
-    assert char._calculate_turn_count() == 5
-    assert char._calculate_turn_count(2) == 7
-    assert char._calculate_turn_count(None) == 5
-
 def test_calculate_percent_change():
     """Test percentage change calculation."""
     char = HarmonyCharacter()

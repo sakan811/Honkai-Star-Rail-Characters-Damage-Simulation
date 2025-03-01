@@ -1,7 +1,9 @@
+from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
+
 class TestRegenerateEnergy:
     def test_regenerate_energy_normal(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 50
         character.trailblazer_ult_energy = 100
 
@@ -13,7 +15,7 @@ class TestRegenerateEnergy:
 
     def test_regenerate_energy_default_amount(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 50
         character.trailblazer_ult_energy = 100
 
@@ -25,7 +27,7 @@ class TestRegenerateEnergy:
 
     def test_regenerate_energy_exceed_max(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 90
         character.trailblazer_ult_energy = 100
 
@@ -37,7 +39,7 @@ class TestRegenerateEnergy:
 
     def test_regenerate_energy_already_max(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 100
         character.trailblazer_ult_energy = 100
 
@@ -49,7 +51,7 @@ class TestRegenerateEnergy:
 
     def test_regenerate_energy_zero_amount(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 60
         character.trailblazer_ult_energy = 100
 
@@ -61,7 +63,7 @@ class TestRegenerateEnergy:
 
     def test_regenerate_energy_negative_amount(self):
         # Arrange
-        character = Character()
+        character = HarmonyCharacter()
         character.trailblazer_current_energy = 60
         character.trailblazer_ult_energy = 100
 
@@ -70,15 +72,3 @@ class TestRegenerateEnergy:
 
         # Assert
         assert character.trailblazer_current_energy == 30  # Negative amount decreases energy
-
-
-class Character:
-    def __init__(self):
-        self.trailblazer_current_energy = 0
-        self.trailblazer_ult_energy = 100
-
-    def regenerate_energy(self, amount: int = 30) -> None:
-        self.trailblazer_current_energy = min(
-            self.trailblazer_current_energy + amount,
-            self.trailblazer_ult_energy
-        )
