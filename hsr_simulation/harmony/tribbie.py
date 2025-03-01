@@ -32,7 +32,24 @@ class Tribbie(HarmonyCharacter):
         Tribbie's talent DMG from follow-up attacks
         :return: talent DMG
         """
-        return 0.18 * self.hp
+        talent_dmg_list = []
+        
+        # DMG for 1 Ult from ally
+        talent_dmg = 0.18 * self.hp
+        talent_dmg_list.append(talent_dmg)
+        
+        # DMG for 2 Ult from ally
+        talent_dmg = 0.18 * self.hp * 2
+        talent_dmg_list.append(talent_dmg)
+        
+        # DMG for 3 Ult from ally
+        talent_dmg = 0.18 * self.hp * 3
+        talent_dmg_list.append(talent_dmg)
+        
+        # Average DMG
+        avg_talent_dmg = sum(talent_dmg_list) / len(talent_dmg_list)
+        
+        return avg_talent_dmg
     
     def ult_buff(self, *args, **kwargs) -> float:
         """
