@@ -80,12 +80,14 @@ You can customize the simulation using the following command-line arguments:
   If not specified, all paths will be simulated.
 
 - `--sim-count`: Number of battle simulations to run (default: 1000)
+  > Does not affect the Harmony path.
 
   ```bash
   python main.py --sim-count 500  # Run 500 simulations
   ```
 
 - `--max-cycles`: Maximum number of cycles to simulate per battle (default: 10)
+  > Does not affect the Harmony path.
 
   ```bash
   python main.py --max-cycles 15  # Run for 15 cycles
