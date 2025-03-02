@@ -12,6 +12,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import math
+
+
 class HarmonyCharacter:
     """
     Class representing a Harmony character.
@@ -290,11 +293,20 @@ class HarmonyCharacter:
         )
         
         total_dmg = basic_atk_dmg + skill_dmg + ult_dmg
+        dmg_list.append(total_dmg)
         
         if bonus_turns is not None:
-            total_dmg *= 1 + bonus_turns
+            bonus_turns = math.ceil(bonus_turns)
+            for _ in range(bonus_turns):
+                skill_dmg = self.calculate_skill_damage(
+                                atk=atk,
+                                dmg_bonus_multiplier=params['dmg_bonus_multiplier'],
+                                elemental_dmg_multiplier=params['elemental_dmg_multiplier'],
+                                res_pen_multiplier=params['res_pen_multiplier'],
+                                additional_dmg=params.get('additional_dmg', 0)
+                            )
             
-        dmg_list.append(total_dmg)
+                dmg_list.append(skill_dmg)
         
         # Handle break mechanics
         self.handle_break_damage(dmg_list, params['break_dmg'], params['super_break_dmg'])
@@ -377,16 +389,26 @@ class HarmonyCharacter:
         raise NotImplementedError("potential_buff method is not implemented")
 
     @staticmethod
-    def crit_buff(crit_rate: float, crit_dmg: float) -> float:
+    def crit_buff(crit_rate: float, crit_dmg: float, base_crit_rate: float = 0, base_crit_dmg: float = 0) -> float:
         """
-        Calculate the percentage increase in damage due to critical hits.
-        :param crit_rate: Crit rate (as a decimal, e.g., 0.5 for 50%)
-        :param crit_dmg: Crit damage (as a decimal, e.g., 1.5 for 150% crit damage)
+        Calculate the percentage increase in damage due to increased crit rate or crit damage.
+        
+        :param crit_rate: New crit rate (as a decimal, e.g., 0.5 for 50%)
+        :param crit_dmg: New crit damage (as a decimal, e.g., 1.5 for 150% crit damage)
+        :param base_crit_rate: Base crit rate to compare against (default 0)
+        :param base_crit_dmg: Base crit damage to compare against (default 0)
         :return: Damage increase as a percentage
         """
         base_damage = 1
-        average_damage = (1 - crit_rate) * base_damage + crit_rate * (base_damage * crit_dmg)
-        damage_increase = (average_damage / base_damage - 1)
+        
+        # Calculate baseline average damage
+        baseline_avg_damage = (1 - base_crit_rate) * base_damage + base_crit_rate * (base_damage * (1 + base_crit_dmg))
+        
+        # Calculate new average damage
+        new_avg_damage = (1 - crit_rate) * base_damage + crit_rate * (base_damage * (1 + crit_dmg))
+        
+        # Calculate percentage increase
+        damage_increase = (new_avg_damage / baseline_avg_damage) - 1
         return damage_increase
 
     def energy_regen_buff(self, total_energy_gain: int) -> float:

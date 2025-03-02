@@ -44,10 +44,17 @@ class Sunday(HarmonyCharacter):
         sunday_crit_dmg = self.trailblazer_crit_dmg + 2.0939
 
         crit_dmg_increased = ((0.3 * sunday_crit_dmg) + 0.12)
-        self.trailblazer_crit_dmg += crit_dmg_increased
-        self.trailblazer_crit_rate += self.talent_buff()
+        final_trailblazer_crit_dmg = self.trailblazer_crit_dmg + crit_dmg_increased
+        final_trailblazer_crit_rate = self.trailblazer_crit_rate + self.talent_buff()
 
-        return ult_energy_regen_buff 
+        crit_buff = self.crit_buff(
+            crit_rate=final_trailblazer_crit_rate,
+            crit_dmg=final_trailblazer_crit_dmg,
+            base_crit_rate=self.trailblazer_crit_rate,
+            base_crit_dmg=self.trailblazer_crit_dmg
+        )
+
+        return ult_energy_regen_buff + crit_buff
 
     def potential_buff(self):
         base_dmg = self.calculate_trailblazer_dmg()
