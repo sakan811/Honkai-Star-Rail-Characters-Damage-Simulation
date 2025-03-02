@@ -44,6 +44,6 @@
 
 [Power BI](https://app.powerbi.com/view?r=eyJrIjoiMDMzZjNkZWItODcyYy00MjlkLWE5NGItNjM4OTk3N2NiNTA1IiwidCI6ImZlMzViMTA3LTdjMmYtNGNjMy1hZDYzLTA2NTY0MzcyMDg3OCIsImMiOjEwfQ%3D%3D)
 
-[Facebook](https://www.facebook.com/share/p/15nRbantr7/)  
+[Facebook](https://www.facebook.com/share/p/1AS1YN19MX/)  
 
-[Instagram](https://www.instagram.com/p/DGqjVnnBTwd/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)
+[Instagram](https://www.instagram.com/p/DGsp-gFP7Cq/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==)

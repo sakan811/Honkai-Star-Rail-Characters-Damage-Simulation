@@ -79,6 +79,9 @@ Erudition characters' were simulated to fight against 1 - 5 enemies which random
 - If the DMG buff varies by situations, the buff is averaged.
   - Sunday's buff from Skill varies by ally's Summon, so his buff is averaged.
 - Buff related to Skill point were ignored.
+- CRIT-related buffs were evaluated based on their impact on average damage output. The calculation uses this formula:
+  ```(1 - crit_rate) * 1 + crit_rate * (1 * crit_dmg)```
+  - This formula represents the potential DMG increased from CRIT rate or CRIT damage, accounting for both non-critical and critical hits.
 - Energy Regen-related buffs were evaluated using this formular: `total_ult_energy_gain / trailblazer_ult_energy`
   - This formular represents the potential DMG increased from Energy Regen, accounting for both non-ult and ult hits.
 - If the buff is based on a stat of a Harmony character, that stat is based on average value from **PRYDWEN.GG**.

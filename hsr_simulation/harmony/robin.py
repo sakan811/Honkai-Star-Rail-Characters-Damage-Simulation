@@ -48,11 +48,18 @@ class Robin(HarmonyCharacter):
         
         ult_crit_dmg_multiplier = 1 + 1.5
 
-        self.trailblazer_crit_dmg += self.talent_buff() + self.a4_trace_buff()
+        final_trailblazer_crit_dmg = self.trailblazer_crit_dmg + self.talent_buff() + self.a4_trace_buff()
+        
+        crit_buff = self.crit_buff(
+            crit_rate=self.trailblazer_crit_rate,
+            crit_dmg=final_trailblazer_crit_dmg,
+            base_crit_rate=self.trailblazer_crit_rate,
+            base_crit_dmg=self.trailblazer_crit_dmg
+        )
     
         additional_dmg = (1.2 * self.DEFAULT_ATK) * (1 + self.skill_buff()) * ult_crit_dmg_multiplier
         buffed_dmg = self.calculate_trailblazer_dmg(
-            dmg_bonus_multiplier=self.skill_buff(),
+            dmg_bonus_multiplier=self.skill_buff() + crit_buff,
             atk_bonus=self.ult_buff(),
             dmg_from_harmony_char=additional_dmg,
             bonus_turns=bonus_turn,

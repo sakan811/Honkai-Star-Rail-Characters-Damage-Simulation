@@ -19,7 +19,25 @@ def test_calculate_percent_change():
 
 def test_crit_buff():
     """Test critical hit buff calculation."""
-    char = HarmonyCharacter()
-    buff = char.crit_buff(0.5, 2.0)
-    expected = ((1 - 0.5) * 1 + 0.5 * 2) / 1 - 1
+    # Test with default base values (0, 0)
+    crit_rate, crit_dmg = 0.5, 2.0
+    buff = HarmonyCharacter.crit_buff(crit_rate, crit_dmg)
+    
+    # Calculate expected result manually
+    base_damage = 1
+    baseline_avg_damage = 1  # With base_crit_rate=0 and base_crit_dmg=0, this is just 1
+    new_avg_damage = (1 - crit_rate) * base_damage + crit_rate * (base_damage * (1 + crit_dmg))
+    expected = (new_avg_damage / baseline_avg_damage) - 1
+    
+    assert abs(buff - expected) < 0.001
+    
+    # Test with custom base values
+    base_crit_rate, base_crit_dmg = 0.3, 1.0
+    buff = HarmonyCharacter.crit_buff(crit_rate, crit_dmg, base_crit_rate, base_crit_dmg)
+    
+    # Calculate expected result manually
+    baseline_avg_damage = (1 - base_crit_rate) * base_damage + base_crit_rate * (base_damage * (1 + base_crit_dmg))
+    new_avg_damage = (1 - crit_rate) * base_damage + crit_rate * (base_damage * (1 + crit_dmg))
+    expected = (new_avg_damage / baseline_avg_damage) - 1
+    
     assert abs(buff - expected) < 0.001 
