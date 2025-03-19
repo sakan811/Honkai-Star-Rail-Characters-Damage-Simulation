@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Herta(Character):
-    def __init__(
-            self,
-            speed: float = 100,
-            ult_energy: int = 110
-    ):
+    def __init__(self, speed: float = 100, ult_energy: int = 110):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
         self.enemy_is_frozen = random.choice([True, False])
@@ -37,7 +33,7 @@ class Herta(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
         self.enemy_is_frozen = random.choice([True, False])
@@ -49,7 +45,7 @@ class Herta(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -78,8 +74,8 @@ class Herta(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -96,37 +92,45 @@ class Herta(Character):
             # simulate A2 trace
             dmg_multiplier += 0.25
 
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+        )
 
         # other target DMG
         for _ in range(self.enemy_on_field - 1):
-            dmg += self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+            dmg += self._calculate_damage(
+                skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg_multiplier = 0
 
         # simulate A6 trace
         if self.enemy_is_frozen:
             dmg_multiplier += 0.2
 
-        dmg = self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
         # other target DMG
         for _ in range(self.enemy_on_field - 1):
-            dmg += self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
+            dmg += self._calculate_damage(
+                skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier]
+            )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def _simulate_follow_up_atk(self) -> None:
         """
@@ -144,7 +148,5 @@ class Herta(Character):
                 for _ in range(num_enemy_current_hp_less_than_50_percent - 1):
                     dmg += self._calculate_damage(skill_multiplier=0.4, break_amount=5)
 
-                self.data['DMG'].append(dmg)
-                self.data['DMG_Type'].append('Talent')
-
-
+                self.data["DMG"].append(dmg)
+                self.data["DMG_Type"].append("Talent")

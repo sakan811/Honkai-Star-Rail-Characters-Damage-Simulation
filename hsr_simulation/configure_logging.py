@@ -2,7 +2,9 @@ import logging
 import os
 
 
-def configure_logging_with_file(log_dir: str, log_file: str, logger_name: str, level: str = "DEBUG") -> logging.Logger:
+def configure_logging_with_file(
+    log_dir: str, log_file: str, logger_name: str, level: str = "DEBUG"
+) -> logging.Logger:
     """
     Configure logging.
     :param log_dir: Directory for log file.
@@ -36,10 +38,12 @@ def configure_logging_with_file(log_dir: str, log_file: str, logger_name: str, l
         logger.setLevel(logging.CRITICAL)
 
     # Define a custom log format
-    log_format = '%(asctime)s | %(filename)s | line:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s'
+    log_format = "%(asctime)s | %(filename)s | line:%(lineno)d | %(funcName)s | %(levelname)s | %(message)s"
 
     # Create a FileHandler to write logs to the specified file in overwrite mode
-    file_handler = logging.FileHandler(log_file_path, mode='w')  # 'w' for write mode (overwrite)
+    file_handler = logging.FileHandler(
+        log_file_path, mode="w"
+    )  # 'w' for write mode (overwrite)
 
     # Create a StreamHandler to output logs to the terminal
     stream_handler = logging.StreamHandler()
@@ -58,5 +62,6 @@ def configure_logging_with_file(log_dir: str, log_file: str, logger_name: str, l
     return logger
 
 
-main_logger = configure_logging_with_file(log_dir='logs', log_file='main.log',
-                                          logger_name='main', level='WARNING')
+main_logger = configure_logging_with_file(
+    log_dir="logs", log_file="main.log", logger_name="main", level="WARNING"
+)

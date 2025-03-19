@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Blade(Character):
-    def __init__(
-            self,
-            speed: float = 97,
-            ult_energy: int = 130
-    ):
+    def __init__(self, speed: float = 97, ult_energy: int = 130):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.default_hp = 7000  # Initialize default_hp
         self.hp_loss_tally = 0  # Initialize HP loss tally for Ultimate
@@ -38,7 +34,7 @@ class Blade(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.hp_loss_tally = 0  # Initialize HP loss tally for Ultimate
         self.charge_stacks = 0  # Initialize Charge stacks for Talent
@@ -50,7 +46,7 @@ class Blade(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -86,8 +82,8 @@ class Blade(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_enhanced_basic_atk(self) -> None:
         """
@@ -108,8 +104,8 @@ class Blade(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Basic ATK")
 
         self.charge_stacks += 1
         self._apply_talent_effect()
@@ -138,15 +134,17 @@ class Blade(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg_from_atk = self.atk * 0.4
         dmg_from_max_hp = self.default_hp
-        skill_multiplier: float = sum([dmg_from_atk, dmg_from_max_hp, self.hp_loss_tally]) / self.atk
+        skill_multiplier: float = (
+            sum([dmg_from_atk, dmg_from_max_hp, self.hp_loss_tally]) / self.atk
+        )
 
         dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         self.hp_loss_tally = 0  # Reset HP loss tally after Ultimate
 
@@ -159,14 +157,15 @@ class Blade(Character):
             dmg_from_max_hp = self.default_hp * 1.1
             skill_multiplier: float = sum([dmg_from_atk, dmg_from_max_hp]) / self.atk
 
-            dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=10)
+            dmg = self._calculate_damage(
+                skill_multiplier=skill_multiplier, break_amount=10
+            )
             self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
 
             # simulate A6 trace
             dmg *= 1.2
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Talent')
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Talent")
 
             self.charge_stacks = 0  # Reset Charge stacks after follow-up attack
-

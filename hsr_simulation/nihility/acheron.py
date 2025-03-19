@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Acheron(Character):
-    def __init__(
-            self,
-            speed: float = 101,
-            ult_energy: int = 0
-    ):
+    def __init__(self, speed: float = 101, ult_energy: int = 0):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.slash_dream = 0
         self.crimson_knot = 0
@@ -36,30 +32,32 @@ class Acheron(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
 
         # simulate applying debuff on enemy
         if self.nihility_teammate_num > 0:
-            main_logger.info('Applying debuff on enemy from ally')
+            main_logger.info("Applying debuff on enemy from ally")
             self.crimson_knot += 1 * self.nihility_teammate_num
             self.crimson_knot = min(9, self.crimson_knot)
-            self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1 * self.nihility_teammate_num)
-        main_logger.debug(f'Current Crimson Knot: {self.crimson_knot}')
+            self._update_skill_point_and_ult_energy(
+                skill_points=0, slash_dream=1 * self.nihility_teammate_num
+            )
+        main_logger.debug(f"Current Crimson Knot: {self.crimson_knot}")
 
         if self.a6_buff > 0:
             self.a6_buff -= 1
-        main_logger.debug(f'Current A6 Buff: {self.a6_buff}')
+        main_logger.debug(f"Current A6 Buff: {self.a6_buff}")
 
         if self.a6_buff <= 0:
             self.a6_dmg_multiplier = 0
-        main_logger.debug(f'Current A6 Dmg Multiplier: {self.a6_dmg_multiplier}')
+        main_logger.debug(f"Current A6 Dmg Multiplier: {self.a6_dmg_multiplier}")
 
         # Simulate A2 Trace
         if self.battle_start:
-            main_logger.info('Battle start!')
+            main_logger.info("Battle start!")
             self.battle_start = False
             self.slash_dream += 5
             self.crimson_knot += 5
@@ -69,7 +67,7 @@ class Acheron(Character):
         else:
             self._use_basic_atk()
 
-        main_logger.debug(f'Current Slash Dream: {self.slash_dream}')
+        main_logger.debug(f"Current Slash Dream: {self.slash_dream}")
 
         if self._can_use_ult():
             self._use_ult()
@@ -82,12 +80,15 @@ class Acheron(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                     dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1,
+            break_amount=10,
+            dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, slash_dream=0)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -96,12 +97,13 @@ class Acheron(Character):
         """
         main_logger.info("Using skill...")
         dmg_multiplier = [self.a4_dmg_multiplier, self.a6_dmg_multiplier]
-        dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20,
-                                     dmg_multipliers=dmg_multiplier)
+        dmg = self._calculate_damage(
+            skill_multiplier=1.6, break_amount=20, dmg_multipliers=dmg_multiplier
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, slash_dream=1)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         self.crimson_knot += 1
         self.crimson_knot = min(9, self.crimson_knot)
@@ -111,7 +113,7 @@ class Acheron(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
         total_dmg = []
         res_pen = [0.2]
 
@@ -124,10 +126,12 @@ class Acheron(Character):
                 self.a6_buff = 3
 
             # Rainblade hits
-            rainblade_dmg = self._calculate_damage(skill_multiplier=0.24, break_amount=5,
-                                                   res_multipliers=res_pen,
-                                                   dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                    self.a6_dmg_multiplier])
+            rainblade_dmg = self._calculate_damage(
+                skill_multiplier=0.24,
+                break_amount=5,
+                res_multipliers=res_pen,
+                dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+            )
 
             total_dmg.append(rainblade_dmg)
 
@@ -138,19 +142,22 @@ class Acheron(Character):
             for _ in range(removed_crimson_knot):
                 base_skill_multiplier = 0.15
                 final_skill_multiplier = base_skill_multiplier + add_skill_multiplier
-                additional_dmg = self._calculate_damage(skill_multiplier=final_skill_multiplier,
-                                                        break_amount=0,
-                                                        dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                         self.a6_dmg_multiplier],
-                                                        res_multipliers=res_pen)
+                additional_dmg = self._calculate_damage(
+                    skill_multiplier=final_skill_multiplier,
+                    break_amount=0,
+                    dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+                    res_multipliers=res_pen,
+                )
 
                 total_dmg.append(additional_dmg)
 
         # Stygian Resurge
-        stygian_dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=5,
-                                             res_multipliers=res_pen,
-                                             dmg_multipliers=[self.a4_dmg_multiplier,
-                                                              self.a6_dmg_multiplier])
+        stygian_dmg = self._calculate_damage(
+            skill_multiplier=1.2,
+            break_amount=5,
+            res_multipliers=res_pen,
+            dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+        )
 
         total_dmg.append(stygian_dmg)
 
@@ -159,22 +166,28 @@ class Acheron(Character):
 
         # Find max DMG
         self.crit_rate = 1
-        max_dmg = self._calculate_damage(skill_multiplier=3.72, break_amount=0, res_multipliers=res_pen,
-                                         dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier])
+        max_dmg = self._calculate_damage(
+            skill_multiplier=3.72,
+            break_amount=0,
+            res_multipliers=res_pen,
+            dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+        )
         self.crit_rate = 0.5
 
         final_total_dmg = float(sum(total_dmg))
         final_dmg = min(final_total_dmg, max_dmg)
 
-        self._record_damage(final_dmg, 'Ultimate')
+        self._record_damage(final_dmg, "Ultimate")
 
         # A6 Trace DMG
         for _ in range(6):
-            additional_dmg = self._calculate_damage(skill_multiplier=0.25, break_amount=0,
-                                                    dmg_multipliers=[self.a4_dmg_multiplier,
-                                                                     self.a6_dmg_multiplier],
-                                                    res_multipliers=res_pen)
-            self._record_damage(additional_dmg, 'Ultimate')
+            additional_dmg = self._calculate_damage(
+                skill_multiplier=0.25,
+                break_amount=0,
+                dmg_multipliers=[self.a4_dmg_multiplier, self.a6_dmg_multiplier],
+                res_multipliers=res_pen,
+            )
+            self._record_damage(additional_dmg, "Ultimate")
 
     def _remove_crimson_knot(self, remove_amount: int = 3) -> tuple[float, int]:
         """
@@ -191,14 +204,16 @@ class Acheron(Character):
     def _can_use_ult(self) -> bool:
         return self.slash_dream >= 9
 
-    def _update_skill_point_and_ult_energy(self, skill_points: int, slash_dream: int) -> None:
+    def _update_skill_point_and_ult_energy(
+        self, skill_points: int, slash_dream: int
+    ) -> None:
         """
         Update skill points and ultimate energy.
         :param skill_points: Skill points.
         :param slash_dream: Slash Dream stack.
         :return: None
         """
-        main_logger.info('Updating skill points and Slash Dream stacks...')
+        main_logger.info("Updating skill points and Slash Dream stacks...")
         self.skill_points += skill_points
         self.slash_dream += slash_dream
         # ensure that the Slash Dream not exceed 12 stacks
@@ -209,7 +224,7 @@ class Acheron(Character):
         Random Nihility teammate
         :return: None
         """
-        main_logger.info('Random Nihility teammate...')
+        main_logger.info("Random Nihility teammate...")
         self.nihility_teammate_num = random.choice([1, 2])
         if self.nihility_teammate_num == 1:
             self.a4_dmg_multiplier = 0.15
@@ -222,7 +237,7 @@ class Acheron(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.slash_dream = 0
         self.crimson_knot = 0
@@ -231,15 +246,15 @@ class Acheron(Character):
         self.a6_buff = 0
         self.nihility_teammate_num = 0
 
-    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+    def check_if_enemy_weakness_broken(self, break_type: str = "None") -> None:
         """
         Check whether enemy is weakness broken.
         :param break_type: Break DMG type, e.g., Physical, Fire, etc.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        main_logger.info(f"{self.__class__.__name__}: Checking Enemy Toughness...")
         if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
             self.enemy_weakness_broken = True
             self._update_skill_point_and_ult_energy(skill_points=0, slash_dream=1)
-            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
+            main_logger.debug(f"{self.__class__.__name__}: Enemy is Weakness Broken")

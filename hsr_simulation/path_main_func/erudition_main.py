@@ -24,7 +24,10 @@ from hsr_simulation.erudition.rappa import Rappa
 from hsr_simulation.erudition.serval import Serval
 from hsr_simulation.erudition.the_herta import TheHerta
 from hsr_simulation.postgre import generate_dmg_view_query
-from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
+from hsr_simulation.simulate_battles import (
+    start_simulations,
+    start_simulations_for_char_with_summon,
+)
 from hsr_simulation.utils import process_result_list
 from hsr_simulation.postgre import PostgresOperations
 
@@ -36,25 +39,35 @@ def start_sim_erudition(simulation_num: int, max_cycles: int) -> None:
     :param max_cycles: Maximum number of cycles to simulate
     :return: None
     """
-    main_logger.info('Starting Erudition characters simulations...')
+    main_logger.info("Starting Erudition characters simulations...")
 
     db = PostgresOperations()
 
     # Setup database tables
-    stage_table_name = 'EruditionStage'
-    view_name = 'Erudition'
+    stage_table_name = "EruditionStage"
+    view_name = "Erudition"
     db.drop_stage_table(stage_table_name)
     db.drop_view(view_name)
 
     # Erudition characters list
-    erudition_char_list: list[Character] = [Qingque(), Argenti(), Herta(), Himeko(), Serval(), Jade(), Jingyuan(),
-                                            Rappa(), TheHerta()]
+    erudition_char_list: list[Character] = [
+        Qingque(),
+        Argenti(),
+        Herta(),
+        Himeko(),
+        Serval(),
+        Jade(),
+        Jingyuan(),
+        Rappa(),
+        TheHerta(),
+    ]
 
     for erudition_char in erudition_char_list:
         if isinstance(erudition_char, Jingyuan):
             lightning_lord = erudition_char.summon_lightning_lord(erudition_char)
-            dict_list = start_simulations_for_char_with_summon(erudition_char, lightning_lord,
-                                                              max_cycles, simulation_num)
+            dict_list = start_simulations_for_char_with_summon(
+                erudition_char, lightning_lord, max_cycles, simulation_num
+            )
         else:
             dict_list = start_simulations(erudition_char, max_cycles, simulation_num)
         process_result_list(erudition_char, dict_list, stage_table_name)

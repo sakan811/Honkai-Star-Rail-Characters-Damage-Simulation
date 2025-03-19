@@ -57,9 +57,16 @@ class Algaea(Character):
 
     def _apply_speeding_sol(self) -> None:
         """Apply A6 trace - The Speeding Sol."""
-        if self.current_ult_energy < self.ult_energy * self.SPEEDING_SOL_ENERGY_THRESHOLD:
-            self.current_ult_energy = int(self.ult_energy * self.SPEEDING_SOL_ENERGY_THRESHOLD)
-            main_logger.info(f"{self.__class__.__name__} regenerated energy to 50% due to The Speeding Sol")
+        if (
+            self.current_ult_energy
+            < self.ult_energy * self.SPEEDING_SOL_ENERGY_THRESHOLD
+        ):
+            self.current_ult_energy = int(
+                self.ult_energy * self.SPEEDING_SOL_ENERGY_THRESHOLD
+            )
+            main_logger.info(
+                f"{self.__class__.__name__} regenerated energy to 50% due to The Speeding Sol"
+            )
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -86,10 +93,14 @@ class Algaea(Character):
         """Update Supreme Stance state and ATK boost."""
         if self.supreme_stance and self.supreme_stance_turns_left > 0:
             # Calculate ATK boost from A2 trace for both characters
-            self.supreme_stance_atk_boost = (self.speed * self.MYOPIC_DOOM_AGLAEA_SPD_MULTIPLIER) + (self.garmentmaker.speed * self.MYOPIC_DOOM_GARMENTMAKER_SPD_MULTIPLIER)            
+            self.supreme_stance_atk_boost = (
+                self.speed * self.MYOPIC_DOOM_AGLAEA_SPD_MULTIPLIER
+            ) + (self.garmentmaker.speed * self.MYOPIC_DOOM_GARMENTMAKER_SPD_MULTIPLIER)
             self.supreme_stance_turns_left -= 1
-            main_logger.info(f"{self.__class__.__name__} Supreme Stance turns left: {self.supreme_stance_turns_left}")
-            
+            main_logger.info(
+                f"{self.__class__.__name__} Supreme Stance turns left: {self.supreme_stance_turns_left}"
+            )
+
             if self.supreme_stance_turns_left <= 0:
                 self._end_supreme_stance()
         else:
@@ -99,9 +110,13 @@ class Algaea(Character):
         """End Supreme Stance and handle Garmentmaker's disappearance."""
         if self.garmentmaker:
             # Store 1 stack of speed buff before disappearing (A4 trace)
-            self.retained_speed_buff_stacks = min(1, self.garmentmaker.speed_buff_stacks)
-            main_logger.info(f"{self.__class__.__name__} retained {self.retained_speed_buff_stacks} speed buff stack(s) from Last Thread of Fate")
-            
+            self.retained_speed_buff_stacks = min(
+                1, self.garmentmaker.speed_buff_stacks
+            )
+            main_logger.info(
+                f"{self.__class__.__name__} retained {self.retained_speed_buff_stacks} speed buff stack(s) from Last Thread of Fate"
+            )
+
             # Reset Garmentmaker's ATK to default before disappearing
             self.garmentmaker.atk = self.garmentmaker.default_atk
             self.garmentmaker.disappear()
@@ -125,7 +140,7 @@ class Algaea(Character):
 
         # Update Supreme Stance state and ATK boost
         self._update_supreme_stance()
-        
+
         # reset stats for each action
         self.char_action_value_for_action_forward = []
 
@@ -140,7 +155,7 @@ class Algaea(Character):
 
         if self._can_use_ult():
             self._use_ult()
-        
+
         # Garmentmaker's turn
         if self.garmentmaker:
             self.garmentmaker.take_action()
@@ -154,7 +169,7 @@ class Algaea(Character):
         )
         self._update_skill_point_and_ult_energy(1, self.BASIC_ATK_ENERGY_GAIN)
         self._record_damage(dmg, "Basic ATK")
-        
+
         # Apply seam stitch after attacks if Garmentmaker is present
         self._apply_seam_stitch()
 
@@ -176,7 +191,7 @@ class Algaea(Character):
             break_amount=self.ENHANCED_BASIC_ATK_BREAK_AMOUNT,
         )
         self._record_damage(dmg, "Enhanced Basic ATK")
-        
+
         # Apply seam stitch after attacks if Garmentmaker is present
         self._apply_seam_stitch()
 
@@ -208,7 +223,7 @@ class Algaea(Character):
         else:
             # Restore Garmentmaker
             self.garmentmaker.reset_character_data_for_each_battle()
-            
+
         self.take_action()
 
         self._update_skill_point_and_ult_energy(-1, self.SKILL_ENERGY_GAIN)
@@ -217,7 +232,7 @@ class Algaea(Character):
     def _use_ult(self) -> None:
         """Simulate ultimate - enter Supreme Stance and summon/heal Garmentmaker."""
         main_logger.info(f"{self.__class__.__name__} is using ultimate...")
-        
+
         # Summon or reset Garmentmaker
         if not self.garmentmaker:
             self.garmentmaker = Garmentmaker()
@@ -228,16 +243,21 @@ class Algaea(Character):
         # Enter Supreme Stance
         self.supreme_stance = True
         self.supreme_stance_turns_left = self.SUPREME_STANCE_DURATION
-        
+
         # Inherit speed buff stacks from Garmentmaker
         if self.garmentmaker.speed_buff_stacks > 0:
-            speed_buff = self.garmentmaker.speed_buff_stacks * self.SUPREME_STANCE_SPEED_BUFF_PERCENT
-            self.speed *= (1 + speed_buff)
-        
+            speed_buff = (
+                self.garmentmaker.speed_buff_stacks
+                * self.SUPREME_STANCE_SPEED_BUFF_PERCENT
+            )
+            self.speed *= 1 + speed_buff
+
         self.current_ult_energy = self.DEFAULT_ULT_ENERGY_AFTER_ULT
 
         # Take immediate action
-        self.char_action_value_for_action_forward.append(self.simulate_action_forward(1))
+        self.char_action_value_for_action_forward.append(
+            self.simulate_action_forward(1)
+        )
 
     def _apply_seam_stitch(self) -> None:
         """Apply seam stitch to Garmentmaker."""
@@ -250,12 +270,13 @@ class Algaea(Character):
         # Add Supreme Stance ATK boost to base ATK before calculation
         original_atk = self.atk
         self.atk += self.supreme_stance_atk_boost
-        
+
         damage = super()._calculate_damage(skill_multiplier, break_amount)
-        
+
         # Restore original ATK
         self.atk = original_atk
         return damage
+
 
 class Garmentmaker(Character):
     # Constants for skill multipliers and break amounts
@@ -281,7 +302,9 @@ class Garmentmaker(Character):
         self.seam_stitch_target = False
         self.default_speed = speed
         self.default_atk = self.atk  # Store default ATK for reset
-        self.remaining_action_value = 0  # Track remaining action value for multiple actions
+        self.remaining_action_value = (
+            0  # Track remaining action value for multiple actions
+        )
 
     def reset_character_data_for_each_battle(self) -> None:
         """
@@ -301,7 +324,9 @@ class Garmentmaker(Character):
         """Apply speed buff from retained stacks without incrementing the stack count."""
         if self.speed_buff_stacks > 0:
             self.speed += self.SPEED_BUFF * self.speed_buff_stacks
-            main_logger.info(f"{self.__class__.__name__} applied {self.speed_buff_stacks} retained speed buff stack(s)")
+            main_logger.info(
+                f"{self.__class__.__name__} applied {self.speed_buff_stacks} retained speed buff stack(s)"
+            )
 
     def take_action(self) -> None:
         """
@@ -318,19 +343,25 @@ class Garmentmaker(Character):
             self.speed += self.SPEED_BUFF * self.speed_buff_stacks
 
         # Get Aglaea's action value for this turn if starting new turn
-        if self.remaining_action_value == 0:  # Only calculate if not continuing from previous turn
+        if (
+            self.remaining_action_value == 0
+        ):  # Only calculate if not continuing from previous turn
             aglaea_action_value = self.aglaea.calculate_action_value(self.aglaea.speed)
             self.remaining_action_value = aglaea_action_value
-            main_logger.info(f"{self.__class__.__name__} received {aglaea_action_value} action value from Aglaea")
+            main_logger.info(
+                f"{self.__class__.__name__} received {aglaea_action_value} action value from Aglaea"
+            )
 
         # Always take at least one action
         self._use_skill()
         if self.seam_stitch_target:
             self._apply_speed_buff()
-            
+
         current_action_value = self.calculate_action_value(self.speed)
         self.remaining_action_value -= current_action_value
-        main_logger.info(f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining after first action")
+        main_logger.info(
+            f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining after first action"
+        )
 
         # Take additional actions if enough action value remains
         while self.remaining_action_value > 0:
@@ -339,7 +370,9 @@ class Garmentmaker(Character):
                 self._apply_speed_buff()
 
             self.remaining_action_value -= current_action_value
-            main_logger.info(f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining")
+            main_logger.info(
+                f"{self.__class__.__name__} has {self.remaining_action_value} action value remaining"
+            )
 
     def _use_skill(self) -> None:
         """Simulate skill damage."""
@@ -357,9 +390,11 @@ class Garmentmaker(Character):
             self.speed_buff_stacks += 1
             # Recalculate speed from base speed plus all stacks
             self.speed = self.default_speed + (self.SPEED_BUFF * self.speed_buff_stacks)
-            main_logger.info(f"{self.__class__.__name__} gained speed buff stack {self.speed_buff_stacks}")
+            main_logger.info(
+                f"{self.__class__.__name__} gained speed buff stack {self.speed_buff_stacks}"
+            )
 
-    def set_aglaea(self, aglaea: 'Algaea') -> None:
+    def set_aglaea(self, aglaea: "Algaea") -> None:
         """Set reference to Aglaea for energy regeneration."""
         self.aglaea = aglaea
 
@@ -367,16 +402,18 @@ class Garmentmaker(Character):
         """Handle Garmentmaker disappearing and regenerating Aglaea's energy."""
         if self.aglaea:
             self.aglaea.current_ult_energy += self.ENERGY_REGEN_ON_DISAPPEAR
-            main_logger.info(f"{self.__class__.__name__} disappeared and regenerated {self.ENERGY_REGEN_ON_DISAPPEAR} energy for Aglaea")
+            main_logger.info(
+                f"{self.__class__.__name__} disappeared and regenerated {self.ENERGY_REGEN_ON_DISAPPEAR} energy for Aglaea"
+            )
 
     def _calculate_damage(self, skill_multiplier: float, break_amount: int) -> float:
         """Calculate damage with current ATK including Supreme Stance boost if active."""
         # Add Supreme Stance ATK boost to base ATK before calculation
         original_atk = self.atk
         self.atk += self.aglaea.supreme_stance_atk_boost
-        
+
         damage = super()._calculate_damage(skill_multiplier, break_amount)
-        
+
         # Restore original ATK
         self.atk = original_atk
         return damage

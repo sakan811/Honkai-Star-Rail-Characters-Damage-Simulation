@@ -29,7 +29,14 @@ def parse_args() -> argparse.Namespace:
         "--paths",
         type=str,
         nargs="+",
-        choices=["Hunt", "Nihility", "Destruction", "Erudition", "Harmony", "Remembrance"],
+        choices=[
+            "Hunt",
+            "Nihility",
+            "Destruction",
+            "Erudition",
+            "Harmony",
+            "Remembrance",
+        ],
         help="Specify which paths to simulate. If not provided, all paths will be simulated.",
     )
     parser.add_argument(
@@ -68,7 +75,8 @@ def run_simulations(paths: List[str], simulation_num: int, max_cycles: int) -> N
         "Nihility": start_sim_nihility,
         "Destruction": start_sim_destruction,
         "Erudition": start_sim_erudition,
-        "Harmony": lambda x, y: start_sim_harmony(),  # Harmony doesn't take args currently
+        "Harmony": lambda x,
+        y: start_sim_harmony(),  # Harmony doesn't take args currently
         "Remembrance": start_sim_remembrance,
     }
 

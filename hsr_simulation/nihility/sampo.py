@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Sampo(Character):
-    def __init__(
-            self,
-            speed: float = 102,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 102, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.ult_buff = 0
         self.wind_shear = []
@@ -33,7 +29,7 @@ class Sampo(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.wind_shear = []
         self.ult_buff = 0
@@ -43,7 +39,7 @@ class Sampo(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate applying Wind Shear on enemy turn
         self._apply_wind_shear_dmg()
@@ -82,7 +78,7 @@ class Sampo(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
         self._inflict_wind_shear()
 
@@ -99,7 +95,7 @@ class Sampo(Character):
 
             self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=6)
 
-            self._record_damage(dmg, 'Skill')
+            self._record_damage(dmg, "Skill")
 
         self._inflict_wind_shear()
 
@@ -108,10 +104,10 @@ class Sampo(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         self.ult_buff = 2
 
@@ -122,7 +118,7 @@ class Sampo(Character):
         Inflict Wind Shear DoT stack
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is inflicting Wind Shear...')
+        main_logger.info(f"{self.__class__.__name__} is inflicting Wind Shear...")
         if random.random() < 0.65:
             # ensure Wind Shear stacks not exceed 5
             if len(self.wind_shear) < 5:
@@ -138,7 +134,7 @@ class Sampo(Character):
         Apply Wind Shear DoT damage
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Wind Shear is dealing damage...')
+        main_logger.info(f"{self.__class__.__name__}: Wind Shear is dealing damage...")
         hit_num = len(self.wind_shear)
         # apply Wind Shear DMG by the number of Wind Shear stacks
         for _ in range(hit_num):
@@ -147,7 +143,11 @@ class Sampo(Character):
             if self.ult_buff > 0:
                 dot_dmg_multiplier += [0.3]
 
-            dmg = self._calculate_damage(skill_multiplier=0.52, break_amount=0,
-                                         dot_dmg_multipliers=dot_dmg_multiplier, can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=0.52,
+                break_amount=0,
+                dot_dmg_multipliers=dot_dmg_multiplier,
+                can_crit=False,
+            )
 
-            self._record_damage(dmg, 'DoT')
+            self._record_damage(dmg, "DoT")

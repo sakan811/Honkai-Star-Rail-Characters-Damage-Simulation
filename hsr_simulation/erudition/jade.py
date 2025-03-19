@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Jade(Character):
-    def __init__(
-            self,
-            speed: float = 103,
-            ult_energy: int = 140
-    ):
+    def __init__(self, speed: float = 103, ult_energy: int = 140):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.debt_collector = 0
         self.ult_buff = 0
@@ -40,7 +36,7 @@ class Jade(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.debt_collector = 0
         self.ult_buff = 0
@@ -55,14 +51,16 @@ class Jade(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # reset stats for each action
         self.char_action_value_for_action_forward = []
 
         if self.battle_start:
             self.battle_start = False
-            self.char_action_value_for_action_forward.append(self.simulate_action_forward(0.5))
+            self.char_action_value_for_action_forward.append(
+                self.simulate_action_forward(0.5)
+            )
 
         self._simulate_enemy_weakness_broken()
 
@@ -116,8 +114,8 @@ class Jade(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         self._gain_charge(target_num=3)
 
@@ -135,15 +133,15 @@ class Jade(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         self._gain_crit_dmg_buff()
 
         dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=20)
         for _ in range(self.enemy_on_field - 1):
             dmg += self._calculate_damage(skill_multiplier=2.4, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         self.ult_buff = 2
 
@@ -154,7 +152,7 @@ class Jade(Character):
         Simulate Debt Collector damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using Debt Collector...')
+        main_logger.info(f"{self.__class__.__name__} is using Debt Collector...")
         dmg = self._calculate_damage(skill_multiplier=0.25, break_amount=0)
 
         # simulate AoE attack from Debt Collector
@@ -162,8 +160,8 @@ class Jade(Character):
             for _ in range(self.enemy_on_field - 1):
                 dmg += self._calculate_damage(skill_multiplier=0.25, break_amount=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         self._gain_charge(target_num=self.num_of_enemy_being_hit)
 
@@ -172,7 +170,7 @@ class Jade(Character):
         Simulate Follow-up attack damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using Follow-up attack...')
+        main_logger.info(f"{self.__class__.__name__} is using Follow-up attack...")
         self._gain_crit_dmg_buff()
 
         skill_multiplier = 1.2
@@ -185,12 +183,14 @@ class Jade(Character):
 
         # other target DMG
         for _ in range(self.enemy_on_field - 1):
-            dmg += self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=10)
+            dmg += self._calculate_damage(
+                skill_multiplier=skill_multiplier, break_amount=10
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=10)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         self.pawned_asset += 5
         self.pawned_asset = min(self.pawned_asset, 50)
@@ -202,7 +202,9 @@ class Jade(Character):
         Simulate gaining Critical Damage buff.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining Critical Damage buff...')
+        main_logger.info(
+            f"{self.__class__.__name__} is gaining Critical Damage buff..."
+        )
         self.crit_dmg = self.default_crit_dmg + (0.024 * self.pawned_asset)
 
     def _gain_charge(self, target_num: int) -> None:
@@ -211,7 +213,7 @@ class Jade(Character):
         :param target_num: Number of targets being hit.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining Charge...')
+        main_logger.info(f"{self.__class__.__name__} is gaining Charge...")
         self.charge += target_num
         self.charge = min(self.charge, 8)
 
@@ -220,5 +222,5 @@ class Jade(Character):
         Simulate gaining ATK buff.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining ATK buff...')
+        main_logger.info(f"{self.__class__.__name__} is gaining ATK buff...")
         self.atk = self.default_atk + (0.005 * self.pawned_asset)

@@ -25,7 +25,10 @@ from hsr_simulation.hunt.sushang import Sushang
 from hsr_simulation.hunt.topaz import Topaz
 from hsr_simulation.hunt.yanqing import YanQing
 from hsr_simulation.postgre import generate_dmg_view_query
-from hsr_simulation.simulate_battles import start_simulations, start_simulations_for_char_with_summon
+from hsr_simulation.simulate_battles import (
+    start_simulations,
+    start_simulations_for_char_with_summon,
+)
 from hsr_simulation.utils import process_result_list
 from hsr_simulation.postgre import PostgresOperations
 
@@ -37,26 +40,36 @@ def start_sim_hunt(simulation_num: int, max_cycles: int) -> None:
     :param max_cycles: Maximum number of cycles to simulate
     :return: None
     """
-    main_logger.info('Starting Hunt characters simulations...')
+    main_logger.info("Starting Hunt characters simulations...")
 
     db = PostgresOperations()
 
     # Setup database tables
-    stage_table_name = 'HuntStage'
-    view_name = 'Hunt'
+    stage_table_name = "HuntStage"
+    view_name = "Hunt"
     db.drop_stage_table(stage_table_name)
     db.drop_view(view_name)
 
     # Hunt characters list
-    hunt_char_list: list[Character] = [Seele(), DanHeng(), YanQing(), Sushang(), 
-                                     Topaz(), DrRatio(), Boothill(), March7thHunt(), 
-                                     Feixiao(), Moze()]
+    hunt_char_list: list[Character] = [
+        Seele(),
+        DanHeng(),
+        YanQing(),
+        Sushang(),
+        Topaz(),
+        DrRatio(),
+        Boothill(),
+        March7thHunt(),
+        Feixiao(),
+        Moze(),
+    ]
 
     for hunt_char in hunt_char_list:
         if isinstance(hunt_char, Topaz):
             numby = hunt_char.summon_numby(hunt_char)
-            dict_list = start_simulations_for_char_with_summon(hunt_char, numby, 
-                                                             max_cycles, simulation_num)
+            dict_list = start_simulations_for_char_with_summon(
+                hunt_char, numby, max_cycles, simulation_num
+            )
         else:
             dict_list = start_simulations(hunt_char, max_cycles, simulation_num)
         process_result_list(hunt_char, dict_list, stage_table_name)

@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class BlackSwan(Character):
-    def __init__(
-            self,
-            speed: float = 102,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 102, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.arcana = 0
         self.epiphany = 0
@@ -35,7 +31,7 @@ class BlackSwan(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.arcana = 0
         self.epiphany = 0
@@ -47,14 +43,14 @@ class BlackSwan(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
 
         # simulate A4 Trace
         if self.battle_start:
-            main_logger.debug('Battle starts')
+            main_logger.debug("Battle starts")
             self.battle_start = False
             self._apply_arcana()
 
@@ -71,7 +67,7 @@ class BlackSwan(Character):
             self.current_ult_energy = 5
 
         # simulate A4 Trace br randomizing ally's DoT attack
-        main_logger.debug('Randomizing ally DoT attack...')
+        main_logger.debug("Randomizing ally DoT attack...")
         if random.random() < 0.5:
             self._apply_arcana()
 
@@ -80,7 +76,7 @@ class BlackSwan(Character):
         Apply Arcana stack with base inflicting chance.
         :return:
         """
-        main_logger.info('Apply Arcana stack...')
+        main_logger.info("Apply Arcana stack...")
         base_chance = 0.65 * (1 + self.effect_hit_rate)
         if random.random() < base_chance:
             self.arcana += 1
@@ -92,15 +88,21 @@ class BlackSwan(Character):
         """
         main_logger.info("Using basic attack...")
         if self.enemy_def_reduced > 0:
-            dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
-                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=0.6,
+                break_amount=10,
+                dmg_multipliers=[0.208, self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=10,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=0.6,
+                break_amount=10,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
         # generate Arcana stack
         self._apply_arcana()
@@ -118,15 +120,21 @@ class BlackSwan(Character):
         """
         main_logger.info("Using skill...")
         if self.enemy_def_reduced > 0:
-            dmg = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
-                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=0.9,
+                break_amount=20,
+                dmg_multipliers=[0.208, self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=0.9, break_amount=20,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=0.9,
+                break_amount=20,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         # generate Arcana
         self.arcana += 1
@@ -139,15 +147,21 @@ class BlackSwan(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
         if self.enemy_def_reduced > 0:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
-                                         dmg_multipliers=[0.208, self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=30,
+                dmg_multipliers=[0.208, self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=30,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=30,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         self.epiphany = 2
 
@@ -156,9 +170,9 @@ class BlackSwan(Character):
         Simulate enemy turn
         :return: None
         """
-        main_logger.info('Simulating enemy turn...')
-        main_logger.debug(f'Arcana stack on enemy: {self.arcana}')
-        main_logger.debug(f'Epiphany stack on enemy: {self.epiphany}')
+        main_logger.info("Simulating enemy turn...")
+        main_logger.debug(f"Arcana stack on enemy: {self.arcana}")
+        main_logger.debug(f"Epiphany stack on enemy: {self.epiphany}")
         self._apply_talent_dmg()
 
         if self.epiphany > 0:
@@ -169,7 +183,7 @@ class BlackSwan(Character):
         Simulate talent damage.
         :return: None
         """
-        main_logger.info('Simulating talent damage...')
+        main_logger.info("Simulating talent damage...")
         epiphany_multiplier = 0
         if self.epiphany > 0:
             epiphany_multiplier = 0.25
@@ -180,18 +194,33 @@ class BlackSwan(Character):
             if self.arcana >= 7:
                 dmg_multiplier = [epiphany_multiplier, self.a6_dmg_multiplier]
                 dot_multiplier = 0.12 * self.arcana
-                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0, dot_dmg_multipliers=[dot_multiplier],
-                                             dmg_multipliers=dmg_multiplier, def_reduction_multiplier=[0.2],
-                                             can_crit=False)
+                dmg = self._calculate_damage(
+                    skill_multiplier=2.4,
+                    break_amount=0,
+                    dot_dmg_multipliers=[dot_multiplier],
+                    dmg_multipliers=dmg_multiplier,
+                    def_reduction_multiplier=[0.2],
+                    can_crit=False,
+                )
             else:
-                dmg_multiplier = [0.12 * self.arcana, epiphany_multiplier, self.a6_dmg_multiplier]
+                dmg_multiplier = [
+                    0.12 * self.arcana,
+                    epiphany_multiplier,
+                    self.a6_dmg_multiplier,
+                ]
                 dot_multiplier = 0.12 * self.arcana
-                dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=0, dot_dmg_multipliers=[dot_multiplier],
-                                             dmg_multipliers=dmg_multiplier,
-                                             can_crit=False)
+                dmg = self._calculate_damage(
+                    skill_multiplier=2.4,
+                    break_amount=0,
+                    dot_dmg_multipliers=[dot_multiplier],
+                    dmg_multipliers=dmg_multiplier,
+                    can_crit=False,
+                )
 
-            self._record_damage(dmg, 'DoT')
+            self._record_damage(dmg, "DoT")
 
             if self.epiphany <= 0:
-                main_logger.debug('Epiphany stack is zero or less. Reset Arcana stack to 1.')
+                main_logger.debug(
+                    "Epiphany stack is zero or less. Reset Arcana stack to 1."
+                )
                 self.arcana = 1

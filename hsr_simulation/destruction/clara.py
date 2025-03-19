@@ -17,11 +17,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Clara(Character):
-    def __init__(
-            self,
-            speed: float = 90,
-            ult_energy: int = 110
-    ):
+    def __init__(self, speed: float = 90, ult_energy: int = 110):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.ult_buff = 0
 
@@ -33,7 +29,7 @@ class Clara(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.ult_buff = 0
 
@@ -42,7 +38,7 @@ class Clara(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -72,8 +68,8 @@ class Clara(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -85,15 +81,15 @@ class Clara(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         self.ult_buff = 2
 
     def _apply_talent(self) -> None:
@@ -101,7 +97,7 @@ class Clara(Character):
         Apply character's talent.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying talent...')
+        main_logger.info(f"{self.__class__.__name__} is applying talent...")
 
         if self.ult_buff > 0:
             skill_multiplier = 3.2
@@ -114,7 +110,5 @@ class Clara(Character):
         # simulate A6 trace
         dmg *= 1.3
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
-
-
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")

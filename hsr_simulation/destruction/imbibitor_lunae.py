@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class ImbibitorLunae(Character):
-    def __init__(
-            self,
-            speed: float = 102,
-            ult_energy: int = 140
-    ):
+    def __init__(self, speed: float = 102, ult_energy: int = 140):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.transcendence = False
         self.divine_spear = False
@@ -39,7 +35,7 @@ class ImbibitorLunae(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.transcendence = False
         self.divine_spear = False
@@ -53,7 +49,7 @@ class ImbibitorLunae(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -69,11 +65,17 @@ class ImbibitorLunae(Character):
             self._use_basic_atk()
 
         if self.transcendence:
-            self._use_enhanced_basic_atk(number_of_hits=3, skill_multiplier=2.6, break_amount=30)
+            self._use_enhanced_basic_atk(
+                number_of_hits=3, skill_multiplier=2.6, break_amount=30
+            )
         elif self.divine_spear:
-            self._use_enhanced_basic_atk(number_of_hits=5, skill_multiplier=3.8, break_amount=35)
+            self._use_enhanced_basic_atk(
+                number_of_hits=5, skill_multiplier=3.8, break_amount=35
+            )
         elif self.fulgurant_leap:
-            self._use_enhanced_basic_atk(number_of_hits=7, skill_multiplier=5, break_amount=40)
+            self._use_enhanced_basic_atk(
+                number_of_hits=7, skill_multiplier=5, break_amount=40
+            )
 
         if self._can_use_ult():
             self._use_ult()
@@ -103,8 +105,8 @@ class ImbibitorLunae(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -134,7 +136,7 @@ class ImbibitorLunae(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         hit_num = 3
         skill_multiplier = 3
         skill_multiplier_for_each_hit = skill_multiplier / hit_num
@@ -147,17 +149,22 @@ class ImbibitorLunae(Character):
         for _ in range(hit_num):
             dmg_multiplier = self._gain_righteous_buffs()
 
-            dmg = self._calculate_damage(skill_multiplier=skill_multiplier_for_each_hit,
-                                         break_amount=break_amount_for_each_hit, dmg_multipliers=[dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=skill_multiplier_for_each_hit,
+                break_amount=break_amount_for_each_hit,
+                dmg_multipliers=[dmg_multiplier],
+            )
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Ultimate")
 
         self.squama_sacrosancta = 2
         self.skill_points += self.squama_sacrosancta
         self.squama_sacrosancta = 0
 
-    def _use_enhanced_basic_atk(self, number_of_hits: int, skill_multiplier: float, break_amount: int) -> None:
+    def _use_enhanced_basic_atk(
+        self, number_of_hits: int, skill_multiplier: float, break_amount: int
+    ) -> None:
         """
         Simulate enhanced basic atk damage.
         :param number_of_hits: Number of hits.
@@ -175,10 +182,13 @@ class ImbibitorLunae(Character):
 
             dmg_multiplier = self._gain_righteous_buffs()
 
-            dmg = self._calculate_damage(skill_multiplier=skill_multiplier_for_each_hit,
-                                         break_amount=break_amount_for_each_hit, dmg_multipliers=[dmg_multiplier])
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Enhanced Basic ATK')
+            dmg = self._calculate_damage(
+                skill_multiplier=skill_multiplier_for_each_hit,
+                break_amount=break_amount_for_each_hit,
+                dmg_multipliers=[dmg_multiplier],
+            )
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Enhanced Basic ATK")
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=40)
 
@@ -187,7 +197,7 @@ class ImbibitorLunae(Character):
         Gain Outroar buffs to the character.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining Outroar buffs...')
+        main_logger.info(f"{self.__class__.__name__} is gaining Outroar buffs...")
         self.outroar += 1
         self.outroar = min(self.outroar, 4)
 
@@ -199,7 +209,9 @@ class ImbibitorLunae(Character):
         Gain Righteous Heart buffs to the character.
         :return: DMG multiplier.
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining Righteous Heart buffs...')
+        main_logger.info(
+            f"{self.__class__.__name__} is gaining Righteous Heart buffs..."
+        )
 
         self.righteous_heart += 1
         self.righteous_heart = min(self.righteous_heart, 6)
