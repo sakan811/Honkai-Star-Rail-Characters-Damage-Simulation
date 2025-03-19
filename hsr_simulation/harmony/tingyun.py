@@ -17,6 +17,7 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 
 class Tingyun(HarmonyCharacter):
     BENEDICT_HIT_NUM = 3
+
     def __init__(self):
         super().__init__()
 
@@ -38,9 +39,9 @@ class Tingyun(HarmonyCharacter):
         base_dmg = self.calculate_trailblazer_dmg()
 
         ally_atk = self.trailblazer_atk + self.skill_buff()
-        
+
         additional_dmg = self.a6_trace_buff(ally_atk) + (0.4 * ally_atk)
-        
+
         # account for Benedict's 3 hits from Trailblazer's Skill, Ult, and Basic ATK
         additional_dmg = additional_dmg * self.BENEDICT_HIT_NUM
 

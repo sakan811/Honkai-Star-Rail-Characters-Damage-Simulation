@@ -18,35 +18,36 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 class Asta(HarmonyCharacter):
     SKILL_NUM_HIT = 3
     A2_TRACE_NUM_HIT = 5
+
     def __init__(self):
         super().__init__()
         self.DEFAULT_ATK = 1760.86
         self.bonus_turn = self.calculate_spd_breakpoint(bonus_spd=self.ult_buff())
-        
+
     def skill_buff(self) -> float:
         data = []
         intial_hit_dmg = 0.5 * self.DEFAULT_ATK
-        
+
         # further DMG 1 time
         further_hit_dmg = 0.5 * self.DEFAULT_ATK
         total_dmg = intial_hit_dmg + further_hit_dmg * self.SKILL_NUM_HIT
         data.append(total_dmg)
-        
+
         # further DMG 2 times
         further_hit_dmg = 0.5 * self.DEFAULT_ATK * 2
         total_dmg = intial_hit_dmg + further_hit_dmg * self.SKILL_NUM_HIT
         data.append(total_dmg)
-        
+
         # further DMG 3 times
         further_hit_dmg = 0.5 * self.DEFAULT_ATK * 3
         total_dmg = intial_hit_dmg + further_hit_dmg * self.SKILL_NUM_HIT
         data.append(total_dmg)
-        
+
         # further DMG 4 times
         further_hit_dmg = 0.5 * self.DEFAULT_ATK * 4
         total_dmg = intial_hit_dmg + further_hit_dmg * self.SKILL_NUM_HIT
         data.append(total_dmg)
-                
+
         return sum(data) / len(data)
 
     def talent_buff(self) -> float:
@@ -57,7 +58,7 @@ class Asta(HarmonyCharacter):
     def ult_buff(self) -> int:
         spd_buff = 50
         return spd_buff
-    
+
     def a2_trace_buff(self) -> float:
         # DoT damage per hit
         dot_dmg_per_hit = 0.5 * self.DEFAULT_ATK
@@ -76,6 +77,6 @@ class Asta(HarmonyCharacter):
         buffed_dmg = self.calculate_trailblazer_dmg(
             atk_bonus=self.talent_buff(),
             elemental_dmg_multiplier=self.a4_trace_buff(),
-            bonus_turns=self.bonus_turn
+            bonus_turns=self.bonus_turn,
         )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

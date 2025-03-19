@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Rappa(Character):
-    def __init__(
-            self,
-            speed: float = 96,
-            ult_energy: int = 140
-    ):
+    def __init__(self, speed: float = 96, ult_energy: int = 140):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
         self.sealform = False
@@ -38,7 +34,7 @@ class Rappa(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.enemy_on_field = random.choice([1, 2, 3, 4, 5])
         self.sealform = False
@@ -51,7 +47,7 @@ class Rappa(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
         self._simulate_enemy_weakness_broken()
 
         if self.a6_trace_buff > 0:
@@ -86,8 +82,8 @@ class Rappa(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_enhanced_basic_atk(self) -> None:
         """
@@ -119,8 +115,8 @@ class Rappa(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Basic ATK")
 
         self._simulate_talent_dmg()
 
@@ -138,26 +134,28 @@ class Rappa(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         self.sealform = True
         self.chroma_ink = 3
         self.break_effect += 0.3
-        self.char_action_value_for_action_forward.append(self.simulate_action_forward(1))
+        self.char_action_value_for_action_forward.append(
+            self.simulate_action_forward(1)
+        )
 
     def check_if_enemy_weakness_broken(self) -> None:
         """
         Check whether enemy is weakness broken.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        main_logger.info(f"{self.__class__.__name__}: Checking Enemy Toughness...")
         if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
             self.enemy_weakness_broken = True
@@ -172,15 +170,15 @@ class Rappa(Character):
 
             self.charge = min(self.charge, 10)
 
-            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
+            main_logger.debug(f"{self.__class__.__name__}: Enemy is Weakness Broken")
 
     def _simulate_talent_dmg(self) -> None:
         """
         Simulate talent damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Simulating talent damage...')
-        dmg = self.do_break_dmg(break_type='Imaginary') * 0.6
+        main_logger.info(f"{self.__class__.__name__}: Simulating talent damage...")
+        dmg = self.do_break_dmg(break_type="Imaginary") * 0.6
         dmg *= 1 + (0.5 * self.charge)
 
         # simulate A6 trace
@@ -188,8 +186,10 @@ class Rappa(Character):
             additional_break_dmg_multiplier = 0
             if self.atk > 2400:
                 excess_atk = (self.atk - 2400) // 100
-                additional_break_dmg_multiplier = (0.01 * excess_atk)
-                additional_break_dmg_multiplier = min(additional_break_dmg_multiplier, 0.08)
+                additional_break_dmg_multiplier = 0.01 * excess_atk
+                additional_break_dmg_multiplier = min(
+                    additional_break_dmg_multiplier, 0.08
+                )
 
             dmg *= 1 + (0.02 + additional_break_dmg_multiplier)
 
@@ -200,8 +200,8 @@ class Rappa(Character):
 
         self._calculate_damage(skill_multiplier=0, break_amount=toughness_reduction)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         self.charge = 0
 
@@ -211,7 +211,9 @@ class Rappa(Character):
         If enemy weakness is broken, its action should be delayed for 1 turn.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Simulate when enemy is weakness broken...')
+        main_logger.info(
+            f"{self.__class__.__name__}: Simulate when enemy is weakness broken..."
+        )
         if self.enemy_weakness_broken:
             if self.enemy_turn_delayed_duration_weakness_broken > 0:
                 self.enemy_turn_delayed_duration_weakness_broken -= 1
@@ -224,10 +226,13 @@ class Rappa(Character):
         :param enemy_toughness_reduction: Enemy toughness reduction from an attack
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Simulating A4 trace...')
+        main_logger.info(f"{self.__class__.__name__}: Simulating A4 trace...")
         if self.enemy_weakness_broken:
-            dmg = self._deal_super_break_dmg(enemy_toughness_reduction=enemy_toughness_reduction, break_effect=self.break_effect)
+            dmg = self._deal_super_break_dmg(
+                enemy_toughness_reduction=enemy_toughness_reduction,
+                break_effect=self.break_effect,
+            )
             dmg *= 0.6
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Super Break DMG')
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Super Break DMG")

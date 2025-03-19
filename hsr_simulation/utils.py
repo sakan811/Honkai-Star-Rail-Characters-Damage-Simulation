@@ -21,9 +21,8 @@ from hsr_simulation.postgre import load_df_to_stage_table
 
 
 def process_result_list(
-        character: Character,
-        dict_list: list,
-        stage_table_name: str) -> None:
+    character: Character, dict_list: list, stage_table_name: str
+) -> None:
     """
     Process a list of results by extracting total damage, calculating the average damage,
     converting the results into a DataFrame, adding the character's name to the DataFrame,
@@ -33,7 +32,7 @@ def process_result_list(
     :param stage_table_name: Stage table name
     :return: None
     """
-    main_logger.info(f'Processing result list of {character.__class__.__name__}...')
+    main_logger.info(f"Processing result list of {character.__class__.__name__}...")
 
     df: pd.DataFrame = create_df_from_dict_list(dict_list)
 
@@ -49,12 +48,7 @@ def add_char_name_to_df(character: Character, df: pd.DataFrame) -> None:
     :param df: Dataframe
     :return: None
     """
-    main_logger.info(f'Adding character name {character.__class__.__name__} to dataframe...')
-    df['Character'] = f'{character.__class__.__name__}'
-
-
-
-
-
-
-
+    main_logger.info(
+        f"Adding character name {character.__class__.__name__} to dataframe..."
+    )
+    df["Character"] = f"{character.__class__.__name__}"

@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Xueyi(Character):
-    def __init__(
-            self,
-            speed: float = 103,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 103, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.karma_stack = 0
         self.a2_trace_dmg_multiplier = self.break_effect
@@ -35,7 +31,7 @@ class Xueyi(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.karma_stack = 0
         self.a2_trace_dmg_multiplier = self.break_effect
@@ -45,7 +41,7 @@ class Xueyi(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -68,13 +64,16 @@ class Xueyi(Character):
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                     dmg_multipliers=[self.a2_trace_dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1,
+            break_amount=10,
+            dmg_multipliers=[self.a2_trace_dmg_multiplier],
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         self._gain_karma_stack()
         if self.karma_stack >= 8:
@@ -86,13 +85,16 @@ class Xueyi(Character):
         :return: None
         """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
-        dmg = self._calculate_damage(skill_multiplier=1.4, break_amount=20,
-                                     dmg_multipliers=[self.a2_trace_dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1.4,
+            break_amount=20,
+            dmg_multipliers=[self.a2_trace_dmg_multiplier],
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         self._gain_karma_stack()
         if self.karma_stack >= 8:
@@ -103,7 +105,7 @@ class Xueyi(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         base_break_amount = 40
 
         break_amount = base_break_amount * self.break_effect
@@ -117,12 +119,18 @@ class Xueyi(Character):
         else:
             a4_trace_dmg_multiplier = 0
 
-        dmg = self._calculate_damage(skill_multiplier=2.5, break_amount=break_amount,
-                                     dmg_multipliers=[dmg_increased, self.a2_trace_dmg_multiplier,
-                                                      a4_trace_dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2.5,
+            break_amount=break_amount,
+            dmg_multipliers=[
+                dmg_increased,
+                self.a2_trace_dmg_multiplier,
+                a4_trace_dmg_multiplier,
+            ],
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         self._gain_karma_stack()
         if self.karma_stack >= 8:
@@ -133,7 +141,7 @@ class Xueyi(Character):
         Gain karma stack.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is gaining karma stack...')
+        main_logger.info(f"{self.__class__.__name__} is gaining karma stack...")
         self.karma_stack += 1
         base_max_karma_stack = 8
 
@@ -148,14 +156,14 @@ class Xueyi(Character):
         Simulate follow-up attack damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using follow-up attack...')
+        main_logger.info(f"{self.__class__.__name__} is using follow-up attack...")
         num_hit = 3
 
         for _ in range(num_hit):
             dmg = self._calculate_damage(skill_multiplier=0.9, break_amount=5)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Talent')
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Talent")
 
             self.current_ult_energy += 2
 

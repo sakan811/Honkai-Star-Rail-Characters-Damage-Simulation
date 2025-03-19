@@ -33,7 +33,7 @@ class DanHeng(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.speed = self.default_speed
         self.can_get_talent = True
@@ -41,7 +41,7 @@ class DanHeng(Character):
         self.a4_trace_buff = 0
 
     def take_action(self) -> None:
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
 
@@ -49,46 +49,48 @@ class DanHeng(Character):
         super().take_action()
 
     def _use_basic_atk(self) -> None:
-        main_logger.info('Using basic atk...')
+        main_logger.info("Using basic atk...")
         if self._is_enemy_slowed():
-            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4])
+            dmg = self._calculate_damage(
+                skill_multiplier=1, break_amount=10, dmg_multipliers=[0.4]
+            )
         else:
             dmg = self._calculate_damage(1, 10)
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
-        main_logger.info('Using skill...')
+        main_logger.info("Using skill...")
         dmg = self._calculate_damage(2.6, 20)
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
-        main_logger.info('Using ult...')
+        main_logger.info("Using ult...")
         multiplier = 5.2 if self._is_enemy_slowed() else 4
         dmg = self._calculate_damage(multiplier, 30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def _apply_talent(self) -> None:
         """
         Simulate talent
         :return: None
         """
-        main_logger.info('Simulating talent...')
+        main_logger.info("Simulating talent...")
         if self.can_get_talent and random.random() < 0.5:
             self.talent_buff = 2
             self.can_get_talent = False
 
     def _reset_buffs(self):
-        main_logger.info('Resetting buffs...')
+        main_logger.info("Resetting buffs...")
         if self.a4_trace_buff > 0:
             self.a4_trace_buff -= 1
         else:

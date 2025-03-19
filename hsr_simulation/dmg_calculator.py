@@ -16,10 +16,11 @@ from hsr_simulation.configure_logging import main_logger
 
 
 def calculate_base_dmg(
-        skill_multiplier: float = 1,
-        extra_multipliers: list[float] = None,
-        atk: float = 1,
-        extra_dmg: float = 0) -> float:
+    skill_multiplier: float = 1,
+    extra_multipliers: list[float] = None,
+    atk: float = 1,
+    extra_dmg: float = 0,
+) -> float:
     """
     Calculates base damage
     :param skill_multiplier: This is the percentage value stated in the skill description, indicating the damage dealt.
@@ -28,7 +29,7 @@ def calculate_base_dmg(
     :param extra_dmg: A flat additional damage value that is included in some skills.
     :return: Base damage
     """
-    main_logger.info('Calculating base damage...')
+    main_logger.info("Calculating base damage...")
 
     extra_multipliers_sum = 0
     if extra_multipliers is not None:
@@ -38,9 +39,10 @@ def calculate_base_dmg(
 
 
 def calculate_dmg_multipliers(
-        crit_dmg: float = 0,
-        dot_dmg: list[float] = None,
-        dmg_multipliers: list[float] = None) -> float:
+    crit_dmg: float = 0,
+    dot_dmg: list[float] = None,
+    dmg_multipliers: list[float] = None,
+) -> float:
     """
     Calculates base damage multipliers.
     :param crit_dmg: Critical damage multiplier
@@ -48,7 +50,7 @@ def calculate_dmg_multipliers(
     :param dmg_multipliers: List of damage multipliers
     :return: Final damage multiplier
     """
-    main_logger.info('Calculating damage multipliers...')
+    main_logger.info("Calculating damage multipliers...")
 
     dot_dmg_sum = 0 if dot_dmg is None else sum(dot_dmg)
     dmg_multipliers_sum = 0 if dmg_multipliers is None else sum(dmg_multipliers)
@@ -64,14 +66,15 @@ def calculate_universal_dmg_reduction(weakness_broken: bool) -> float:
     :param weakness_broken: Whether the weakness broken.
     :return: Damage Reduction Multiplier
     """
-    main_logger.info('Returning universal dmg reduction multiplier...')
+    main_logger.info("Returning universal dmg reduction multiplier...")
 
     if weakness_broken:
-        main_logger.debug('No damage reduction')
+        main_logger.debug("No damage reduction")
         return 1
     else:
-        main_logger.debug('Reduce dmg')
+        main_logger.debug("Reduce dmg")
         return 0.9
+
 
 def calculate_res_multipliers(res_pen: list[float] = None) -> float:
     """
@@ -104,16 +107,17 @@ def calculate_break_effect(break_amount: int, break_effect: float) -> float:
     :param break_effect: Break effect.
     :return: Break amount
     """
-    main_logger.info('Calculating break effect...')
+    main_logger.info("Calculating break effect...")
     return break_amount * break_effect
 
 
 def calculate_total_damage(
-        base_dmg: float,
-        dmg_multipliers: float,
-        res_multipliers: float,
-        dmg_reduction: float,
-        def_reduction_multiplier: float) -> float:
+    base_dmg: float,
+    dmg_multipliers: float,
+    res_multipliers: float,
+    dmg_reduction: float,
+    def_reduction_multiplier: float,
+) -> float:
     """
     Calculates total damage
     :param base_dmg: Base DMG.
@@ -123,8 +127,14 @@ def calculate_total_damage(
     :param def_reduction_multiplier: DEF Reduction Multipliers.
     :return: Total damage
     """
-    main_logger.info('Calculating total damage...')
-    return base_dmg * dmg_multipliers * def_reduction_multiplier * res_multipliers * dmg_reduction
+    main_logger.info("Calculating total damage...")
+    return (
+        base_dmg
+        * dmg_multipliers
+        * def_reduction_multiplier
+        * res_multipliers
+        * dmg_reduction
+    )
 
 
 def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
@@ -134,16 +144,16 @@ def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
     :param target_max_toughness: Max toughness of the target.
     :return: Break DMG
     """
-    main_logger.info('Calculating break damage...')
+    main_logger.info("Calculating break damage...")
     level_80_multiplier = 3767
 
-    if break_type == 'Physical' or break_type == 'Fire':
+    if break_type == "Physical" or break_type == "Fire":
         base_multiplier = 2
-    elif break_type == 'Ice' or break_type == 'Lightning':
+    elif break_type == "Ice" or break_type == "Lightning":
         base_multiplier = 1
-    elif break_type == 'Wind':
+    elif break_type == "Wind":
         base_multiplier = 1.5
-    elif break_type == 'Quantum' or break_type == 'Imaginary':
+    elif break_type == "Quantum" or break_type == "Imaginary":
         base_multiplier = 0.5
     else:
         base_multiplier = 1
@@ -153,18 +163,18 @@ def calculate_break_damage(break_type: str, target_max_toughness: int) -> float:
 
 
 def calculate_super_break_dmg(
-        base_toughness_reduce: float,
-        break_effect: float = 1) -> float:
+    base_toughness_reduce: float, break_effect: float = 1
+) -> float:
     """
     Calculates super_break dmg
     :param base_toughness_reduce: Base toughness reduction.
     :param break_effect: Break Effect
     :return: Super Break dmg
     """
-    main_logger.info('Calculating super_break dmg...')
+    main_logger.info("Calculating super_break dmg...")
     lvl_multiplier = 3767.5533
     return lvl_multiplier * (base_toughness_reduce / 10) * (1 + break_effect)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -29,13 +29,13 @@ def start_sim_remembrance(simulation_num: int, max_cycles: int) -> None:
     :param max_cycles: Maximum number of cycles to simulate
     :return: None
     """
-    main_logger.info('Starting Remembrance characters simulations...')
+    main_logger.info("Starting Remembrance characters simulations...")
 
     db = PostgresOperations()
 
     # Setup database tables
-    stage_table_name = 'RemembranceStage'
-    view_name = 'Remembrance'
+    stage_table_name = "RemembranceStage"
+    view_name = "Remembrance"
     db.drop_stage_table(stage_table_name)
     db.drop_view(view_name)
 

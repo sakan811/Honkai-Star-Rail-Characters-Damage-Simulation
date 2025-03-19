@@ -22,6 +22,7 @@ from hsr_simulation.destruction.hook import Hook
 from hsr_simulation.destruction.imbibitor_lunae import ImbibitorLunae
 from hsr_simulation.destruction.jingliu import Jingliu
 from hsr_simulation.destruction.misha import Misha
+from hsr_simulation.destruction.mydei import Mydei
 from hsr_simulation.destruction.trailblazer_physical import TrailblazerPhysical
 from hsr_simulation.destruction.xueyi import Xueyi
 from hsr_simulation.destruction.yunli import Yunli
@@ -33,21 +34,31 @@ from hsr_simulation.postgre import PostgresOperations
 
 def start_sim_destruction(simulation_num: int, max_cycles: int) -> None:
     """Start simulations for Destruction characters"""
-    main_logger.info('Starting Destruction characters simulations...')
+    main_logger.info("Starting Destruction characters simulations...")
 
     db = PostgresOperations()
 
     # Setup database tables
-    stage_table_name = 'DestructionStage'
-    view_name = 'Destruction'
+    stage_table_name = "DestructionStage"
+    view_name = "Destruction"
     db.drop_stage_table(stage_table_name)
     db.drop_view(view_name)
 
     # Destruction characters list
-    destruction_char_list: list[Character] = [Jingliu(), Hook(), Arlan(), Blade(), 
-                                            Clara(), ImbibitorLunae(), FireFly(),
-                                            TrailblazerPhysical(), Misha(), Xueyi(), 
-                                            Yunli()]
+    destruction_char_list: list[Character] = [
+        Jingliu(),
+        Hook(),
+        Arlan(),
+        Blade(),
+        Clara(),
+        ImbibitorLunae(),
+        FireFly(),
+        TrailblazerPhysical(),
+        Misha(),
+        Xueyi(),
+        Yunli(),
+        Mydei(),
+    ]
 
     for destruction_char in destruction_char_list:
         dict_list = start_simulations(destruction_char, max_cycles, simulation_num)

@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Serval(Character):
-    def __init__(
-            self,
-            speed: float = 104,
-            ult_energy: int = 100
-    ):
+    def __init__(self, speed: float = 104, ult_energy: int = 100):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.shock = 0
         self.a6_trace_buff = 0
@@ -37,7 +33,7 @@ class Serval(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.shock = 0
         self.a6_trace_buff = 0
@@ -49,7 +45,7 @@ class Serval(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
@@ -90,8 +86,8 @@ class Serval(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         if self.shock > 0:
             self._apply_talent_dmg(target_num=1)
@@ -111,8 +107,8 @@ class Serval(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         base_chance = 0.8
 
@@ -130,15 +126,15 @@ class Serval(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg = self._calculate_damage(skill_multiplier=1.8, break_amount=20)
 
         # other target DMG
         for _ in range(self.enemy_on_field - 1):
             dmg += self._calculate_damage(skill_multiplier=1.8, break_amount=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         if self.shock > 0:
             self.shock += 2
@@ -149,17 +145,19 @@ class Serval(Character):
         Simulate applying shock damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying shock damage...')
+        main_logger.info(f"{self.__class__.__name__} is applying shock damage...")
         dmg = 0
 
         # only up to 3 targets can be affected by shock
         max_targets = 3
         enemy_on_field = min(self.enemy_on_field, max_targets)
         for _ in range(enemy_on_field):
-            dmg += self._calculate_damage(skill_multiplier=1.04, break_amount=0, can_crit=False)
+            dmg += self._calculate_damage(
+                skill_multiplier=1.04, break_amount=0, can_crit=False
+            )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('DoT')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("DoT")
 
     def _apply_talent_dmg(self, target_num: int) -> None:
         """
@@ -167,20 +165,20 @@ class Serval(Character):
         :param target_num: Number of targets to apply talent damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying talent damage...')
+        main_logger.info(f"{self.__class__.__name__} is applying talent damage...")
         dmg = 0
         for _ in range(target_num):
             dmg += self._calculate_damage(skill_multiplier=0.72, break_amount=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
     def _simulate_defeating_enemy(self) -> None:
         """
         Simulate defeating the enemy.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is defeating enemy...')
+        main_logger.info(f"{self.__class__.__name__} is defeating enemy...")
         if self.enemy_defeated:
             self.a6_trace_buff = 2
             self.atk = self.default_atk * 1.2

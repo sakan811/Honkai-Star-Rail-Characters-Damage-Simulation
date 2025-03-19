@@ -18,10 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class DrRatio(Character):
-    def __init__(self,
-                 speed=103,
-                 ult_energy=140
-                 ):
+    def __init__(self, speed=103, ult_energy=140):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.debuff_on_enemy = []
 
@@ -31,7 +28,7 @@ class DrRatio(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.debuff_on_enemy: list[str] = []
 
@@ -40,7 +37,7 @@ class DrRatio(Character):
         Simulate taking actions.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # reset stats
         self.crit_rate = 0.5
@@ -49,12 +46,12 @@ class DrRatio(Character):
         # simulate applying debuff on an enemy by allies
         debuff_num: int = random.choice([0, 3])
         for _ in range(debuff_num):
-            self.debuff_on_enemy.append('debuff')
+            self.debuff_on_enemy.append("debuff")
 
         # simulate enemy turn
         if len(self.debuff_on_enemy) > 0:
-            if 'debuff' in self.debuff_on_enemy:
-                self.debuff_on_enemy.remove('debuff')
+            if "debuff" in self.debuff_on_enemy:
+                self.debuff_on_enemy.remove("debuff")
         self._simulate_enemy_weakness_broken()
 
         if self.skill_points > 0:
@@ -69,8 +66,8 @@ class DrRatio(Character):
             self.current_ult_energy = 5
 
         # simulate ult debuff
-        if 'wiseman_folly' in self.debuff_on_enemy:
-            self.debuff_on_enemy.remove('wiseman_folly')
+        if "wiseman_folly" in self.debuff_on_enemy:
+            self.debuff_on_enemy.remove("wiseman_folly")
             ally_atk_num = random.choice([1, 2])
             for _ in range(ally_atk_num):
                 self._follow_up_atk()
@@ -84,8 +81,8 @@ class DrRatio(Character):
         dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -97,8 +94,12 @@ class DrRatio(Character):
         # simulate A2 Trace
         crit_rate_multiplier = 0.025
         crit_dmg_multiplier = 0.05
-        self.crit_rate += min(crit_rate_multiplier * 6, crit_rate_multiplier * len(self.debuff_on_enemy))
-        self.crit_dmg += min(crit_dmg_multiplier * 6, crit_dmg_multiplier * len(self.debuff_on_enemy))
+        self.crit_rate += min(
+            crit_rate_multiplier * 6, crit_rate_multiplier * len(self.debuff_on_enemy)
+        )
+        self.crit_dmg += min(
+            crit_dmg_multiplier * 6, crit_dmg_multiplier * len(self.debuff_on_enemy)
+        )
 
         # simulate A6 Trace
         if len(self.debuff_on_enemy) >= 3:
@@ -106,59 +107,61 @@ class DrRatio(Character):
         else:
             multiplier = 0
 
-        dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1.5, break_amount=20, dmg_multipliers=[multiplier]
+        )
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
 
-        self.debuff_on_enemy.append('wiseman_folly')
-        self.debuff_on_enemy.append('wiseman_folly')
+        self.debuff_on_enemy.append("wiseman_folly")
+        self.debuff_on_enemy.append("wiseman_folly")
 
         ult_dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=30)
 
-        self.data['DMG'].append(ult_dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(ult_dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def _follow_up_atk(self) -> None:
         """
         Simulate follow-up attack damage.
         :return: None
         """
-        main_logger.info('Using follow-up attack...')
+        main_logger.info("Using follow-up attack...")
         dmg = self._calculate_damage(skill_multiplier=2.7, break_amount=10)
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=5)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
     def _simulate_talent(self) -> None:
         """
         Simulate talent.
         :return: None
         """
-        main_logger.info('Simulating talent...')
+        main_logger.info("Simulating talent...")
         follow_up_chance = 0.4 + (0.2 * len(self.debuff_on_enemy))
         final_follow_up_chance = min(1.0, follow_up_chance)
         if random.random() < final_follow_up_chance:
             self._follow_up_atk()
 
-    def check_if_enemy_weakness_broken(self, break_type: str = 'None') -> None:
+    def check_if_enemy_weakness_broken(self, break_type: str = "None") -> None:
         """
         Check whether enemy is weakness broken.
         :param break_type: Break DMG type, e.g., Physical, Fire, etc.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        main_logger.info(f"{self.__class__.__name__}: Checking Enemy Toughness...")
         if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
             self.enemy_weakness_broken = True
-            self.debuff_on_enemy.append('debuff')
-            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
+            self.debuff_on_enemy.append("debuff")
+            main_logger.debug(f"{self.__class__.__name__}: Enemy is Weakness Broken")

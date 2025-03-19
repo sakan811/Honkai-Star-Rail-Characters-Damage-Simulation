@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Jiaoqiu(Character):
-    def __init__(
-            self,
-            speed: float = 98,
-            ult_energy: int = 100
-    ):
+    def __init__(self, speed: float = 98, ult_energy: int = 100):
         super().__init__(speed=speed, ult_energy=ult_energy)
 
         self.ashen_roast = []
@@ -36,7 +32,7 @@ class Jiaoqiu(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.ashen_roast = []
         self.zone = 0
@@ -50,20 +46,20 @@ class Jiaoqiu(Character):
             effect_hit_rate = 0
         else:
             effect_hit_rate = self.effect_hit_rate - 0.8
-        main_logger.debug(f'Effect hit rate: {effect_hit_rate}')
+        main_logger.debug(f"Effect hit rate: {effect_hit_rate}")
 
         multiplier: float = effect_hit_rate // 0.15
         atk_increase: float = min(0.6 * multiplier, 2.4)
         self.atk = self.default_atk * (1 + atk_increase)
 
-        main_logger.debug(f'Atk: {self.atk}')
+        main_logger.debug(f"Atk: {self.atk}")
 
     def take_action(self) -> None:
         """
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_turn()
 
@@ -92,11 +88,13 @@ class Jiaoqiu(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
         dmg_multiplier = self._apply_talent()
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Enhanced Basic ATK')
+        self._record_damage(dmg, "Enhanced Basic ATK")
 
         self._inflict_ashen_roast()
 
@@ -107,11 +105,13 @@ class Jiaoqiu(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
         dmg_multiplier = self._apply_talent()
-        dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1.5, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         self._inflict_ashen_roast()
 
@@ -120,13 +120,15 @@ class Jiaoqiu(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg_multiplier = self._apply_talent()
         if self.zone > 0:
             dmg_multiplier += 0.15
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         self.zone = 3
 
@@ -134,7 +136,7 @@ class Jiaoqiu(Character):
         """
         Inflict ashen roast stack.
         """
-        main_logger.info(f'{self.__class__.__name__} is inflict Ashen Roast...')
+        main_logger.info(f"{self.__class__.__name__} is inflict Ashen Roast...")
         if len(self.ashen_roast) < 5:
             self.ashen_roast.append(2)
 
@@ -143,7 +145,7 @@ class Jiaoqiu(Character):
         Simulate talent effect.
         :return: DMG multiplier.
         """
-        main_logger.info(f'{self.__class__.__name__} is applying talent...')
+        main_logger.info(f"{self.__class__.__name__} is applying talent...")
         if len(self.ashen_roast) > 0:
             if len(self.ashen_roast) == 1:
                 return 0.15
@@ -156,21 +158,27 @@ class Jiaoqiu(Character):
         """
         Simulate burn damage.
         """
-        main_logger.info(f'{self.__class__.__name__} is applying burn damage...')
+        main_logger.info(f"{self.__class__.__name__} is applying burn damage...")
         if len(self.ashen_roast) > 0:
             dmg_multiplier = self._apply_talent()
-            dmg = self._calculate_damage(skill_multiplier=1.8, break_amount=0, dmg_multipliers=[dmg_multiplier],
-                                         can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=1.8,
+                break_amount=0,
+                dmg_multipliers=[dmg_multiplier],
+                can_crit=False,
+            )
 
-            self._record_damage(dmg, 'DoT')
+            self._record_damage(dmg, "DoT")
 
     def _simulate_enemy_turn(self) -> None:
         """
         Simulate enemy turn
         """
-        main_logger.info(f'{self.__class__.__name__}: simulating enemy turn...')
+        main_logger.info(f"{self.__class__.__name__}: simulating enemy turn...")
 
-        main_logger.debug(f'Current Ashen Roast stack on enemy: {len(self.ashen_roast)}')
+        main_logger.debug(
+            f"Current Ashen Roast stack on enemy: {len(self.ashen_roast)}"
+        )
         self._simulate_enemy_weakness_broken()
 
         if len(self.ashen_roast) > 0:

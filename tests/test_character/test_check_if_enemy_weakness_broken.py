@@ -1,9 +1,11 @@
 import pytest
 from hsr_simulation.character import Character
 
+
 @pytest.fixture
 def character():
     return Character()
+
 
 def test_enemy_weakness_broken(character):
     # Set up the character with enemy toughness <= 0 and weakness not broken
@@ -17,6 +19,7 @@ def test_enemy_weakness_broken(character):
     assert character.enemy_weakness_broken is True
     assert character.enemy_turn_delayed_duration_weakness_broken == 1
 
+
 def test_enemy_weakness_not_broken(character):
     # Set up the character with enemy toughness > 0
     character.current_enemy_toughness = 10
@@ -28,6 +31,7 @@ def test_enemy_weakness_not_broken(character):
     # Assert the enemy weakness is not broken
     assert character.enemy_weakness_broken is False
     assert character.enemy_turn_delayed_duration_weakness_broken == 0
+
 
 def test_enemy_already_weakness_broken(character):
     # Set up the character with enemy weakness already broken
