@@ -9,7 +9,9 @@ def test_subclass_topaz_and_numby():
     numby = topaz.summon_numby(topaz)
 
     # When:
-    dict_list = start_simulations_for_char_with_summon(topaz, numby, max_cycles=10, simulation_num=2)
+    dict_list = start_simulations_for_char_with_summon(
+        topaz, numby, max_cycles=10, simulation_num=2
+    )
 
     # Then:
     # Ensure the simulations returned a non-empty list
@@ -31,8 +33,8 @@ def test_subclass_topaz_and_numby():
 
     # Validate 'Simulate Round No.' correctness
     for index, element in enumerate(dict_list):
-        if 'Simulate Round No.' in element:
-            for i in element['Simulate Round No.']:
+        if "Simulate Round No." in element:
+            for i in element["Simulate Round No."]:
                 assert i == index
 
 
@@ -42,7 +44,9 @@ def test_subclass_jingyuan_and_lighting_lord():
     lightning_lord = jingyuan.summon_lightning_lord(jingyuan)
 
     # When:
-    dict_list = start_simulations_for_char_with_summon(jingyuan, lightning_lord, max_cycles=10, simulation_num=2)
+    dict_list = start_simulations_for_char_with_summon(
+        jingyuan, lightning_lord, max_cycles=10, simulation_num=2
+    )
 
     # Then:
     # Ensure the simulations returned a non-empty list
@@ -64,6 +68,6 @@ def test_subclass_jingyuan_and_lighting_lord():
 
     # Validate 'Simulate Round No.' correctness
     for index, element in enumerate(dict_list):
-        if 'Simulate Round No.' in element:
-            for i in element['Simulate Round No.']:
+        if "Simulate Round No." in element:
+            for i in element["Simulate Round No."]:
                 assert i == index

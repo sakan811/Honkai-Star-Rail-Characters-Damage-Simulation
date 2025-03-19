@@ -17,11 +17,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Arlan(Character):
-    def __init__(
-            self,
-            speed: float = 102,
-            ult_energy: int = 110
-    ):
+    def __init__(self, speed: float = 102, ult_energy: int = 110):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.default_hp: int = 3600
         self.current_hp: int = self.default_hp
@@ -34,7 +30,7 @@ class Arlan(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.default_hp: int = 3600
 
@@ -43,7 +39,7 @@ class Arlan(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -67,8 +63,8 @@ class Arlan(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -84,19 +80,21 @@ class Arlan(Character):
         dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=20)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        single_target_dmg = self._calculate_damage(skill_multiplier=3.2, break_amount=20)
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
+        single_target_dmg = self._calculate_damage(
+            skill_multiplier=3.2, break_amount=20
+        )
 
-        self.data['DMG'].append(single_target_dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(single_target_dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def _apply_talent_effect(self) -> None:
         """
@@ -105,4 +103,4 @@ class Arlan(Character):
         """
         missing_hp_percent = (self.default_hp - self.current_hp) / self.default_hp
         dmg_increase = min(missing_hp_percent * 0.72, 0.72)
-        self.atk *= (1 + dmg_increase)
+        self.atk *= 1 + dmg_increase

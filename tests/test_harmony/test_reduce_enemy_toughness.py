@@ -1,5 +1,6 @@
 from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 
+
 class TestReduceEnemyToughness:
     def test_reduce_toughness_normal(self):
         # Arrange

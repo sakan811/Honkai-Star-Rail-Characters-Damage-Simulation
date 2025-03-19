@@ -16,7 +16,7 @@ class TestHarmonyCharacter:
             atk=2000,
             dmg_bonus_multiplier=1.0,
             elemental_dmg_multiplier=1.0,
-            res_pen_multiplier=1.0
+            res_pen_multiplier=1.0,
         )
         assert damage == 2000  # 2000 * 1.0 * 1.0 * 1.0 * 1.0
 
@@ -26,7 +26,7 @@ class TestHarmonyCharacter:
             dmg_bonus_multiplier=1.5,
             elemental_dmg_multiplier=1.2,
             res_pen_multiplier=0.9,
-            additional_dmg=500
+            additional_dmg=500,
         )
         assert damage == (2000 * 1.0 + 500) * 1.5 * 1.2 * 0.9
 
@@ -37,7 +37,7 @@ class TestHarmonyCharacter:
             atk=2000,
             dmg_bonus_multiplier=1.0,
             elemental_dmg_multiplier=1.0,
-            res_pen_multiplier=1.0
+            res_pen_multiplier=1.0,
         )
         assert damage == 2000 * 1.25  # 2000 * 1.25 * 1.0 * 1.0 * 1.0
 
@@ -47,7 +47,7 @@ class TestHarmonyCharacter:
             dmg_bonus_multiplier=1.5,
             elemental_dmg_multiplier=1.2,
             res_pen_multiplier=0.9,
-            additional_dmg=500
+            additional_dmg=500,
         )
         assert damage == (2000 * 1.25 + 500) * 1.5 * 1.2 * 0.9
 
@@ -58,7 +58,7 @@ class TestHarmonyCharacter:
             atk=2000,
             dmg_bonus_multiplier=1.0,
             elemental_dmg_multiplier=1.0,
-            res_pen_multiplier=1.0
+            res_pen_multiplier=1.0,
         )
         assert damage == 2000 * 4.25  # 2000 * 4.25 * 1.0 * 1.0 * 1.0
 
@@ -68,7 +68,7 @@ class TestHarmonyCharacter:
             dmg_bonus_multiplier=1.5,
             elemental_dmg_multiplier=1.2,
             res_pen_multiplier=0.9,
-            additional_dmg=500
+            additional_dmg=500,
         )
         assert damage == (2000 * 4.25 + 500) * 1.5 * 1.2 * 0.9
 
@@ -76,14 +76,14 @@ class TestHarmonyCharacter:
         """Test the calculate_trailblazer_dmg method."""
         # Test with default parameters
         damage = self.harmony_char.calculate_trailblazer_dmg()
-        
+
         # Expected damage calculation:
         # Basic attack: 2000 * 1.0 = 2000
         # Skill: 2000 * 1.25 = 2500
         # Ultimate: 2000 * 4.25 = 8500
         # Total: 2000 + 2500 + 8500 = 13000
         assert damage == 13000
-        
+
         # Test with modified parameters
         damage = self.harmony_char.calculate_trailblazer_dmg(
             atk_bonus=0.5,  # 50% ATK bonus
@@ -92,9 +92,9 @@ class TestHarmonyCharacter:
             res_pen_multiplier=0.1,  # 10% RES penetration
             additional_dmg=1000,  # 1000 additional DMG
             dmg_from_harmony_char=5000,  # 5000 DMG from Harmony character
-            bonus_turns=2  # 2 bonus turns
+            bonus_turns=2,  # 2 bonus turns
         )
-        
+
         # Expected damage calculation with modified parameters:
         # ATK = 2000 * 1.5 = 3000
         # Basic attack: (3000 * 1.0 + 1000) * 1.3 * 1.2 * 1.1 = 5148
@@ -111,15 +111,15 @@ class TestHarmonyCharacter:
         """Test the regenerate_energy method."""
         # Initial energy is 0
         assert self.harmony_char.trailblazer_current_energy == 0
-        
+
         # Regenerate default amount (30)
         self.harmony_char.regenerate_energy()
         assert self.harmony_char.trailblazer_current_energy == 30
-        
+
         # Regenerate custom amount (50)
         self.harmony_char.regenerate_energy(50)
         assert self.harmony_char.trailblazer_current_energy == 80
-        
+
         # Regenerate more than max (120)
         self.harmony_char.regenerate_energy(100)
         assert self.harmony_char.trailblazer_current_energy == 120  # Capped at max
@@ -128,13 +128,13 @@ class TestHarmonyCharacter:
         """Test the _process_multiplier method."""
         # Test with None value
         assert self.harmony_char._process_multiplier(None) == 1
-        
+
         # Test with 0 value
         assert self.harmony_char._process_multiplier(0) == 1
-        
+
         # Test with positive value
         assert self.harmony_char._process_multiplier(0.5) == 1.5
-        
+
         # Test with negative value
         assert self.harmony_char._process_multiplier(-0.2) == 0.8
 
@@ -143,11 +143,17 @@ class TestHarmonyCharacter:
         # Test percentage mode
         assert self.harmony_char.calculate_percent_change(100, 150) == 50
         assert self.harmony_char.calculate_percent_change(100, 80) == -20
-        
+
         # Test decimal mode
-        assert self.harmony_char.calculate_percent_change(100, 150, decimal_mode=True) == 0.5
-        assert self.harmony_char.calculate_percent_change(100, 80, decimal_mode=True) == -0.2
+        assert (
+            self.harmony_char.calculate_percent_change(100, 150, decimal_mode=True)
+            == 0.5
+        )
+        assert (
+            self.harmony_char.calculate_percent_change(100, 80, decimal_mode=True)
+            == -0.2
+        )
 
 
 if __name__ == "__main__":
-    pytest.main(["-v", "test_harmony_base_char.py"]) 
+    pytest.main(["-v", "test_harmony_base_char.py"])

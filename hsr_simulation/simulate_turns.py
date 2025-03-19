@@ -29,9 +29,15 @@ def process_character_turn(character: Character, cycles_action_val: float) -> fl
     character.take_action()
 
     # simulate Action Forward
-    main_logger.debug(f'{character.__class__.__name__} current speed: {character.speed}')
-    char_action_val_to_be_added: float = float(sum(character.char_action_value_for_action_forward))
-    main_logger.debug(f'{character.__class__.__name__} action value to be added: {char_action_val_to_be_added}')
+    main_logger.debug(
+        f"{character.__class__.__name__} current speed: {character.speed}"
+    )
+    char_action_val_to_be_added: float = float(
+        sum(character.char_action_value_for_action_forward)
+    )
+    main_logger.debug(
+        f"{character.__class__.__name__} action value to be added: {char_action_val_to_be_added}"
+    )
 
     # Ensure that the character action value to be added does not exceed
     # the action value used to subtract the cycle action value
@@ -48,15 +54,17 @@ def simulate_turns(character: Character, cycles_action_val: float) -> int:
     :param cycles_action_val: Cycles action value.
     :return: Character's turns.
     """
-    main_logger.info(f'Simulate turns for {character.__class__.__name__}...')
+    main_logger.info(f"Simulate turns for {character.__class__.__name__}...")
 
     char_turn_count: int = 0
     while cycles_action_val > 0:
         char_spd: float = character.speed
-        main_logger.debug(f'{character.__class__.__name__} current speed: {char_spd}')
+        main_logger.debug(f"{character.__class__.__name__} current speed: {char_spd}")
 
         char_action_val = character.calculate_action_value(char_spd)
-        main_logger.debug(f'{character.__class__.__name__} current action value: {char_action_val}')
+        main_logger.debug(
+            f"{character.__class__.__name__} current action value: {char_action_val}"
+        )
 
         if cycles_action_val < char_action_val:
             break
@@ -68,12 +76,13 @@ def simulate_turns(character: Character, cycles_action_val: float) -> int:
 
 
 def simulate_turns_for_char_with_summon(
-        cycles_action_value_for_summon: float,
-        cycles_action_value_for_char: float,
-        summon: Character,
-        summon_end: bool,
-        character: Character,
-        character_end: bool) -> tuple[int, int]:
+    cycles_action_value_for_summon: float,
+    cycles_action_value_for_char: float,
+    summon: Character,
+    summon_end: bool,
+    character: Character,
+    character_end: bool,
+) -> tuple[int, int]:
     """
     Simulate turns for Character and their summon.
     :param cycles_action_value_for_summon: Cycles action value of Summon.
@@ -84,7 +93,9 @@ def simulate_turns_for_char_with_summon(
     :param character_end: Whether Character's cycles end
     :return: Summon and Character turn count
     """
-    main_logger.info(f'Simulating turns for {summon.__class__.__name__} and {character.__class__.__name__}...')
+    main_logger.info(
+        f"Simulating turns for {summon.__class__.__name__} and {character.__class__.__name__}..."
+    )
 
     character_turn_count: int = 0
     summon_turn_count: int = 0
@@ -94,21 +105,31 @@ def simulate_turns_for_char_with_summon(
         else:
             if not character_end:
                 character_speed: float = character.speed
-                main_logger.debug(f'{character.__class__.__name__} speed: {character_speed}')
-                character_action_value = character.calculate_action_value(character_speed)
-                main_logger.debug(f'{character.__class__.__name__} action value: {character_action_value}')
+                main_logger.debug(
+                    f"{character.__class__.__name__} speed: {character_speed}"
+                )
+                character_action_value = character.calculate_action_value(
+                    character_speed
+                )
+                main_logger.debug(
+                    f"{character.__class__.__name__} action value: {character_action_value}"
+                )
 
                 # calculate whether the Character has turns left
                 if cycles_action_value_for_char >= character_action_value:
-                    cycles_action_value_for_char = process_character_turn(character, cycles_action_value_for_char)
+                    cycles_action_value_for_char = process_character_turn(
+                        character, cycles_action_value_for_char
+                    )
                     character_turn_count += 1
                 else:
                     character_end = True
 
             if not summon_end:
-                main_logger.debug(f'{summon.__class__.__name__} speed: {summon.speed}')
+                main_logger.debug(f"{summon.__class__.__name__} speed: {summon.speed}")
                 summon_action_val: float = summon.calculate_action_value(summon.speed)
-                main_logger.debug(f'{summon.__class__.__name__} action value: {summon_action_val}')
+                main_logger.debug(
+                    f"{summon.__class__.__name__} action value: {summon_action_val}"
+                )
 
                 # calculate whether Summon has turns left
                 if cycles_action_value_for_summon >= summon_action_val:
@@ -118,15 +139,21 @@ def simulate_turns_for_char_with_summon(
                     summon.take_action()
 
                     # simulate Action Forward
-                    main_logger.debug(f'{summon.__class__.__name__} current speed: {summon.speed}')
-                    char_action_val_to_be_added: float = float(sum(summon.summon_action_value_for_action_forward))
                     main_logger.debug(
-                        f'{summon.__class__.__name__} action value to be added: {char_action_val_to_be_added}')
+                        f"{summon.__class__.__name__} current speed: {summon.speed}"
+                    )
+                    char_action_val_to_be_added: float = float(
+                        sum(summon.summon_action_value_for_action_forward)
+                    )
+                    main_logger.debug(
+                        f"{summon.__class__.__name__} action value to be added: {char_action_val_to_be_added}"
+                    )
                     cycles_action_value_for_summon += char_action_val_to_be_added
 
                     # ensure it Summon's cycles action value not exceed Character's current cycles action value
-                    cycles_action_value_for_summon: float = min(cycles_action_value_for_summon,
-                                                                cycles_action_value_for_char)
+                    cycles_action_value_for_summon: float = min(
+                        cycles_action_value_for_summon, cycles_action_value_for_char
+                    )
 
                     # reset summon stats
                     summon.reset_summon_stat_for_each_turn()
@@ -135,5 +162,5 @@ def simulate_turns_for_char_with_summon(
     return summon_turn_count, character_turn_count
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

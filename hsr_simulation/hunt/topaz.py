@@ -15,16 +15,18 @@ import random
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
-from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, \
-    calculate_universal_dmg_reduction, calculate_def_multipliers, calculate_res_multipliers, calculate_total_damage
+from hsr_simulation.dmg_calculator import (
+    calculate_base_dmg,
+    calculate_dmg_multipliers,
+    calculate_universal_dmg_reduction,
+    calculate_def_multipliers,
+    calculate_res_multipliers,
+    calculate_total_damage,
+)
 
 
 class Topaz(Character):
-    def __init__(
-            self,
-            speed: float = 110,
-            ult_energy: int = 130
-    ):
+    def __init__(self, speed: float = 110, ult_energy: int = 130):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.windfall_bonanza = 0
         self.numby = None
@@ -35,25 +37,25 @@ class Topaz(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.numby = None
         self.windfall_bonanza = 0
 
-    def summon_numby(self, topaz: 'Topaz', speed: int = 80) -> 'Numby':
+    def summon_numby(self, topaz: "Topaz", speed: int = 80) -> "Numby":
         """
         Summon Numby.
         :param topaz: Topaz character.
         :param speed: Numby's speed.
         :return: Numby object.
         """
-        main_logger.info('Summon Numby...')
+        main_logger.info("Summon Numby...")
         self.numby = Numby(topaz=topaz, speed=speed, ult_energy=0)
         return self.numby
 
     @staticmethod
     def enemy_has_fire_weakness() -> bool:
-        main_logger.info('Whether the enemy has fire weakness...')
+        main_logger.info("Whether the enemy has fire weakness...")
         if random.random() < 0.5:
             return True
         else:
@@ -64,7 +66,7 @@ class Topaz(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
@@ -88,7 +90,9 @@ class Topaz(Character):
         """
         main_logger.info("Using basic attack...")
         if self.enemy_has_fire_weakness():
-            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[0.15])
+            dmg = self._calculate_damage(
+                skill_multiplier=1, break_amount=10, dmg_multipliers=[0.15]
+            )
         else:
             dmg = self._calculate_damage(skill_multiplier=1, break_amount=10)
 
@@ -99,7 +103,7 @@ class Topaz(Character):
             self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -108,10 +112,13 @@ class Topaz(Character):
         """
         main_logger.info("Using skill...")
         if self.enemy_has_fire_weakness():
-            dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
-                                         dmg_multipliers=[0.5, 0.15])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.5, break_amount=20, dmg_multipliers=[0.5, 0.15]
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20, dmg_multipliers=[0.5])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.5, break_amount=20, dmg_multipliers=[0.5]
+            )
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
         # Numby action forward
@@ -119,14 +126,14 @@ class Topaz(Character):
             self.numby.simulate_action_forward(action_forward_percent=0.5)
         )
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: Damage and break amount.
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
         self.windfall_bonanza = 2
 
 
@@ -135,30 +142,25 @@ def random_ally_follow_up_atk() -> bool:
     Simulate random follow-up atk from ally.
     :return: Whether an ally does follow-up attack
     """
-    main_logger.info('Random ally follow-up atk...')
+    main_logger.info("Random ally follow-up atk...")
     # random number of allies that can do follow up attack
     follow_up_atk_ally_num = random.choice([0, 1])
 
     if random.random() < (0.33 * follow_up_atk_ally_num):
-        main_logger.debug('Ally does follow-up atk')
+        main_logger.debug("Ally does follow-up atk")
         return True
     else:
         return False
 
 
 class Numby(Character):
-    def __init__(
-            self,
-            topaz: Topaz,
-            speed: float = 80,
-            ult_energy: int = 0
-    ):
+    def __init__(self, topaz: Topaz, speed: float = 80, ult_energy: int = 0):
         super().__init__(
             atk=topaz.atk,
             crit_rate=topaz.crit_rate,
             crit_dmg=topaz.crit_dmg,
             speed=speed,
-            ult_energy=ult_energy
+            ult_energy=ult_energy,
         )
         self.windfall_bonanza_attacks = 0
         self.topaz = topaz
@@ -179,28 +181,30 @@ class Numby(Character):
         :return: None
         """
         if with_ult_buff:
-            main_logger.info('Numby attacking with Ult buff...')
+            main_logger.info("Numby attacking with Ult buff...")
             if self.topaz.enemy_has_fire_weakness():
-                dmg = self._calculate_damage(skill_multiplier=3, break_amount=20,
-                                             dmg_multipliers=[0.15])
+                dmg = self._calculate_damage(
+                    skill_multiplier=3, break_amount=20, dmg_multipliers=[0.15]
+                )
 
                 dmg = self._calculate_damage(skill_multiplier=3, break_amount=20)
 
-                self._record_damage(dmg, 'Numby with Ult Buff')
+                self._record_damage(dmg, "Numby with Ult Buff")
         else:
-            main_logger.info('Numby attacking...')
+            main_logger.info("Numby attacking...")
             if self.topaz.enemy_has_fire_weakness():
-                dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20,
-                                             dmg_multipliers=[0.15])
+                dmg = self._calculate_damage(
+                    skill_multiplier=1.5, break_amount=20, dmg_multipliers=[0.15]
+                )
 
-                self._record_damage(dmg, 'Numby')
+                self._record_damage(dmg, "Numby")
             else:
                 dmg = self._calculate_damage(skill_multiplier=1.5, break_amount=20)
 
-                self._record_damage(dmg, 'Numby')
+                self._record_damage(dmg, "Numby")
 
     def take_action(self) -> None:
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         if self.topaz.windfall_bonanza > 0:
             self.crit_dmg += 0.25
@@ -221,7 +225,9 @@ class Numby(Character):
 
             # Numby action forward
             self.summon_action_value_for_action_forward.append(
-                self.simulate_action_forward(action_forward_percent=0.5 * follow_up_atk_ally_num)
+                self.simulate_action_forward(
+                    action_forward_percent=0.5 * follow_up_atk_ally_num
+                )
             )
         else:
             if random_ally_follow_up_atk():
@@ -239,19 +245,20 @@ class Numby(Character):
         Reset Numby stats
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} stats ...')
+        main_logger.info(f"Resetting {self.__class__.__name__} stats ...")
         super().reset_summon_stat_for_each_turn()
         self.crit_dmg = 1
 
     def _calculate_damage(
-            self,
-            skill_multiplier: float,
-            break_amount: int,
-            dmg_multipliers: list[float] = None,
-            dot_dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None,
-            def_reduction_multiplier: list[float] = None,
-            can_crit: bool = True) -> float:
+        self,
+        skill_multiplier: float,
+        break_amount: int,
+        dmg_multipliers: list[float] = None,
+        dot_dmg_multipliers: list[float] = None,
+        res_multipliers: list[float] = None,
+        def_reduction_multiplier: list[float] = None,
+        can_crit: bool = True,
+    ) -> float:
         """
         Calculates damage based on multipliers.
         :param skill_multiplier: Skill multiplier.
@@ -263,7 +270,7 @@ class Numby(Character):
         :param can_crit: Whether the DMG can CRIT.
         :return: Damage.
         """
-        main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
+        main_logger.info(f"{self.__class__.__name__}: Calculating damage...")
         # reduce enemy toughness
         self.topaz.current_enemy_toughness -= break_amount
 
@@ -272,20 +279,32 @@ class Numby(Character):
         base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
 
         if random.random() < self.crit_rate and can_crit:
-            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
+            dmg_multiplier = calculate_dmg_multipliers(
+                crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers
+            )
         else:
-            dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers)
+            dmg_multiplier = calculate_dmg_multipliers(
+                dmg_multipliers=dmg_multipliers, dot_dmg=dot_dmg_multipliers
+            )
 
-        dmg_reduction = calculate_universal_dmg_reduction(self.topaz.enemy_weakness_broken)
-        def_reduction = calculate_def_multipliers(def_reduction_multiplier=def_reduction_multiplier)
+        dmg_reduction = calculate_universal_dmg_reduction(
+            self.topaz.enemy_weakness_broken
+        )
+        def_reduction = calculate_def_multipliers(
+            def_reduction_multiplier=def_reduction_multiplier
+        )
         res_multiplier = calculate_res_multipliers(res_multipliers)
 
-        total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
-                                           res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
-                                           def_reduction_multiplier=def_reduction)
+        total_dmg = calculate_total_damage(
+            base_dmg=base_dmg,
+            dmg_multipliers=dmg_multiplier,
+            res_multipliers=res_multiplier,
+            dmg_reduction=dmg_reduction,
+            def_reduction_multiplier=def_reduction,
+        )
 
         return total_dmg
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

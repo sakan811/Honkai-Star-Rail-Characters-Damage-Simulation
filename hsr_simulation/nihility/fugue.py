@@ -19,7 +19,7 @@ from hsr_simulation.configure_logging import main_logger
 
 class Fugue(Character):
     DEF_REDUCTION = 0.18  # Define DEF reduction as a class constant
-    
+
     def __init__(self, speed: float = 102, ult_energy: int = 130):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.foxian_player = 0
@@ -54,17 +54,23 @@ class Fugue(Character):
         """
         Override to handle Cloudflame Luster mechanics
         """
-        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        main_logger.info(f"{self.__class__.__name__}: Checking Enemy Toughness...")
         if self.current_enemy_toughness <= 0:
-            excess_break = abs(self.current_enemy_toughness)  # Get the excess break amount
+            excess_break = abs(
+                self.current_enemy_toughness
+            )  # Get the excess break amount
             if not self.enemy_weakness_broken:
                 self.enemy_turn_delayed_duration_weakness_broken = 1
                 self.enemy_weakness_broken = True
-                main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
+                main_logger.debug(
+                    f"{self.__class__.__name__}: Enemy is Weakness Broken"
+                )
                 self._apply_cloudflame_luster()
                 # Apply excess break to Cloudflame Luster if any
                 if excess_break > 0:
-                    self.cloudflame_luster = max(0, self.cloudflame_luster - excess_break)
+                    self.cloudflame_luster = max(
+                        0, self.cloudflame_luster - excess_break
+                    )
             elif self.cloudflame_luster > 0:
                 # When enemy is already broken, reduce Cloudflame Luster by excess break amount
                 old_cloudflame = self.cloudflame_luster
@@ -74,28 +80,33 @@ class Fugue(Character):
                     self.last_break_amount = excess_break
 
     def _calculate_damage(
-            self,
-            skill_multiplier: float,
-            break_amount: int,
-            dmg_multipliers: list[float] = None,
-            dot_dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None,
-            def_reduction_multiplier: list[float] = None,
-            can_crit: bool = True) -> float:
+        self,
+        skill_multiplier: float,
+        break_amount: int,
+        dmg_multipliers: list[float] = None,
+        dot_dmg_multipliers: list[float] = None,
+        res_multipliers: list[float] = None,
+        def_reduction_multiplier: list[float] = None,
+        can_crit: bool = True,
+    ) -> float:
         """
         Calculate regular damage and store break amount for talent processing
         """
         # Apply break effect to break amount
         modified_break_amount = int(break_amount * self.break_effect)
-        
+
         # Reduce enemy toughness
         self.current_enemy_toughness -= modified_break_amount
         self.check_if_enemy_weakness_broken()
-        
+
         # Store break amount for talent processing if enemy is broken and no Cloudflame Luster
-        if self.enemy_weakness_broken and modified_break_amount > 0 and self.cloudflame_luster <= 0:
+        if (
+            self.enemy_weakness_broken
+            and modified_break_amount > 0
+            and self.cloudflame_luster <= 0
+        ):
             self.last_break_amount = modified_break_amount
-        
+
         return super()._calculate_damage(
             skill_multiplier=skill_multiplier,
             break_amount=modified_break_amount,
@@ -103,7 +114,7 @@ class Fugue(Character):
             dot_dmg_multipliers=dot_dmg_multipliers,
             res_multipliers=res_multipliers,
             def_reduction_multiplier=def_reduction_multiplier,
-            can_crit=can_crit
+            can_crit=can_crit,
         )
 
     def _apply_talent_dmg(self) -> None:
@@ -111,16 +122,20 @@ class Fugue(Character):
         Simulate talent damage - converts break amount to Super Break DMG when enemy is broken
         """
         main_logger.info("Simulating talent damage...")
-        
+
         # If enemy is broken and we have stored break amount, convert to Super Break DMG
-        if self.enemy_weakness_broken and hasattr(self, 'last_break_amount') and self.last_break_amount > 0:
+        if (
+            self.enemy_weakness_broken
+            and hasattr(self, "last_break_amount")
+            and self.last_break_amount > 0
+        ):
             super_break_dmg = self._deal_super_break_dmg(
                 enemy_toughness_reduction=self.last_break_amount,
-                break_effect=self.break_effect
+                break_effect=self.break_effect,
             )
-            self.data['DMG'].append(super_break_dmg)
-            self.data['DMG_Type'].append('Super Break DMG')
-            
+            self.data["DMG"].append(super_break_dmg)
+            self.data["DMG_Type"].append("Super Break DMG")
+
             # Clear the stored break amount after processing
             self.last_break_amount = 0
 
@@ -146,7 +161,7 @@ class Fugue(Character):
         if self._can_use_ult():
             self._use_ult()
             self.current_ult_energy = 5
-        
+
         self._apply_talent_dmg()  # Process any new super break damage
 
     def _use_basic_atk(self) -> None:
@@ -161,9 +176,7 @@ class Fugue(Character):
             self.foxian_player_def_reduce_turn -= 1
 
         dmg = self._calculate_damage(
-            skill_multiplier=1, 
-            break_amount=10, 
-            def_reduction_multiplier=[def_reduce]
+            skill_multiplier=1, break_amount=10, def_reduction_multiplier=[def_reduce]
         )
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -182,9 +195,7 @@ class Fugue(Character):
             self.foxian_player_def_reduce_turn = 2
 
         dmg = self._calculate_damage(
-            skill_multiplier=1, 
-            break_amount=10, 
-            def_reduction_multiplier=[def_reduce]
+            skill_multiplier=1, break_amount=10, def_reduction_multiplier=[def_reduce]
         )
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
@@ -203,9 +214,9 @@ class Fugue(Character):
             self._simulate_a4_trace()  # Apply A4 trace effect at battle start
         else:
             self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
-        
+
         dmg = 0
-    
+
         self.foxian_player = 3  # Reset Foxian Player duration
 
         self._record_damage(dmg, "Skill")
@@ -221,9 +232,7 @@ class Fugue(Character):
             self.foxian_player_def_reduce_turn -= 1
 
         dmg = self._calculate_damage(
-            skill_multiplier=2, 
-            break_amount=20, 
-            def_reduction_multiplier=[def_reduce]
+            skill_multiplier=2, break_amount=20, def_reduction_multiplier=[def_reduce]
         )
 
         self._record_damage(dmg, "Ultimate")

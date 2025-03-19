@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Feixiao(Character):
-    def __init__(
-            self,
-            speed: float = 112,
-            ult_energy: int = 0
-    ):
+    def __init__(self, speed: float = 112, ult_energy: int = 0):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.flying_aureus = 0
         self.can_use_talent = True
@@ -39,7 +35,7 @@ class Feixiao(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.flying_aureus = 0
         self.can_use_talent = True
@@ -53,7 +49,7 @@ class Feixiao(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
         self._simulate_enemy_weakness_broken()
 
         # simulate A2 Trace
@@ -100,12 +96,14 @@ class Feixiao(Character):
         if self.talent_buff > 0:
             dmg_multiplier = 0.6
 
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         self._gain_flying_aureus_stack()
 
@@ -124,12 +122,14 @@ class Feixiao(Character):
         if self.talent_buff > 0:
             dmg_multiplier = 0.6
 
-        dmg = self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         self._use_follow_up_atk()
 
@@ -140,7 +140,7 @@ class Feixiao(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
 
         # simulate A4 trace
         self.crit_dmg += 0.36
@@ -153,10 +153,13 @@ class Feixiao(Character):
             dmg_multiplier += 0.6
 
         skill_multiplier = random.choice([5.2, 7])
-        dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=int(30 * self.break_effect),
-                                     dmg_multipliers=[dmg_multiplier])
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        dmg = self._calculate_damage(
+            skill_multiplier=skill_multiplier,
+            break_amount=int(30 * self.break_effect),
+            dmg_multipliers=[dmg_multiplier],
+        )
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         # reset stats after Ultimate
         self.break_effect = self.default_break_effect
@@ -175,10 +178,12 @@ class Feixiao(Character):
         if self.talent_buff > 0:
             dmg_multiplier = 0.6
 
-        dmg = self._calculate_damage(skill_multiplier=1.1, break_amount=5, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1.1, break_amount=5, dmg_multipliers=[dmg_multiplier]
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         self.talent_buff = 2
 

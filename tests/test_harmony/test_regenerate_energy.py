@@ -1,5 +1,6 @@
 from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 
+
 class TestRegenerateEnergy:
     def test_regenerate_energy_normal(self):
         # Arrange
@@ -47,7 +48,9 @@ class TestRegenerateEnergy:
         character.regenerate_energy(50)
 
         # Assert
-        assert character.trailblazer_current_energy == 100  # Shouldn't increase past max
+        assert (
+            character.trailblazer_current_energy == 100
+        )  # Shouldn't increase past max
 
     def test_regenerate_energy_zero_amount(self):
         # Arrange
@@ -71,4 +74,6 @@ class TestRegenerateEnergy:
         character.regenerate_energy(-30)
 
         # Assert
-        assert character.trailblazer_current_energy == 30  # Negative amount decreases energy
+        assert (
+            character.trailblazer_current_energy == 30
+        )  # Negative amount decreases energy

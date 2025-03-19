@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class TrailblazerPhysical(Character):
-    def __init__(
-            self,
-            speed: float = 100,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 100, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.talent_buff = 0
 
@@ -34,7 +30,7 @@ class TrailblazerPhysical(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.talent_buff = 0
 
@@ -43,7 +39,7 @@ class TrailblazerPhysical(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -95,8 +91,8 @@ class TrailblazerPhysical(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -108,33 +104,37 @@ class TrailblazerPhysical(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         # simulate A6 trace
         dmg_multiplier = 0.25
 
         # randomize between 2 ultimate attack modes
         skill_multiplier = random.choice([4.5, 2.7])
-        dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=skill_multiplier,
+            break_amount=20,
+            dmg_multipliers=[dmg_multiplier],
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def check_if_enemy_weakness_broken(self) -> None:
         """
         Check whether enemy is weakness broken.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__}: Checking Enemy Toughness...')
+        main_logger.info(f"{self.__class__.__name__}: Checking Enemy Toughness...")
         if self.current_enemy_toughness <= 0 and not self.enemy_weakness_broken:
             self.enemy_turn_delayed_duration_weakness_broken = 1
             self.enemy_weakness_broken = True
-            main_logger.debug(f'{self.__class__.__name__}: Enemy is Weakness Broken')
+            main_logger.debug(f"{self.__class__.__name__}: Enemy is Weakness Broken")
             self._simulate_talent()

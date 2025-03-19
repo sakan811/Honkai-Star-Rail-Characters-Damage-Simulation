@@ -17,11 +17,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Hook(Character):
-    def __init__(
-            self,
-            speed: float = 94,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 94, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.burn: int = 0
         self.can_use_enhanced_skill: bool = False
@@ -34,7 +30,7 @@ class Hook(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.burn: int = 0
         self.can_use_enhanced_skill: bool = False
@@ -44,7 +40,7 @@ class Hook(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
@@ -77,8 +73,8 @@ class Hook(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         if self.burn > 0:
             self._apply_talent_dmg()
@@ -93,8 +89,8 @@ class Hook(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         if self.burn > 0:
             self._apply_talent_dmg()
@@ -111,8 +107,8 @@ class Hook(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Skill")
 
         if self.burn > 0:
             self._apply_talent_dmg()
@@ -124,11 +120,11 @@ class Hook(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg = self._calculate_damage(skill_multiplier=4, break_amount=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         if self.burn > 0:
             self._apply_talent_dmg()
@@ -137,7 +133,9 @@ class Hook(Character):
 
         # simulate A6 trace
         self.current_ult_energy += 5
-        action_value_from_action_fwd: float = self.simulate_action_forward(action_forward_percent=0.2)
+        action_value_from_action_fwd: float = self.simulate_action_forward(
+            action_forward_percent=0.2
+        )
         self.char_action_value_for_action_forward.append(action_value_from_action_fwd)
 
     def _apply_burn_dmg(self) -> None:
@@ -145,21 +143,23 @@ class Hook(Character):
         Apply burn damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying burn damage...')
-        dmg = self._calculate_damage(skill_multiplier=0.65, break_amount=0, can_crit=False)
+        main_logger.info(f"{self.__class__.__name__} is applying burn damage...")
+        dmg = self._calculate_damage(
+            skill_multiplier=0.65, break_amount=0, can_crit=False
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('DoT')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("DoT")
 
     def _apply_talent_dmg(self) -> None:
         """
         Apply talent damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying talent damage...')
+        main_logger.info(f"{self.__class__.__name__} is applying talent damage...")
         dmg = self._calculate_damage(skill_multiplier=1, break_amount=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         self.current_ult_energy += 5

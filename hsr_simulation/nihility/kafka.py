@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Kafka(Character):
-    def __init__(
-            self,
-            speed: float = 100,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 100, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.shock = 0
         self.talent_cooldown = False
@@ -33,7 +29,7 @@ class Kafka(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.shock = 0
         self.talent_cooldown = False
@@ -43,7 +39,7 @@ class Kafka(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
@@ -76,7 +72,7 @@ class Kafka(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -86,7 +82,7 @@ class Kafka(Character):
         main_logger.info("Using skill...")
         dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=20)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
@@ -101,10 +97,10 @@ class Kafka(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
         dmg = self._calculate_damage(skill_multiplier=0.8, break_amount=20)
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         self.shock = 2
 
@@ -115,13 +111,13 @@ class Kafka(Character):
         Simulate Talent damage.
         :return: None
         """
-        main_logger.info('Using talent...')
+        main_logger.info("Using talent...")
         dmg = self._calculate_damage(skill_multiplier=1.4, break_amount=10)
 
         self.shock = 2
         self.talent_cooldown = True
 
-        self._record_damage(dmg, 'Talent')
+        self._record_damage(dmg, "Talent")
 
     def _use_shock(self, skill_trigger: bool = False) -> float:
         """
@@ -129,14 +125,18 @@ class Kafka(Character):
         :param skill_trigger: Whether the DoT is triggered by Kafka's Skill
         :return: Damage
         """
-        main_logger.info('Using Shock DoT...')
+        main_logger.info("Using Shock DoT...")
         if skill_trigger:
-            dmg = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=2.9, break_amount=0, can_crit=False
+            )
             dmg *= 0.75
         else:
-            dmg = self._calculate_damage(skill_multiplier=2.9, break_amount=0, can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=2.9, break_amount=0, can_crit=False
+            )
 
-        self._record_damage(dmg, 'DoT')
+        self._record_damage(dmg, "DoT")
 
         return dmg
 
@@ -145,9 +145,7 @@ class Kafka(Character):
         Calculate shock dmg on enemy's turn.
         :return: None.
         """
-        main_logger.info('Calculating shock dmg on enemy turn...')
+        main_logger.info("Calculating shock dmg on enemy turn...")
         if self.shock > 0:
             self.shock -= 1
             self._use_shock()
-
-

@@ -33,21 +33,30 @@ from hsr_simulation.postgre import PostgresOperations
 
 def start_sim_nihility(simulation_num: int, max_cycles: int) -> None:
     """Start simulations for Nihility characters"""
-    main_logger.info('Starting Nihility characters simulations...')
+    main_logger.info("Starting Nihility characters simulations...")
 
     db = PostgresOperations()
 
     # Setup database tables
-    stage_table_name = 'NihilityStage'
-    view_name = 'Nihility'
+    stage_table_name = "NihilityStage"
+    view_name = "Nihility"
     db.drop_stage_table(stage_table_name)
     db.drop_view(view_name)
 
     # Nihility characters list
-    nihility_char_list: list[Character] = [Kafka(), BlackSwan(), Acheron(),
-                                         Guinanfei(), Pela(), Luka(),
-                                         SilverWolf(), Sampo(), Welt(),
-                                         Jiaoqiu(), Fugue()]
+    nihility_char_list: list[Character] = [
+        Kafka(),
+        BlackSwan(),
+        Acheron(),
+        Guinanfei(),
+        Pela(),
+        Luka(),
+        SilverWolf(),
+        Sampo(),
+        Welt(),
+        Jiaoqiu(),
+        Fugue(),
+    ]
 
     for nihility_char in nihility_char_list:
         dict_list = start_simulations(nihility_char, max_cycles, simulation_num)

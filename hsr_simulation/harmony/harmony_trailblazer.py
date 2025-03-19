@@ -34,5 +34,7 @@ class HarmonyTrailblazer(HarmonyCharacter):
         base_dmg = self.calculate_trailblazer_dmg()
 
         super_break_dmg = self.ult_buff() * (1 + self.a2_trace_buff())
-        buffed_dmg = self.calculate_trailblazer_dmg(dmg_from_harmony_char=super_break_dmg)
+        buffed_dmg = self.calculate_trailblazer_dmg(
+            dmg_from_harmony_char=super_break_dmg
+        )
         return self.calculate_percent_change(base_dmg, buffed_dmg)

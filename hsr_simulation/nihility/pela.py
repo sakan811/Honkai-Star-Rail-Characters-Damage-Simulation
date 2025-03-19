@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Pela(Character):
-    def __init__(
-            self,
-            speed: float = 105,
-            ult_energy: int = 110
-    ):
+    def __init__(self, speed: float = 105, ult_energy: int = 110):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.enemy_has_buff = False
         self.a6_buff = False
@@ -35,7 +31,7 @@ class Pela(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.enemy_has_buff = False
         self.a6_buff = False
@@ -47,7 +43,7 @@ class Pela(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # random debuff on enemy
         self.enemy_has_buff = random.choice([True, False])
@@ -82,11 +78,13 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multipler]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -103,12 +101,13 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg = self._calculate_damage(skill_multiplier=2.1, break_amount=20,
-                                     dmg_multipliers=[dmg_multipler])
+        dmg = self._calculate_damage(
+            skill_multiplier=2.1, break_amount=20, dmg_multipliers=[dmg_multipler]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         # A6 trace
         if self.enemy_has_buff:
@@ -119,7 +118,7 @@ class Pela(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         self.current_ult_energy = 5
 
         dmg_multipler = 0
@@ -132,8 +131,10 @@ class Pela(Character):
             dmg_multipler += 0.2
             self.a6_buff = False
 
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=20, dmg_multipliers=[dmg_multipler]
+        )
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         self.exposed = 2
