@@ -19,10 +19,15 @@ import numpy as np
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
-from hsr_simulation.simulate_cycles import simulate_cycles, simulate_cycles_for_character_with_summon
+from hsr_simulation.simulate_cycles import (
+    simulate_cycles,
+    simulate_cycles_for_character_with_summon,
+)
 
 
-def start_simulations(character: Character, max_cycles: int, simulation_num: int) -> List[Dict[str, List[Any]]]:
+def start_simulations(
+    character: Character, max_cycles: int, simulation_num: int
+) -> List[Dict[str, List[Any]]]:
     """
     Start battle simulations.
     :param character: Character to simulate
@@ -30,7 +35,9 @@ def start_simulations(character: Character, max_cycles: int, simulation_num: int
     :param simulation_num: Number of battles to simulate
     :return: A list of Character's action details as a dictionary.
     """
-    main_logger.info(f'Starting battle simulations for {character.__class__.__name__}...')
+    main_logger.info(
+        f"Starting battle simulations for {character.__class__.__name__}..."
+    )
 
     if simulation_num <= 0:
         return []
@@ -40,8 +47,7 @@ def start_simulations(character: Character, max_cycles: int, simulation_num: int
 
     # Use NumPy's vectorize with specified output type
     vectorized_simulate = np.vectorize(
-        lambda i: simulate_cycles(character, max_cycles, i),
-        otypes=[object]
+        lambda i: simulate_cycles(character, max_cycles, i), otypes=[object]
     )
     result_list = vectorized_simulate(sim_indices)
 
@@ -49,10 +55,8 @@ def start_simulations(character: Character, max_cycles: int, simulation_num: int
 
 
 def start_simulations_for_char_with_summon(
-        character: Character,
-        summon,
-        max_cycles: int,
-        simulation_num: int) -> List[Dict[str, List[Any]]]:
+    character: Character, summon, max_cycles: int, simulation_num: int
+) -> List[Dict[str, List[Any]]]:
     """
     Start battle simulations for Character and their Summon.
     :param character: Character
@@ -61,7 +65,9 @@ def start_simulations_for_char_with_summon(
     :param simulation_num: The Number of battles to simulate
     :return: A list of Character's action details as a dictionary.
     """
-    main_logger.info(f'Start battle simulations for {character.__class__.__name__} and {summon.__class__.__name__}...')
+    main_logger.info(
+        f"Start battle simulations for {character.__class__.__name__} and {summon.__class__.__name__}..."
+    )
 
     if simulation_num <= 0:
         return []
@@ -71,11 +77,11 @@ def start_simulations_for_char_with_summon(
 
     # Use NumPy's vectorize with specified output type
     vectorized_simulate = np.vectorize(
-        lambda i: simulate_cycles_for_character_with_summon(character, summon, max_cycles, i),
-        otypes=[object]
+        lambda i: simulate_cycles_for_character_with_summon(
+            character, summon, max_cycles, i
+        ),
+        otypes=[object],
     )
     result_list = vectorized_simulate(sim_indices)
 
     return result_list.tolist()
-
-

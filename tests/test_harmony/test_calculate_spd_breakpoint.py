@@ -19,4 +19,6 @@ from hsr_simulation.harmony.harmony_base_char import HarmonyCharacter
 def test_calculate_spd_breakpoint(bonus_spd, expected_bonus_turns):
     character = HarmonyCharacter()  # Instantiate the character object
     result = character.calculate_spd_breakpoint(bonus_spd)
-    assert result == expected_bonus_turns, f"Failed for bonus_spd={bonus_spd}: expected {expected_bonus_turns}, got {result}"
+    assert result == expected_bonus_turns, (
+        f"Failed for bonus_spd={bonus_spd}: expected {expected_bonus_turns}, got {result}"
+    )

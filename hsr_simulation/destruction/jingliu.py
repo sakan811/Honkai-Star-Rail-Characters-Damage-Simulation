@@ -22,11 +22,7 @@ class Jingliu(Character):
     MAX_SYZYGY: int = 3
     CRIT_RATE_BONUS: float = 0.5
 
-    def __init__(
-            self,
-            speed: float = 96,
-            ult_energy: int = 140
-    ):
+    def __init__(self, speed: float = 96, ult_energy: int = 140):
         super().__init__(speed=speed, ult_energy=ult_energy)
 
         self.syzygy: int = 0
@@ -41,7 +37,7 @@ class Jingliu(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.syzygy: int = 0
         self.atk_multiplier: float = 0
@@ -52,7 +48,7 @@ class Jingliu(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -92,8 +88,8 @@ class Jingliu(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -105,8 +101,8 @@ class Jingliu(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         if self.syzygy < self.MAX_SYZYGY:
             self.syzygy += 1
@@ -130,8 +126,8 @@ class Jingliu(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Skill")
 
         self.atk = self.default_atk
 
@@ -140,17 +136,19 @@ class Jingliu(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         if self.spectral_transmigration:
             self.atk = self.default_atk * self.atk_multiplier
             dmg_multiplier = 0.2
         else:
             dmg_multiplier = 0
 
-        dmg = self._calculate_damage(skill_multiplier=3, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=3, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         if self.syzygy < self.MAX_SYZYGY:
             self.syzygy += 1
@@ -164,7 +162,9 @@ class Jingliu(Character):
         Simulate Spectral Transmigration state.
         :return: None
         """
-        main_logger.info(f"{self.__class__.__name__} is entering Spectral Transmigration state...")
+        main_logger.info(
+            f"{self.__class__.__name__} is entering Spectral Transmigration state..."
+        )
         action_value: float = self.simulate_action_forward(action_forward_percent=1)
         self.char_action_value_for_action_forward.append(action_value)
         self.crit_rate = self.default_crit_rate + self.CRIT_RATE_BONUS

@@ -23,3 +23,4 @@ post_template.txt
 **/*.db
 .venv/
 /postgres_sql_vscode.pgsql
+/postgres_data

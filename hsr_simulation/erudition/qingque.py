@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Qingque(Character):
-    def __init__(
-            self,
-            speed: float = 98,
-            ult_energy: int = 140
-    ):
+    def __init__(self, speed: float = 98, ult_energy: int = 140):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.skill_buff = 0
         self.tile_suit = [0, 1, 2]
@@ -41,7 +37,7 @@ class Qingque(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.skill_buff = 0
         self.tile_suit = [0, 1, 2]
@@ -57,7 +53,7 @@ class Qingque(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -97,12 +93,14 @@ class Qingque(Character):
         if self.a4_trace_buff:
             dmg_multiplier = 0.1
 
-        dmg = self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_enhanced_basic_atk(self) -> None:
         """
@@ -114,17 +112,21 @@ class Qingque(Character):
         if self.a4_trace_buff:
             dmg_multiplier = 0.1
 
-        dmg = self._calculate_damage(skill_multiplier=2.4, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2.4, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
         # adjacent target DMG
         adjacent_target = min(self.enemy_on_field - 1, 2)
         for _ in range(adjacent_target):
-            dmg += self._calculate_damage(skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier])
+            dmg += self._calculate_damage(
+                skill_multiplier=1, break_amount=10, dmg_multipliers=[dmg_multiplier]
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=0, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Basic ATK")
 
         # simulate A6 trace buff
         self.speed *= 1.1
@@ -156,7 +158,7 @@ class Qingque(Character):
         :param draw_num: Number of tiles to draw.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is drawing tiles...')
+        main_logger.info(f"{self.__class__.__name__} is drawing tiles...")
         for _ in range(draw_num):
             tile = random.choice(self.tile_suit)
             if tile == self.hand[0] and len(self.hand) < 4:
@@ -167,19 +169,23 @@ class Qingque(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         dmg_multiplier = 0
         if self.a4_trace_buff:
             dmg_multiplier = 0.1
 
-        dmg = self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier]
+        )
 
         # other target DMG
         for _ in range(self.enemy_on_field - 1):
-            dmg += self._calculate_damage(skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier])
+            dmg += self._calculate_damage(
+                skill_multiplier=2, break_amount=20, dmg_multipliers=[dmg_multiplier]
+            )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         self.hand = [0, 0, 0, 0]
 

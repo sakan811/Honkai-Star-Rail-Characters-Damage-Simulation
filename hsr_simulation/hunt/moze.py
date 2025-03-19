@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Moze(Character):
-    def __init__(
-            self,
-            speed: float = 111,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 111, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.prey_exist = False
         self.charge = 0
@@ -38,7 +34,7 @@ class Moze(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.prey_exist = False
         self.charge = 0
@@ -51,7 +47,7 @@ class Moze(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
         self._simulate_enemy_weakness_broken()
 
         # reset stats for each turn
@@ -62,7 +58,9 @@ class Moze(Character):
             self.battle_start = False
 
             # assume that each battle has only 1 wave
-            self.char_action_value_for_action_forward.append(self.simulate_action_forward(0.3))
+            self.char_action_value_for_action_forward.append(
+                self.simulate_action_forward(0.3)
+            )
 
         if self.skill_points > 0 and not self.prey_exist:
             self._use_skill()
@@ -88,8 +86,8 @@ class Moze(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
         self._consume_charge()
 
@@ -103,8 +101,8 @@ class Moze(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         self.charge = 9
         self.prey_exist = True
@@ -114,14 +112,16 @@ class Moze(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         # simulate A6 trace
         dmg_multiplier = 0.25
 
-        dmg = self._calculate_damage(skill_multiplier=2.7, break_amount=30, dmg_multipliers=[dmg_multiplier])
+        dmg = self._calculate_damage(
+            skill_multiplier=2.7, break_amount=30, dmg_multipliers=[dmg_multiplier]
+        )
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         self._use_follow_up_atk()
 
@@ -135,8 +135,8 @@ class Moze(Character):
         main_logger.info(f"{self.__class__.__name__} is using follow-up attack...")
         dmg = self._calculate_damage(skill_multiplier=1.6, break_amount=10)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         # simulate A2 trace
         if self.a2_trace_buff_cooldown <= 0:
@@ -150,11 +150,13 @@ class Moze(Character):
         Simulate additional damage from talent.
         :return: None
         """
-        main_logger.info(f"{self.__class__.__name__} is dealing talent additional DMG...")
+        main_logger.info(
+            f"{self.__class__.__name__} is dealing talent additional DMG..."
+        )
         dmg = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent Additional DMG')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent Additional DMG")
 
         self._consume_charge()
 
@@ -174,4 +176,6 @@ class Moze(Character):
                 self.prey_exist = False
 
                 # simulate A4 trace
-                self.char_action_value_for_action_forward.append(self.simulate_action_forward(0.2))
+                self.char_action_value_for_action_forward.append(
+                    self.simulate_action_forward(0.2)
+                )

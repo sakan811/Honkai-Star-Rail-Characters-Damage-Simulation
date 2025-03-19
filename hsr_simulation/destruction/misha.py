@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Misha(Character):
-    def __init__(
-            self,
-            speed: float = 96,
-            ult_energy: int = 100
-    ):
+    def __init__(self, speed: float = 96, ult_energy: int = 100):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.hit_per_action = 3
         self.enemy_frozen = False
@@ -35,7 +31,7 @@ class Misha(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.hit_per_action = 3
         self.enemy_frozen = False
@@ -45,7 +41,7 @@ class Misha(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -77,8 +73,8 @@ class Misha(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -90,8 +86,8 @@ class Misha(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
         self.hit_per_action += 1
         self.hit_per_action = min(self.hit_per_action, 10)
@@ -101,7 +97,7 @@ class Misha(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
 
         hit_num = self.hit_per_action
 
@@ -128,8 +124,8 @@ class Misha(Character):
 
             dmg = self._calculate_damage(skill_multiplier=0.6, break_amount=10)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Ultimate')
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Ultimate")
 
         self.hit_per_action = 3
         self.crit_dmg = self.default_crit_dmg
@@ -139,7 +135,7 @@ class Misha(Character):
         Simulate enemy's turn.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is simulating enemy turn...')
+        main_logger.info(f"{self.__class__.__name__} is simulating enemy turn...")
         # simulate enemy turn
         self.check_if_enemy_weakness_broken()
         if self.enemy_frozen:
@@ -147,6 +143,5 @@ class Misha(Character):
 
             dmg = self._calculate_damage(skill_multiplier=0.3, break_amount=0)
 
-            self.data['DMG'].append(dmg)
-            self.data['DMG_Type'].append('Freeze DMG')
-
+            self.data["DMG"].append(dmg)
+            self.data["DMG_Type"].append("Freeze DMG")

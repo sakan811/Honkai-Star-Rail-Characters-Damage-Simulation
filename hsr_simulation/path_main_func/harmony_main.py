@@ -45,21 +45,33 @@ def start_sim_harmony() -> None:
 
     # Harmony characters list
     harmony_char_list: list[HarmonyCharacter] = [
-        Sunday(), Asta(), Bronya(), Hanya(), Robin(),
-        RuanMei(), Sparkle(), Tingyun(), HarmonyTrailblazer(),
-        Yukong(), Tribbie()
+        Sunday(),
+        Asta(),
+        Bronya(),
+        Hanya(),
+        Robin(),
+        RuanMei(),
+        Sparkle(),
+        Tingyun(),
+        HarmonyTrailblazer(),
+        Yukong(),
+        Tribbie(),
     ]
 
     # Collect results
     results = [
-        {"Character": harmony_char.__class__.__name__,
-         "PotentialDMGIncreased": harmony_char.potential_buff()}
+        {
+            "Character": harmony_char.__class__.__name__,
+            "PotentialDMGIncreased": harmony_char.potential_buff(),
+        }
         for harmony_char in harmony_char_list
     ]
 
     if results:
         results_df = pd.DataFrame(results)
-        main_logger.info(f"Storing Harmony simulation results into {stage_table_name}...")
+        main_logger.info(
+            f"Storing Harmony simulation results into {stage_table_name}..."
+        )
         db.load_dataframe(results_df, stage_table_name)
 
     query = f'''

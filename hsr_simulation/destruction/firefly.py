@@ -17,11 +17,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class FireFly(Character):
-    def __init__(
-            self,
-            speed: float = 104,
-            ult_energy: int = 240
-    ):
+    def __init__(self, speed: float = 104, ult_energy: int = 240):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.complete_combustion_state = False
         self.complete_combustion_state_duration = 0
@@ -34,7 +30,7 @@ class FireFly(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.complete_combustion_state = False
         self.complete_combustion_state_duration = 0
@@ -44,7 +40,7 @@ class FireFly(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -99,8 +95,8 @@ class FireFly(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_enhanced_basic_atk(self) -> None:
         """
@@ -115,8 +111,8 @@ class FireFly(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Basic ATK")
 
         self._simulate_a4_trace(break_amount)
 
@@ -128,8 +124,9 @@ class FireFly(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is simulating A4 trace...")
         if self.enemy_weakness_broken:
-            super_break_dmg = self._deal_super_break_dmg(enemy_toughness_reduction=break_amount,
-                                                         break_effect=self.break_effect)
+            super_break_dmg = self._deal_super_break_dmg(
+                enemy_toughness_reduction=break_amount, break_effect=self.break_effect
+            )
             if self.break_effect >= 3.6:
                 super_break_dmg *= 0.5
             elif 2 <= self.break_effect < 3.6:
@@ -140,8 +137,8 @@ class FireFly(Character):
             # simulate Ult effect
             super_break_dmg *= 1.2
 
-            self.data['DMG'].append(super_break_dmg)
-            self.data['DMG_Type'].append('Super Break DMG')
+            self.data["DMG"].append(super_break_dmg)
+            self.data["DMG_Type"].append("Super Break DMG")
 
     def _use_skill(self) -> None:
         """
@@ -155,8 +152,8 @@ class FireFly(Character):
         ult_energy = int(self.ult_energy * 0.6)
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=ult_energy)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_enhanced_skill(self) -> None:
         """
@@ -168,12 +165,14 @@ class FireFly(Character):
         base_break_amount = 30
         break_effect = self.break_effect + 0.5
         break_amount = int(base_break_amount * break_effect)
-        dmg = self._calculate_damage(skill_multiplier=skill_multiplier, break_amount=break_amount)
+        dmg = self._calculate_damage(
+            skill_multiplier=skill_multiplier, break_amount=break_amount
+        )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=0)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Enhanced Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Enhanced Skill")
 
         self._simulate_a4_trace(break_amount)
 
@@ -182,10 +181,10 @@ class FireFly(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
-        self.char_action_value_for_action_forward.append(self.simulate_action_forward(1))
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
+        self.char_action_value_for_action_forward.append(
+            self.simulate_action_forward(1)
+        )
         self.complete_combustion_state = True
         self.speed += 60
         self.complete_combustion_state_duration = 2
-
-

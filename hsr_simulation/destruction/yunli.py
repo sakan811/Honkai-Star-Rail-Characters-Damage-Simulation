@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Yunli(Character):
-    def __init__(
-            self,
-            speed: float = 94,
-            ult_energy: int = 240
-    ):
+    def __init__(self, speed: float = 94, ult_energy: int = 240):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.is_parry = False
         self.parry_missed = False
@@ -35,7 +31,7 @@ class Yunli(Character):
         in each battle simulation.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.is_parry = False
         self.parry_missed = False
@@ -45,7 +41,7 @@ class Yunli(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         self._simulate_enemy_weakness_broken()
 
@@ -82,8 +78,8 @@ class Yunli(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -95,15 +91,15 @@ class Yunli(Character):
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
         self.is_parry = True
 
     def _can_use_ult(self) -> bool:
@@ -120,8 +116,8 @@ class Yunli(Character):
 
         dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=10)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Talent")
 
         self.current_ult_energy += 10
 
@@ -151,8 +147,8 @@ class Yunli(Character):
             # simulate A2 trace
             self.parry_missed = True
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
         # reset stats after attack
         self.crit_dmg = self.default_crit_dmg

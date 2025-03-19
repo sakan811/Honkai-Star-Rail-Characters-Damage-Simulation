@@ -18,11 +18,7 @@ from hsr_simulation.configure_logging import main_logger
 
 
 class Guinanfei(Character):
-    def __init__(
-            self,
-            speed: float = 106,
-            ult_energy: int = 120
-    ):
+    def __init__(self, speed: float = 106, ult_energy: int = 120):
         super().__init__(speed=speed, ult_energy=ult_energy)
         self.burn = 0
         self.firekiss = []
@@ -34,7 +30,7 @@ class Guinanfei(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.burn = 0
         self.firekiss = []
@@ -45,13 +41,13 @@ class Guinanfei(Character):
         Simulate taking actions.
         :return: None.
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
-        main_logger.info('Simulate enemy turn')
+        main_logger.info("Simulate enemy turn")
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
 
-        main_logger.info(f'{self.__class__.__name__}: apply Burn DMG on enemy...')
+        main_logger.info(f"{self.__class__.__name__}: apply Burn DMG on enemy...")
         if self.burn > 0:
             self.burn -= 1
             self._apply_dot()
@@ -61,7 +57,7 @@ class Guinanfei(Character):
                     self.firekiss = []
 
         if self.battle_start:
-            main_logger.debug('Battle Start. Apply A4 trace effect')
+            main_logger.debug("Battle Start. Apply A4 trace effect")
             self.battle_start = False
             self.speed *= 1.25
         else:
@@ -89,20 +85,25 @@ class Guinanfei(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using basic attack...")
         if len(self.firekiss) > 0:
-            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                         dmg_multipliers=[0.07 * len(self.firekiss),
-                                                          self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1,
+                break_amount=10,
+                dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=1, break_amount=10,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1,
+                break_amount=10,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self._record_damage(dmg, 'Basic ATK')
+        self._record_damage(dmg, "Basic ATK")
 
         # simulate A2 Trace
         if random.random() < 0.8:
-            main_logger.debug('Apply Burn from A2 trace effect')
+            main_logger.debug("Apply Burn from A2 trace effect")
             self.burn = 2
 
     def _use_skill(self) -> None:
@@ -112,16 +113,21 @@ class Guinanfei(Character):
         """
         main_logger.info(f"{self.__class__.__name__} is using skill...")
         if len(self.firekiss) > 0:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                         dmg_multipliers=[0.07 * len(self.firekiss),
-                                                          self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=20,
+                dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=20,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self._record_damage(dmg, 'Skill')
+        self._record_damage(dmg, "Skill")
 
         self.burn = 2
 
@@ -130,17 +136,22 @@ class Guinanfei(Character):
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is using ultimate...')
+        main_logger.info(f"{self.__class__.__name__} is using ultimate...")
 
         if len(self.firekiss) > 0:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                         dmg_multipliers=[0.07 * len(self.firekiss),
-                                                          self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=20,
+                dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=1.2, break_amount=20,
-                                         dmg_multipliers=[self.a6_dmg_multiplier])
+            dmg = self._calculate_damage(
+                skill_multiplier=1.2,
+                break_amount=20,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+            )
 
-        self._record_damage(dmg, 'Ultimate')
+        self._record_damage(dmg, "Ultimate")
 
         if self.burn > 0:
             self._apply_dot(ult_trigger=True)
@@ -151,20 +162,26 @@ class Guinanfei(Character):
         :param ult_trigger: Whether the DoT is triggered by Ultimate
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is applying dot...')
+        main_logger.info(f"{self.__class__.__name__} is applying dot...")
         if len(self.firekiss) > 0:
-            dmg = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                         dmg_multipliers=[0.07 * len(self.firekiss),
-                                                          self.a6_dmg_multiplier],
-                                         can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=2.182,
+                break_amount=0,
+                dmg_multipliers=[0.07 * len(self.firekiss), self.a6_dmg_multiplier],
+                can_crit=False,
+            )
         else:
-            dmg = self._calculate_damage(skill_multiplier=2.182, break_amount=0,
-                                         dmg_multipliers=[self.a6_dmg_multiplier], can_crit=False)
+            dmg = self._calculate_damage(
+                skill_multiplier=2.182,
+                break_amount=0,
+                dmg_multipliers=[self.a6_dmg_multiplier],
+                can_crit=False,
+            )
 
         if ult_trigger:
             dmg *= 0.92
 
-        self._record_damage(dmg, 'DoT')
+        self._record_damage(dmg, "DoT")
 
         if len(self.firekiss) < 3:
             self.firekiss.append(3)

@@ -43,7 +43,7 @@ class Sunday(HarmonyCharacter):
 
         sunday_crit_dmg = self.trailblazer_crit_dmg + 2.0939
 
-        crit_dmg_increased = ((0.3 * sunday_crit_dmg) + 0.12)
+        crit_dmg_increased = (0.3 * sunday_crit_dmg) + 0.12
         final_trailblazer_crit_dmg = self.trailblazer_crit_dmg + crit_dmg_increased
         final_trailblazer_crit_rate = self.trailblazer_crit_rate + self.talent_buff()
 
@@ -51,7 +51,7 @@ class Sunday(HarmonyCharacter):
             crit_rate=final_trailblazer_crit_rate,
             crit_dmg=final_trailblazer_crit_dmg,
             base_crit_rate=self.trailblazer_crit_rate,
-            base_crit_dmg=self.trailblazer_crit_dmg
+            base_crit_dmg=self.trailblazer_crit_dmg,
         )
 
         return ult_energy_regen_buff + crit_buff
@@ -63,6 +63,8 @@ class Sunday(HarmonyCharacter):
 
         # assume Sunday give 1 extra turns in total from his Skill
         bonus_turn = 1
-        buffed_dmg = self.calculate_trailblazer_dmg(dmg_bonus_multiplier=dmg_buff, bonus_turns=bonus_turn)
+        buffed_dmg = self.calculate_trailblazer_dmg(
+            dmg_bonus_multiplier=dmg_buff, bonus_turns=bonus_turn
+        )
 
         return self.calculate_percent_change(base_dmg, buffed_dmg)

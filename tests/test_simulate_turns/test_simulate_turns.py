@@ -11,12 +11,12 @@ def test_simulate_turns_with_default_attributes():
 
     # Then: Verify the result is a dictionary with expected keys
     assert isinstance(result, dict)
-    assert 'DMG' in result
-    assert 'DMG_Type' in result
-    assert 'Simulate Round No.' in result
-    assert len(result['DMG']) > 0
-    assert len(result['DMG_Type']) > 0
-    assert len(result['Simulate Round No.']) > 0
+    assert "DMG" in result
+    assert "DMG_Type" in result
+    assert "Simulate Round No." in result
+    assert len(result["DMG"]) > 0
+    assert len(result["DMG_Type"]) > 0
+    assert len(result["Simulate Round No."]) > 0
 
 
 def test_simulate_turns_with_max_cycles_zero():
@@ -28,6 +28,6 @@ def test_simulate_turns_with_max_cycles_zero():
 
     # Then: Verify the result is a dictionary with no actions taken
     assert isinstance(result, dict)
-    assert len(result['DMG']) == 0
-    assert len(result['DMG_Type']) == 0
-    assert len(result['Simulate Round No.']) == 0
+    assert len(result["DMG"]) == 0
+    assert len(result["DMG_Type"]) == 0
+    assert len(result["Simulate Round No."]) == 0

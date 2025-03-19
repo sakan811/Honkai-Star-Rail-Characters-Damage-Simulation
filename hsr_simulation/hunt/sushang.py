@@ -15,8 +15,14 @@ import random
 
 from hsr_simulation.character import Character
 from hsr_simulation.configure_logging import main_logger
-from hsr_simulation.dmg_calculator import calculate_base_dmg, calculate_dmg_multipliers, calculate_res_multipliers, \
-    calculate_total_damage, calculate_universal_dmg_reduction, calculate_def_multipliers
+from hsr_simulation.dmg_calculator import (
+    calculate_base_dmg,
+    calculate_dmg_multipliers,
+    calculate_res_multipliers,
+    calculate_total_damage,
+    calculate_universal_dmg_reduction,
+    calculate_def_multipliers,
+)
 
 
 class Sushang(Character):
@@ -33,7 +39,7 @@ class Sushang(Character):
         and the dictionary that store the character's actions' data.
         :return: None
         """
-        main_logger.info(f'Resetting {self.__class__.__name__} data...')
+        main_logger.info(f"Resetting {self.__class__.__name__} data...")
         super().reset_character_data_for_each_battle()
         self.talent_spd_buff = 0
         self.speed = self.default_speed
@@ -45,7 +51,7 @@ class Sushang(Character):
         Simulate taking actions.
         :return: None
         """
-        main_logger.info(f'{self.__class__.__name__} is taking actions...')
+        main_logger.info(f"{self.__class__.__name__} is taking actions...")
 
         # simulate enemy turn
         self._simulate_enemy_weakness_broken()
@@ -88,13 +94,15 @@ class Sushang(Character):
             self.ult_buff = 2
 
             # action again
-            self.char_action_value_for_action_forward.append(self.simulate_action_forward(action_forward_percent=1))
+            self.char_action_value_for_action_forward.append(
+                self.simulate_action_forward(action_forward_percent=1)
+            )
 
     def _handle_a4_trace(self, sword_stance_dmg) -> float:
-        main_logger.info('Handling A4 Trace buff...')
+        main_logger.info("Handling A4 Trace buff...")
         if sword_stance_dmg > 0:
             self.a4_trace_buff += 1
-            sword_stance_dmg *= (1 + (0.025 * self.a4_trace_buff))
+            sword_stance_dmg *= 1 + (0.025 * self.a4_trace_buff)
         return sword_stance_dmg
 
     def _use_basic_atk(self) -> None:
@@ -103,11 +111,13 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using basic attack...")
-        dmg = self._calculate_damage(is_basic_atk=True, skill_multiplier=1, break_amount=10)
+        dmg = self._calculate_damage(
+            is_basic_atk=True, skill_multiplier=1, break_amount=10
+        )
         self._update_skill_point_and_ult_energy(skill_points=1, ult_energy=20)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Basic ATK')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Basic ATK")
 
     def _use_skill(self) -> None:
         """
@@ -115,22 +125,24 @@ class Sushang(Character):
         :return: None
         """
         main_logger.info("Using skill...")
-        dmg = self._calculate_damage(is_skill=True, skill_multiplier=2.1, break_amount=20)
+        dmg = self._calculate_damage(
+            is_skill=True, skill_multiplier=2.1, break_amount=20
+        )
         self._update_skill_point_and_ult_energy(skill_points=-1, ult_energy=30)
 
-        self.data['DMG'].append(dmg)
-        self.data['DMG_Type'].append('Skill')
+        self.data["DMG"].append(dmg)
+        self.data["DMG_Type"].append("Skill")
 
     def _use_ult(self) -> None:
         """
         Simulate ultimate damage.
         :return: None
         """
-        main_logger.info('Using ultimate...')
+        main_logger.info("Using ultimate...")
         ult_dmg = self._calculate_damage(skill_multiplier=3.2, break_amount=30)
 
-        self.data['DMG'].append(ult_dmg)
-        self.data['DMG_Type'].append('Ultimate')
+        self.data["DMG"].append(ult_dmg)
+        self.data["DMG_Type"].append("Ultimate")
 
     def _handle_sword_stance(self, is_extra: bool = False) -> None:
         """
@@ -153,18 +165,19 @@ class Sushang(Character):
             else:
                 sword_stance_dmg = 0
 
-        self.data['DMG'].append(sword_stance_dmg)
-        self.data['DMG_Type'].append('Talent')
+        self.data["DMG"].append(sword_stance_dmg)
+        self.data["DMG_Type"].append("Talent")
 
     def _calculate_damage(
-            self,
-            is_skill: bool = False,
-            is_basic_atk: bool = False,
-            skill_multiplier: float = 0,
-            break_amount: int = 0,
-            dmg_multipliers: list[float] = None,
-            res_multipliers: list[float] = None,
-            can_crit: bool = True) -> float:
+        self,
+        is_skill: bool = False,
+        is_basic_atk: bool = False,
+        skill_multiplier: float = 0,
+        break_amount: int = 0,
+        dmg_multipliers: list[float] = None,
+        res_multipliers: list[float] = None,
+        can_crit: bool = True,
+    ) -> float:
         """
         Calculates damage based on multipliers.
         :param is_skill: Whether the skill is the trigger.
@@ -176,7 +189,7 @@ class Sushang(Character):
         :param can_crit: Whether the DMG can CRIT.
         :return: Damage.
         """
-        main_logger.info(f'{self.__class__.__name__}: Calculating damage...')
+        main_logger.info(f"{self.__class__.__name__}: Calculating damage...")
         self.current_enemy_toughness -= break_amount
         self.check_if_enemy_weakness_broken()
 
@@ -193,16 +206,26 @@ class Sushang(Character):
                 )
 
         if random.random() < self.crit_rate and can_crit:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
-            dmg_multiplier = calculate_dmg_multipliers(crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers)
+            base_dmg = calculate_base_dmg(
+                atk=self.atk, skill_multiplier=skill_multiplier
+            )
+            dmg_multiplier = calculate_dmg_multipliers(
+                crit_dmg=self.crit_dmg, dmg_multipliers=dmg_multipliers
+            )
         else:
-            base_dmg = calculate_base_dmg(atk=self.atk, skill_multiplier=skill_multiplier)
+            base_dmg = calculate_base_dmg(
+                atk=self.atk, skill_multiplier=skill_multiplier
+            )
             dmg_multiplier = calculate_dmg_multipliers(dmg_multipliers=dmg_multipliers)
 
         dmg_reduction = calculate_universal_dmg_reduction(self.enemy_weakness_broken)
         res_multiplier = calculate_res_multipliers(res_multipliers)
         def_reduction = calculate_def_multipliers()
-        total_dmg = calculate_total_damage(base_dmg=base_dmg, dmg_multipliers=dmg_multiplier,
-                                           res_multipliers=res_multiplier, dmg_reduction=dmg_reduction,
-                                           def_reduction_multiplier=def_reduction)
+        total_dmg = calculate_total_damage(
+            base_dmg=base_dmg,
+            dmg_multipliers=dmg_multiplier,
+            res_multipliers=res_multiplier,
+            dmg_reduction=dmg_reduction,
+            def_reduction_multiplier=def_reduction,
+        )
         return total_dmg
