@@ -64,7 +64,7 @@ class Mydei(Character):
         self._simulate_enemy_weakness_broken()
         
         # Simulate HP lost from enemy's attack
-        enemy_attack = random.randint(1000, 8000)
+        enemy_attack = random.randint(1000, 4000)
         self._check_for_killing_blow(enemy_attack)
         self._gain_charge(enemy_attack)
         
